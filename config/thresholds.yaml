@@ -1,0 +1,165 @@
+# Every assumption the calculations depend on. Nothing here is hardcoded in src/.
+#
+# Values marked `verified: false` are starting points that must be confirmed or
+# tuned against real data before anything published depends on them.
+
+meta:
+  version: 1
+
+# --------------------------------------------------------------------------- #
+# Normalization (Deviation D1)
+# --------------------------------------------------------------------------- #
+percentiles:
+  # Percentiles are computed as-of each date from a trailing window. A full-sample
+  # percentile would rank a 2005 reading against data through 2026 and make the
+  # backtest meaningless.
+  window_months: 120            # 10-year trailing window
+  min_history_months: 60        # no score published below 5 years of history
+  method: weak                  # 'weak' (fraction at or below) | 'mid' (ties split)
+
+# --------------------------------------------------------------------------- #
+# Issuance ratio guards (Deviation D5)
+# --------------------------------------------------------------------------- #
+issuance:
+  # Net marketable borrowing passes through zero, most sharply during binding
+  # debt-ceiling episodes. Below this magnitude the ratio is suppressed rather
+  # than reported. Units: USD millions of net issuance per month.
+  min_abs_denominator_monthly_musd: 25000
+  min_abs_denominator_quarterly_musd: 75000
+  verified: false               # calibrate against the real distribution
+
+  # TIPS excluded from the coupon aggregate: MSPD deltas absorb inflation
+  # accretion, which is not issuance (Deviation D2). Revisit once the probe
+  # confirms whether TIPS outstanding is reported at par.
+  coupon_classes: [NOTES, BONDS, FRN]
+
+# --------------------------------------------------------------------------- #
+# Debt ceiling episodes (Deviation D5)
+# --------------------------------------------------------------------------- #
+# During a binding ceiling Treasury runs bills down and net borrowing collapses;
+# on resolution it rebuilds the TGA with a bill surge. That surge is mechanical,
+# not a strategic duration decision, and is the most likely false positive in the
+# whole system. These windows are shaded on charts, flagged on affected rows, and
+# reported both included and excluded in the backtest.
+#
+# DATES BELOW ARE UNVERIFIED and must be checked against Treasury's own debt limit
+# record before use. Month granularity is deliberate: MSPD is monthly.
+debt_ceiling_episodes:
+  verified: false
+  source_to_confirm: https://fiscaldata.treasury.gov/  # plus Treasury debt limit letters
+  episodes:
+    - {binding_from: 2011-05, resolved: 2011-08, note: unverified}
+    - {binding_from: 2013-05, resolved: 2013-10, note: unverified}
+    - {binding_from: 2015-03, resolved: 2015-11, note: unverified}
+    - {binding_from: 2017-03, resolved: 2017-09, note: unverified}
+    - {binding_from: 2019-03, resolved: 2019-08, note: unverified}
+    - {binding_from: 2021-08, resolved: 2021-12, note: unverified}
+    - {binding_from: 2023-01, resolved: 2023-06, note: unverified}
+
+# --------------------------------------------------------------------------- #
+# WAM conventions (Deviation D9)
+# --------------------------------------------------------------------------- #
+wam:
+  days_per_year: 365.25
+  maturity_buckets_years: [1, 2, 3, 5]
+  use_final_maturity_for_frn: true
+  use_final_maturity_for_tips: true
+  model_call_dates: false       # callables (pre-2009 history) mature at final maturity
+  marketable_only: true
+
+# --------------------------------------------------------------------------- #
+# Auction stress
+# --------------------------------------------------------------------------- #
+auctions:
+  trailing_auctions: 12
+  min_trailing_auctions: 12     # fewer than this scores NaN, never a partial window
+  min_components: 2
+  scale_sigma: 3.0              # +/- 3 sd maps to +/- 100, clipped beyond
+  long_end_terms: [10Y, 20Y, 30Y]
+  long_end_window_days: 90
+  long_end_min_auctions: 3
+  # Bidder-class detail is materially richer from 2008. Earlier auctions are
+  # ingested and scored on a reduced factor set, but excluded from the composite
+  # by default.
+  composite_start_date: 2008-04-01
+  include_pre_2008_in_composite: false
+
+# --------------------------------------------------------------------------- #
+# Reference levels
+# --------------------------------------------------------------------------- #
+reference_levels:
+  # TBAC has long referenced a bill share around this range. Shown as a band on
+  # the bill share chart so the reader sees not just that the share rose, but that
+  # it sits outside the range Treasury's own advisory committee recommends.
+  bill_share_recommended_band: [0.15, 0.20]
+  verified: false
+  source_to_confirm: TBAC recommended bill share range - cite the specific report
+
+# --------------------------------------------------------------------------- #
+# Score interpretation (Phase 2 - must be validated by backtest)
+# --------------------------------------------------------------------------- #
+duration_shift_score_bands:
+  verified: false
+  bands:
+    - {name: strong duration extension, from: 0,  to: 20}
+    - {name: modest extension,          from: 20, to: 40}
+    - {name: neutral,                   from: 40, to: 60}
+    - {name: meaningful shortening,     from: 60, to: 80}
+    - {name: aggressive shortening,     from: 80, to: 100}
+
+# Regimes are defined by measurable conditions, never by hand-applied labels.
+# All listed conditions must hold; the highest satisfied regime wins.
+regimes:
+  verified: false
+  green_normal:
+    duration_shift_score_below: 40
+  yellow_shortening:
+    duration_shift_score_at_least: 40
+    bill_share_12m_change_at_least: 0.01
+  orange_duration_pressure:
+    duration_shift_score_at_least: 60
+    bill_share_12m_change_at_least: 0.02
+    term_premium_10y_percentile_at_least: 70
+  red_fiscal_dominance_risk:
+    duration_shift_score_at_least: 80
+    bill_share_12m_change_at_least: 0.03
+    term_premium_10y_percentile_at_least: 85
+    long_end_auction_stress_at_least: 25
+
+# --------------------------------------------------------------------------- #
+# Alerts (hooks designed now, wired in Phase 2)
+# --------------------------------------------------------------------------- #
+alerts:
+  bill_share_new_5y_high: true
+  bill_share_12m_change_above: 0.03
+  wam_12m_decline_months_above: 0.5      # months of WAM lost over a year
+  term_premium_10y_percentile_above: 80
+  duration_shift_score_above: 70
+  long_end_stress_persistent_days: 90
+  # Phase 3
+  simultaneous_shortening_sovereigns_at_least: 3
+
+# --------------------------------------------------------------------------- #
+# Validation
+# --------------------------------------------------------------------------- #
+validation:
+  # Computed marketable total vs published MSPD total. A break is an error, not a
+  # warning: a WAM that cannot reproduce the official total is not fit to publish.
+  reconciliation_tolerance_pct: 0.1
+  debt_to_penny_tolerance_pct: 0.1
+  staleness_days:
+    mspd: 45          # monthly, published around the 8th business day
+    auctions: 7
+    fred_daily: 5
+    nyfed_acm: 10
+    qra_manual: 100   # roughly one quarter plus a grace period
+
+# --------------------------------------------------------------------------- #
+# Frequency alignment (Deviation D8)
+# --------------------------------------------------------------------------- #
+alignment:
+  # Daily series are resampled to month end to meet monthly series. Monthly data
+  # is never forward-filled onto a daily axis for signal purposes.
+  common_frequency: M
+  daily_to_monthly: last
+  interaction_flag_horizon_months: 12

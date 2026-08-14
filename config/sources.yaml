@@ -1,0 +1,179 @@
+# Source registry — single source of truth for every endpoint, file and series ID.
+#
+# `verified: false` means the path / field list below is an EXPECTATION that has
+# NOT been confirmed against a live response. Nothing in this file may be treated
+# as fact until `scripts/probe_sources.py` has run and flipped it.
+#
+# `expected_fields` is a CONTRACT, not documentation: the probe reports MISSING
+# (expected but absent) and UNEXPECTED (present but not listed) for each endpoint,
+# and ingestion refuses to map a field that is not present in the live response.
+
+meta:
+  version: 1
+  probe_required: true
+
+fiscaldata:
+  base_url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/
+  # All values arrive as strings; nulls arrive as the literal string "null".
+  page_size_max: 10000
+  endpoints:
+
+    mspd_table_1:
+      path: v1/debt/mspd/mspd_table_1
+      purpose: Marketable debt outstanding by security class, monthly. Drives Bill Share.
+      date_field: record_date
+      verified: false
+      expected_fields:
+        - record_date
+        - security_type_desc
+        - security_class_desc
+        - debt_held_public_mil_amt
+        - intragov_hold_mil_amt
+        - total_mil_amt
+      notes: >
+        Contains subtotal and total rows. Aggregation MUST filter these out
+        explicitly by label rather than summing blindly.
+
+    mspd_table_3_market:
+      path: v1/debt/mspd/mspd_table_3_market
+      purpose: Security-level detail (CUSIP, issue/maturity date, outstanding). Drives WAM.
+      date_field: record_date
+      verified: false
+      critical_unknowns:
+        - Does this table expose maturity_date per CUSIP for the full history?
+        - Is TIPS outstanding reported at par or inflation-adjusted?
+        - Row count per month (drives storage strategy).
+      expected_fields:
+        - record_date
+        - security_class1_desc
+        - security_class2_desc
+        - cusip
+        - interest_rate_pct
+        - yield_pct
+        - issue_date
+        - maturity_date
+        - outstanding_amt
+      notes: >
+        Exact endpoint name is the single largest open question in the plan.
+        If maturity_date is absent or history is short, WAM must fall back to a
+        different source — see docs/implementation_plan.md, Open Question 1.
+
+    auctions_query:
+      path: v1/accounting/od/auctions_query
+      purpose: Auction results. Drives auction stress metrics.
+      date_field: auction_date
+      verified: false
+      critical_unknowns:
+        - Are low_yield / median_yield published? (enables a real free tail proxy)
+        - Is allotment-at-high published?
+        - First date with primary dealer / direct / indirect breakdown.
+      expected_fields:
+        - auction_date
+        - issue_date
+        - maturity_date
+        - security_type
+        - security_term
+        - cusip
+        - offering_amt
+        - total_accepted
+        - bid_to_cover_ratio
+        - high_yield
+        - primary_dealer_accepted
+        - direct_bidder_accepted
+        - indirect_bidder_accepted
+      probe_extra_fields:
+        - low_yield
+        - median_yield
+        - high_discnt_rate
+        - allocation_pctage
+
+    debt_to_penny:
+      path: v2/accounting/od/debt_to_penny
+      purpose: Independent sanity check on total outstanding.
+      date_field: record_date
+      verified: false
+      expected_fields:
+        - record_date
+        - debt_held_public_amt
+        - intragov_hold_amt
+        - tot_pub_debt_out_amt
+
+    avg_interest_rates:
+      path: v2/accounting/od/avg_interest_rates
+      purpose: Average interest rate by security class. Context for refinancing cost.
+      date_field: record_date
+      verified: false
+      expected_fields:
+        - record_date
+        - security_type_desc
+        - security_desc
+        - avg_interest_rate_amt
+
+    interest_expense:
+      path: v2/accounting/od/interest_expense
+      purpose: Interest expense on the public debt.
+      date_field: record_date
+      verified: false
+      expected_fields:
+        - record_date
+        - expense_type_desc
+        - month_expense_amt
+        - fytd_expense_amt
+
+    operating_cash_balance:
+      path: v1/accounting/dts/operating_cash_balance
+      purpose: Daily TGA balance.
+      date_field: record_date
+      verified: false
+      expected_fields:
+        - record_date
+        - account_type
+        - open_today_bal
+        - close_today_bal
+
+    mts_table_1:
+      path: v1/accounting/mts/mts_table_1
+      purpose: Monthly receipts / outlays / deficit.
+      date_field: record_date
+      verified: false
+      expected_fields:
+        - record_date
+        - classification_desc
+        - current_month_budget_amt
+        - current_fytd_budget_amt
+      notes: Contains total rows; exclude explicitly when aggregating.
+
+fred:
+  base_url: https://api.stlouisfed.org/fred/
+  api_key_env: FRED_API_KEY
+  verified: false
+  series:
+    rates:
+      [DGS3MO, DGS6MO, DGS1, DGS2, DGS5, DGS10, DGS20, DGS30]
+    liquidity:
+      [WALCL, WRESBAL, RRPONTSYD, WTREGEN, SOFR, EFFR, MMMFFAQ027S]
+    fiscal:
+      [GFDEBTN, FYFSGDA188S, A091RC1Q027SBEA, FGRECPT, GDP]
+    term_premium_crosscheck:
+      [THREEFYTP10]
+  known_gaps:
+    DGS20: Series discontinued 1987-01 to 1993-09. Flag as missing; never fill.
+    MMMFFAQ027S: Quarterly frequency; do not forward-fill onto a daily axis.
+
+nyfed_acm:
+  # No API. Scheduled file pull, parsed with pandas.
+  url: https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls
+  landing_page: https://www.newyorkfed.org/research/data_indicators/term-premia-tabs
+  verified: false
+  series_of_interest: [ACMTP02, ACMTP05, ACMTP10]
+  revision_policy: >
+    ACM estimates are model output and are re-estimated retroactively. Every pull
+    stores retrieval_date and is diffed against the prior vintage; changes to
+    historical values raise a revision flag rather than being silently overwritten.
+
+manual:
+  qra_log:
+    path: data/manual/qra_log.csv
+    purpose: Quarterly Refunding Announcement facts. No API exists.
+    entry: Streamlit page app/pages/6_QRA_Input.py
+    rule: Every row must carry source_url pointing at the official Treasury document.
