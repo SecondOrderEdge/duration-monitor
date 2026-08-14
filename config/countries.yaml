@@ -1,0 +1,81 @@
+# Country dimension. Phase 1 is US-only, but country is a first-class column in
+# every schema from day one so Phase 3 is an ingestion problem rather than a
+# migration.
+
+meta:
+  version: 1
+  active_phase: 1
+
+countries:
+  US:
+    name: United States
+    currency: USD
+    enabled: true
+    phase: 1
+    fiscal_year_end: 09-30
+    sources:
+      debt_outstanding: fiscaldata.mspd_table_1
+      securities_detail: fiscaldata.mspd_table_3_market
+      auctions: fiscaldata.auctions_query
+      term_premium: nyfed_acm
+      rates: fred
+
+  # ------------------------------------------------------------------------- #
+  # Phase 3. Listed so the schema and config shape are settled; no ingestion is
+  # written for these and none should be until Phase 1 is validated.
+  # ------------------------------------------------------------------------- #
+  JP:
+    name: Japan
+    currency: JPY
+    enabled: false
+    phase: 3
+    fiscal_year_end: 03-31
+    dmo: Ministry of Finance (MOF)
+    notes: Largest DM debt stock and longest WAM; the key contrast case.
+
+  GB:
+    name: United Kingdom
+    currency: GBP
+    enabled: false
+    phase: 3
+    fiscal_year_end: 03-31
+    dmo: UK Debt Management Office
+    notes: >
+      Long WAM by DM standards and a large index-linked share; both need explicit
+      handling before its bill share is comparable to the US.
+
+  DE:
+    name: Germany
+    currency: EUR
+    enabled: false
+    phase: 3
+    fiscal_year_end: 12-31
+    dmo: Finanzagentur
+
+  FR:
+    name: France
+    currency: EUR
+    enabled: false
+    phase: 3
+    fiscal_year_end: 12-31
+    dmo: Agence France Tresor
+
+  IT:
+    name: Italy
+    currency: EUR
+    enabled: false
+    phase: 3
+    fiscal_year_end: 12-31
+    dmo: MEF / Dipartimento del Tesoro
+
+# Phase 3 global score weighting. Market-size weighting is the default so the
+# score reflects where duration actually has to be absorbed, but equal weighting
+# is available since a small sovereign shortening aggressively is informative
+# even when it is not systemically large.
+global_score:
+  weighting: market_size      # market_size | equal
+  min_countries: 3
+  notes: >
+    Cross-country bill share is not directly comparable without adjusting for
+    index-linked shares and differing security taxonomies. Resolve before
+    publishing any cross-sovereign comparison.

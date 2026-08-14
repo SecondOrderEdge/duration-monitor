@@ -1,0 +1,89 @@
+# Fiscal Duration Shift Score composition. Edit freely — nothing here is imported
+# as a default by the code; weights are passed in explicitly.
+#
+# WHY GROUPS (Deviation D6)
+#
+# Two of the six factors are close to arithmetic complements. If borrowing rises
+# and coupon issuance is held flat, bills absorb the residual by construction —
+# so `incremental_bill_funding` and `coupon_restraint` are largely the same fact.
+# `bill_share_trend` is the stock counterpart of the same flow.
+#
+# Under flat equal weights the composite would therefore be roughly 60% "bills,
+# counted three ways" and only ~40% independent market evidence, and would tend to
+# confirm the thesis using one observation repeatedly.
+#
+# Grouping fixes the balance explicitly: quantity evidence (what the sovereign is
+# doing) and price evidence (whether the market is absorbing it) each carry half.
+# The interaction flag matters precisely because it requires both groups to agree.
+#
+# The Phase 2 backtest publishes the factor correlation matrix so this choice is
+# visible and arguable rather than assumed.
+
+meta:
+  version: 1
+  normalization: percentile_rank      # point-in-time; see config/thresholds.yaml
+  score_range: [0, 100]
+  higher_means: shorter financing profile / greater duration stress
+
+groups:
+  quantity:
+    weight: 0.5
+    description: What the sovereign is doing with its issuance mix.
+    factors:
+      bill_share_trend:
+        weight: 0.30
+        direction: rising_increases_score
+        description: Trend in bills as a share of marketable debt.
+      incremental_bill_funding:
+        weight: 0.30
+        direction: rising_increases_score
+        description: Share of net marketable borrowing absorbed by bills.
+      wam_trend:
+        weight: 0.25
+        direction: falling_increases_score
+        description: Trend in weighted average maturity.
+      coupon_restraint:
+        weight: 0.15
+        direction: rising_increases_score
+        description: >
+          Coupon issuance growth against financing need. Restrained coupons
+          despite rising borrowing raise the score. Down-weighted within the
+          group because it overlaps heavily with incremental_bill_funding.
+
+  market:
+    weight: 0.5
+    description: Whether the market is absorbing duration, and on what terms.
+    factors:
+      term_premium_10y_trend:
+        weight: 0.55
+        direction: rising_increases_score
+        description: Trend in the 10Y ACM term premium.
+      long_end_auction_stress:
+        weight: 0.45
+        direction: rising_increases_score
+        description: Rolling auction stress across 10/20/30Y auctions.
+
+# The signature of the thesis: the sovereign shortening while the market demands
+# more to hold duration. Surfaced prominently rather than folded into the score.
+interaction_flag:
+  name: shortening_into_rising_term_premium
+  conditions:
+    bill_share_change_12m_above: 0.0
+    term_premium_10y_change_12m_above: 0.0
+  require_both: true
+
+# Auction stress composite. Signs are fixed in code (higher always means weaker);
+# only weights are configurable.
+auction_stress_components:
+  bid_to_cover: 1.0
+  indirect: 1.0
+  dealer: 1.0
+  # Zero by default (Deviation D3). A true tail needs the 1pm when-issued yield,
+  # which is not free. The fallback — high yield against a constant-maturity par
+  # yield at the close — absorbs a full day of market movement plus a maturity
+  # mismatch, and is mostly noise about something other than auction quality.
+  #
+  # If the source probe confirms Treasury publishes low/median yield, replace this
+  # with high-minus-median spread, which is a genuine official measure of bid
+  # dispersion, and give it real weight.
+  tail: 0.0
