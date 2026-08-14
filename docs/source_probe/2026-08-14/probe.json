@@ -1,0 +1,87 @@
+{
+  "probe_timestamp_utc": "2026-08-14T03:02:13.817553+00:00",
+  "config_version": 1,
+  "fiscaldata": {
+    "mspd_table_1": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/debt/mspd/mspd_table_1",
+      "path": "v1/debt/mspd/mspd_table_1",
+      "purpose": "Marketable debt outstanding by security class, monthly. Drives Bill Share.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v1/debt/mspd/mspd_table_1?page%5Bsize%5D=2&sort=-record_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": []
+    },
+    "mspd_table_3_market": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/debt/mspd/mspd_table_3_market",
+      "path": "v1/debt/mspd/mspd_table_3_market",
+      "purpose": "Security-level detail (CUSIP, issue/maturity date, outstanding). Drives WAM.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v1/debt/mspd/mspd_table_3_market?page%5Bsize%5D=2&sort=-record_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": [
+        "Does this table expose maturity_date per CUSIP for the full history?",
+        "Is TIPS outstanding reported at par or inflation-adjusted?",
+        "Row count per month (drives storage strategy)."
+      ]
+    },
+    "auctions_query": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/auctions_query",
+      "path": "v1/accounting/od/auctions_query",
+      "purpose": "Auction results. Drives auction stress metrics.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v1/accounting/od/auctions_query?page%5Bsize%5D=2&sort=-auction_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": [
+        "Are low_yield / median_yield published? (enables a real free tail proxy)",
+        "Is allotment-at-high published?",
+        "First date with primary dealer / direct / indirect breakdown."
+      ]
+    },
+    "debt_to_penny": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny",
+      "path": "v2/accounting/od/debt_to_penny",
+      "purpose": "Independent sanity check on total outstanding.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v2/accounting/od/debt_to_penny?page%5Bsize%5D=2&sort=-record_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": []
+    },
+    "avg_interest_rates": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates",
+      "path": "v2/accounting/od/avg_interest_rates",
+      "purpose": "Average interest rate by security class. Context for refinancing cost.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v2/accounting/od/avg_interest_rates?page%5Bsize%5D=2&sort=-record_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": []
+    },
+    "interest_expense": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/interest_expense",
+      "path": "v2/accounting/od/interest_expense",
+      "purpose": "Interest expense on the public debt.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v2/accounting/od/interest_expense?page%5Bsize%5D=2&sort=-record_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": []
+    },
+    "operating_cash_balance": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance",
+      "path": "v1/accounting/dts/operating_cash_balance",
+      "purpose": "Daily TGA balance.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v1/accounting/dts/operating_cash_balance?page%5Bsize%5D=2&sort=-record_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": []
+    },
+    "mts_table_1": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_1",
+      "path": "v1/accounting/mts/mts_table_1",
+      "purpose": "Monthly receipts / outlays / deficit.",
+      "status": "error",
+      "error": "ProxyError: HTTPSConnectionPool(host='api.fiscaldata.treasury.gov', port=443): Max retries exceeded with url: /services/api/fiscal_service/v1/accounting/mts/mts_table_1?page%5Bsize%5D=2&sort=-record_date (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "critical_unknowns": []
+    }
+  },
+  "fred": {
+    "status": "skipped",
+    "reason": "FRED_API_KEY not set in environment"
+  },
+  "nyfed_acm": {
+    "status": "error",
+    "url": "https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls",
+    "error": "ProxyError: HTTPSConnectionPool(host='www.newyorkfed.org', port=443): Max retries exceeded with url: /medialibrary/media/research/data_indicators/ACMTermPremium.xls (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+  }
+}

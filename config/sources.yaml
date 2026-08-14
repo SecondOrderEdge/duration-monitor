@@ -11,6 +11,19 @@
 meta:
   version: 1
   probe_required: true
+  # Probe attempted 2026-08-14; NO fields observed. Every source host was refused
+  # by the sandbox egress policy (403 on CONNECT), so not one endpoint below has
+  # been confirmed against a live response. Evidence:
+  # docs/source_probe/2026-08-14/. Every `verified` flag therefore stays false —
+  # they may only be flipped by a probe run that actually reached the source.
+  last_probe_attempt:
+    date: 2026-08-14
+    outcome: blocked
+    evidence: docs/source_probe/2026-08-14/
+    hosts_blocked:
+      - api.fiscaldata.treasury.gov   # all 8 fiscaldata endpoints
+      - www.newyorkfed.org            # ACM term premium file
+      - api.stlouisfed.org            # FRED (also had no FRED_API_KEY set)
 
 fiscaldata:
   base_url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/
