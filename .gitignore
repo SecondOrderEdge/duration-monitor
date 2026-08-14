@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+
+# Secrets — FRED key comes from FRED_API_KEY / Streamlit secrets, never committed.
+.env
+.streamlit/secrets.toml
+
+# Raw ingested data stays out of git (see implementation_plan.md, Deviation D7).
+# data/processed/ IS committed — the deployed app reads from it.
+data/raw/
+
+# Probe evidence: keep the JSON/markdown reports, not the downloaded binaries.
+docs/source_probe/**/*.bin
+docs/source_probe/**/*.xls
+docs/source_probe/**/*.xlsx

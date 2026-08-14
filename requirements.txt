@@ -1,0 +1,13 @@
+# Pinned. Versions verified as installing cleanly on Python 3.11.
+pandas==3.0.5
+numpy==2.4.6
+pyarrow==24.0.0
+requests==2.33.1
+PyYAML==6.0.1
+streamlit==1.61.1
+plotly==6.9.0
+openpyxl==3.1.5
+xlrd==2.0.2
+
+# dev
+pytest==9.1.1
