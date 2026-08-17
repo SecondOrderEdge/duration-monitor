@@ -9,8 +9,12 @@
 # and ingestion refuses to map a field that is not present in the live response.
 
 meta:
-  version: 1
+  version: 2
   probe_required: true
+  last_probe: 2026-08-14
+  probe_evidence: docs/source_probe/2026-08-14/
+  # fiscaldata and nyfed_acm confirmed against live responses on the date above.
+  # fred remains UNVERIFIED: the probe skipped it because FRED_API_KEY was not set.
 
 fiscaldata:
   base_url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/
@@ -22,7 +26,8 @@ fiscaldata:
       path: v1/debt/mspd/mspd_table_1
       purpose: Marketable debt outstanding by security class, monthly. Drives Bill Share.
       date_field: record_date
-      verified: false
+      verified: true
+      coverage: 2001-01-31 → 2026-07-31 (4645 rows)
       expected_fields:
         - record_date
         - security_type_desc
@@ -34,39 +39,64 @@ fiscaldata:
         Contains subtotal and total rows. Aggregation MUST filter these out
         explicitly by label rather than summing blindly.
 
+        Amounts are in MILLIONS (per the endpoint's own field labels), unlike
+        debt_to_penny which reports whole dollars. Do not compare the two without
+        scaling.
+
     mspd_table_3_market:
       path: v1/debt/mspd/mspd_table_3_market
       purpose: Security-level detail (CUSIP, issue/maturity date, outstanding). Drives WAM.
       date_field: record_date
-      verified: false
-      critical_unknowns:
-        - Does this table expose maturity_date per CUSIP for the full history?
-        - Is TIPS outstanding reported at par or inflation-adjusted?
-        - Row count per month (drives storage strategy).
+      verified: true
+      # There is NO `cusip` field. The CUSIP is carried in `security_class2_desc`.
+      cusip_field: security_class2_desc
       expected_fields:
         - record_date
+        - security_type_desc
         - security_class1_desc
         - security_class2_desc
-        - cusip
         - interest_rate_pct
         - yield_pct
         - issue_date
         - maturity_date
+        - issued_amt
+        - redeemed_amt
+        - inflation_adj_amt
         - outstanding_amt
+      resolved_unknowns:
+        maturity_date_history: >
+          Confirmed present per CUSIP for the full history. At 2001-01-31 it is
+          populated on 211/213 detail rows (the 2 blanks are non-security rows).
+          No fallback source is needed — implementation_plan Open Question 1 is closed.
+        tips_outstanding_basis: >
+          INFLATION-ADJUSTED, not par. Verified on all 53 TIPS CUSIPs at 2026-07-31:
+          sum(issued_amt) + sum(redeemed_amt) + sum(inflation_adj_amt) == outstanding_amt
+          exactly. Par is recoverable as outstanding_amt - inflation_adj_amt.
+        rows_per_month: >
+          887 rows at 2026-07-31 (463 distinct CUSIPs), 224 at 2001-01-31.
+          153,404 rows over the full history — small enough to hold in one parquet file.
       notes: >
-        Exact endpoint name is the single largest open question in the plan.
-        If maturity_date is absent or history is short, WAM must fall back to a
-        different source — see docs/implementation_plan.md, Open Question 1.
+        Rows are NOT one-per-CUSIP. Each CUSIP has one row per issuance tranche
+        (original + reopenings), and `outstanding_amt` is populated on exactly ONE
+        row per CUSIP carrying the group total; it is the literal string "null" on
+        the other tranche rows (46% of rows at 2026-07-31).
+
+        Therefore: to get one row per security, filter to outstanding_amt != "null".
+        NEVER sum issued_amt across rows and NEVER sum outstanding_amt across
+        tranches — both double-count.
+
+        Subtotal rows carry security_class2_desc beginning with "Total"
+        ("Total Treasury Notes", "Total Marketable", ...) and non-security rows
+        (Federal Financing Bank, Total Marketable) carry security_class2_desc ==
+        "null". Both must be excluded before any aggregation.
+
+        interest_rate_pct is "null" for bills (discount securities, no coupon).
 
     auctions_query:
       path: v1/accounting/od/auctions_query
       purpose: Auction results. Drives auction stress metrics.
       date_field: auction_date
-      verified: false
-      critical_unknowns:
-        - Are low_yield / median_yield published? (enables a real free tail proxy)
-        - Is allotment-at-high published?
-        - First date with primary dealer / direct / indirect breakdown.
+      verified: true
       expected_fields:
         - auction_date
         - issue_date
@@ -76,33 +106,62 @@ fiscaldata:
         - cusip
         - offering_amt
         - total_accepted
+        - total_tendered
         - bid_to_cover_ratio
         - high_yield
+        - low_yield
+        - avg_med_yield
+        - allocation_pctage
         - primary_dealer_accepted
         - direct_bidder_accepted
         - indirect_bidder_accepted
       probe_extra_fields:
-        - low_yield
-        - median_yield
         - high_discnt_rate
-        - allocation_pctage
+        - low_discnt_rate
+      resolved_unknowns:
+        tail_proxy: >
+          A real tail proxy IS available. low_yield and high_yield are both
+          published. There is no field named `median_yield` — the median is
+          `avg_med_yield`. Tail = high_yield - avg_med_yield.
+        allotment_at_high: >
+          Published as `allocation_pctage` (percent of bids allotted at the high).
+        dealer_breakdown_start: >
+          2008-04-07 is the first auction_date with non-zero primary_dealer_accepted,
+          direct_bidder_accepted and indirect_bidder_accepted. Earlier auctions
+          (back to 1979-10-31) exist but carry no bidder breakdown — treat as
+          missing, never as zero.
+      notes: >
+        This endpoint contains ANNOUNCED-BUT-NOT-YET-HELD auctions: at probe time
+        (2026-08-14) the max auction_date was 2026-08-20, and every row after the
+        last held auction carries "null" for bid_to_cover_ratio, high_yield,
+        low_yield and avg_med_yield.
+
+        Ingestion must drop rows with a null result field rather than filtering on
+        auction_date <= today, and any "latest auction" metric must resolve to the
+        last row with results, not the last row.
+
+        Bills report on a discount basis: high_discnt_rate / low_discnt_rate are
+        populated where the yield fields are null.
 
     debt_to_penny:
       path: v2/accounting/od/debt_to_penny
       purpose: Independent sanity check on total outstanding.
       date_field: record_date
-      verified: false
+      verified: true
+      coverage: 1993-04-01 → 2026-08-12 (8370 rows)
       expected_fields:
         - record_date
         - debt_held_public_amt
         - intragov_hold_amt
         - tot_pub_debt_out_amt
+      notes: Amounts are whole dollars, not millions. See mspd_table_1.
 
     avg_interest_rates:
       path: v2/accounting/od/avg_interest_rates
       purpose: Average interest rate by security class. Context for refinancing cost.
       date_field: record_date
-      verified: false
+      verified: true
+      coverage: 2001-01-31 → 2026-07-31 (4993 rows)
       expected_fields:
         - record_date
         - security_type_desc
@@ -113,39 +172,82 @@ fiscaldata:
       path: v2/accounting/od/interest_expense
       purpose: Interest expense on the public debt.
       date_field: record_date
-      verified: false
+      verified: true
+      coverage: 2010-05-31 → 2026-07-31 (7283 rows)
       expected_fields:
         - record_date
         - expense_type_desc
+        - expense_group_desc
+        - expense_catg_desc
         - month_expense_amt
         - fytd_expense_amt
+      notes: >
+        Coverage starts 2010-05-31, not 2001. expense_group_desc /
+        expense_catg_desc were not in the original contract but are needed to
+        separate categories from their rollups.
 
     operating_cash_balance:
       path: v1/accounting/dts/operating_cash_balance
       purpose: Daily TGA balance.
       date_field: record_date
-      verified: false
+      verified: true
+      coverage: 2005-10-03 → 2026-08-12 (16522 rows)
       expected_fields:
         - record_date
         - account_type
         - open_today_bal
         - close_today_bal
+        - table_nbr
+        - sub_table_name
+      notes: >
+        Multiple account_type values per record_date, and the endpoint spans more
+        than one DTS sub-table (table_nbr / sub_table_name). Select the TGA row
+        explicitly by account_type — do not assume one row per day.
 
     mts_table_1:
       path: v1/accounting/mts/mts_table_1
       purpose: Monthly receipts / outlays / deficit.
       date_field: record_date
-      verified: false
+      verified: true
       expected_fields:
         - record_date
         - classification_desc
-        - current_month_budget_amt
-        - current_fytd_budget_amt
-      notes: Contains total rows; exclude explicitly when aggregating.
+        - classification_id
+        - parent_id
+        - current_month_gross_rcpt_amt
+        - current_month_gross_outly_amt
+        - current_month_dfct_sur_amt
+        - line_code_nbr
+        - record_type_cd
+        - sequence_level_nbr
+      notes: >
+        The expected `current_month_budget_amt` / `current_fytd_budget_amt` do not
+        exist. Receipts, outlays and deficit are three SEPARATE columns:
+        current_month_gross_rcpt_amt, current_month_gross_outly_amt,
+        current_month_dfct_sur_amt.
+
+        There is NO fiscal-year-to-date column on this endpoint at all (confirmed
+        against the endpoint's full field list, not just a sample). FYTD must be
+        accumulated from monthly rows within each record_fiscal_year, or sourced
+        from a different MTS table.
+
+        Coverage starts 2015-03-31 — materially shorter than the other fiscaldata
+        endpoints, which reach back to 2001. Any metric built on this cannot claim
+        a pre-2015 history.
+
+        Rows are hierarchical: parent_id / sequence_level_nbr define the tree and
+        section-header rows (e.g. classification_desc "FY 2025") carry "null" in
+        all three amount columns. Filter on the hierarchy fields rather than
+        summing blindly.
 
 fred:
   base_url: https://api.stlouisfed.org/fred/
   api_key_env: FRED_API_KEY
+  # STILL UNVERIFIED. The 2026-08-14 probe SKIPPED every FRED series because
+  # FRED_API_KEY was not set in the environment. Not one series ID, frequency,
+  # units or coverage window below has been confirmed against a live response —
+  # they remain expectations. Re-run with the key set before writing ingestion:
+  #     export FRED_API_KEY=... && python scripts/probe_sources.py --only fred
   verified: false
   series:
     rates:
@@ -164,8 +266,25 @@ nyfed_acm:
   # No API. Scheduled file pull, parsed with pandas.
   url: https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls
   landing_page: https://www.newyorkfed.org/research/data_indicators/term-premia-tabs
-  verified: false
+  verified: true
   series_of_interest: [ACMTP02, ACMTP05, ACMTP10]
+  # Genuinely a legacy .xls (Content-Type application/vnd.ms-excel, ~10.1 MB).
+  # openpyxl CANNOT read it; the probe fell through to xlrd. Pin the engine.
+  engine: xlrd
+  # The workbook has TWO sheets and pandas' default (first sheet) is the MONTHLY
+  # one. Reading without sheet_name silently yields month-end data on what the
+  # app treats as a daily axis. Always name the sheet.
+  sheet: ACM Daily
+  sheets:
+    ACM Daily: 16252 rows, 1961-06-14 → 2026-08-07
+    ACM Monthly: 782 rows, 1961-06-30 → 2026-07-31
+  columns: >
+    31 columns on both sheets: DATE, ACMY01-ACMY10 (fitted yields),
+    ACMTP01-ACMTP10 (term premia), ACMRNY01-ACMRNY10 (risk-neutral yields).
+    All three series_of_interest confirmed present.
+  date_parsing: >
+    DATE arrives as a STRING formatted "07-Aug-2026" (%d-%b-%Y), not an Excel
+    serial or datetime. Parse it explicitly; do not rely on pandas inference.
   revision_policy: >
     ACM estimates are model output and are re-estimated retroactively. Every pull
     stores retrieval_date and is diffed against the prior vintage; changes to
