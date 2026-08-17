@@ -9,19 +9,33 @@ credential is a FRED API key, supplied via `FRED_API_KEY` or Streamlit secrets.
 
 ## Status
 
-**Phase 1, calculation layer built and tested.** Ingestion and the Streamlit app are not
-written yet.
+**Phase 1: sources verified, calculation layer and fiscaldata client built and tested.**
+Transformation, validation and the Streamlit app are not written yet.
 
-Blocking item: the four data-source hosts are refused by this environment's network egress
-policy, so live field names could not be verified. Field mappings are therefore declared as a
-machine-checked contract rather than written from memory, and ingestion waits on the probe.
+The network block that stalled step 0 has cleared. Every Treasury Fiscal Data endpoint and
+the NY Fed ACM file were probed live on 2026-08-17, `config/sources.yaml` was corrected
+against what they actually return, and all eight endpoints now match their contract with no
+field drift. Evidence is committed under `docs/source_probe/`.
 
-The calculation layer does not depend on that: it takes DataFrames in the normalized schema
-and returns DataFrames, so it was built and tested against hand-computed fixtures ahead of
-the ingestion it will eventually be fed by.
+Three questions the plan called load-bearing are answered, all favourably:
+
+- **WAM is computable.** `mspd_table_3_market` carries `maturity_date` per security for the
+  full 2001 → 2026 history, so no TreasuryDirect fallback is needed — which matters, as that
+  host is the one still blocked.
+- **TIPS accretion is separately published** as `inflation_adj_amt`, so net issuance can be
+  accretion-adjusted rather than dropping TIPS (Deviation D2).
+- **Auction dispersion is available** — `low_yield`, `avg_med_yield` and `allocation_pctage`
+  — so the preferred high-minus-median and allotment-at-high measures are usable and the
+  noisy CMT tail proxy stays a weight-0 diagnostic (Deviation D3).
+
+Still open: `FRED_API_KEY` is not set anywhere the probe can see it, so FRED remains
+`verified: false` — a credential gap, not a network one. MTS coverage starts 2015-03, not
+2001, which constrains any factor built on the monthly deficit.
 
 | module | covers |
 |---|---|
+| `src/ingestion/typed.py` | declared per-field coercion; `"null"` → NaN with failure counting |
+| `src/ingestion/fiscaldata.py` | paginating, retrying API client; contract and completeness enforcement |
 | `src/calculations/timegrid.py` | period-aware changes; missing months never closed up |
 | `src/calculations/percentiles.py` | point-in-time percentile ranks and trailing z-scores |
 | `src/calculations/wam.py` | weighted average maturity, maturity buckets |
@@ -29,7 +43,7 @@ the ingestion it will eventually be fed by.
 | `src/signals/auction_stress.py` | per-auction stress score, long-end rolling stress |
 
 ```bash
-python -m pytest tests/ -q      # 77 tests
+python -m pytest tests/ -q      # 134 tests
 ```
 
 - [`docs/implementation_plan.md`](docs/implementation_plan.md) — plan, schema, recommended
