@@ -1,6 +1,6 @@
 # Source probe results
 
-- Probe run (UTC): `2026-08-18T20:11:46.871925+00:00`
+- Probe run (UTC): `2026-08-18T20:23:09.142981+00:00`
 
 Field names below are **observed from live responses**. Anything marked MISSING means `config/sources.yaml` expected a field the API does not return — the contract is wrong and must be corrected before ingestion is written against it.
 
@@ -11,7 +11,7 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 | `mspd_table_1` | ok | 4645 | 2001-01-31 → 2026-07-31 | OK |
 | `mspd_table_3_market` | ok | 153404 | 2001-01-31 → 2026-07-31 | OK |
 | `auctions_query` | ok | 11083 | 1979-10-31 → 2026-08-20 | OK |
-| `debt_to_penny` | ok | 8372 | 1993-04-01 → 2026-08-14 | OK |
+| `debt_to_penny` | ok | 8373 | 1993-04-01 → 2026-08-17 | OK |
 | `avg_interest_rates` | ok | 4993 | 2001-01-31 → 2026-07-31 | OK |
 | `interest_expense` | ok | 7283 | 2010-05-31 → 2026-07-31 | OK |
 | `operating_cash_balance` | ok | 16534 | 2005-10-03 → 2026-08-17 | OK |
@@ -52,7 +52,7 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 
 `https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny`
 
-- Coverage: **1993-04-01 → 2026-08-14** (8372 rows)
+- Coverage: **1993-04-01 → 2026-08-17** (8373 rows)
 - Observed fields (11): `debt_held_public_amt`, `intragov_hold_amt`, `record_calendar_day`, `record_calendar_month`, `record_calendar_quarter`, `record_calendar_year`, `record_date`, `record_fiscal_quarter`, `record_fiscal_year`, `src_line_nbr`, `tot_pub_debt_out_amt`
 
 - No field drift since the last probe.
@@ -97,14 +97,14 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 
 | series | status | freq | units | coverage | last updated |
 |---|---|---|---|---|---|
-| `DGS3MO` | ok | D | % | 1981-09-01 → 2026-08-14 | 2026-08-17 15:16:42-05 |
-| `DGS6MO` | ok | D | % | 1981-09-01 → 2026-08-14 | 2026-08-17 15:16:46-05 |
-| `DGS1` | ok | D | % | 1962-01-02 → 2026-08-14 | 2026-08-17 15:16:44-05 |
-| `DGS2` | ok | D | % | 1976-06-01 → 2026-08-14 | 2026-08-17 15:16:42-05 |
-| `DGS5` | ok | D | % | 1962-01-02 → 2026-08-14 | 2026-08-17 15:16:45-05 |
-| `DGS10` | ok | D | % | 1962-01-02 → 2026-08-14 | 2026-08-17 15:16:47-05 |
-| `DGS20` | ok | D | % | 1962-01-02 → 2026-08-14 | 2026-08-17 15:16:25-05 |
-| `DGS30` | ok | D | % | 1977-02-15 → 2026-08-14 | 2026-08-17 15:16:31-05 |
+| `DGS3MO` | ok | D | % | 1981-09-01 → 2026-08-17 | 2026-08-18 15:16:26-05 |
+| `DGS6MO` | ok | D | % | 1981-09-01 → 2026-08-17 | 2026-08-18 15:16:26-05 |
+| `DGS1` | ok | D | % | 1962-01-02 → 2026-08-17 | 2026-08-18 15:16:24-05 |
+| `DGS2` | ok | D | % | 1976-06-01 → 2026-08-17 | 2026-08-18 15:16:22-05 |
+| `DGS5` | ok | D | % | 1962-01-02 → 2026-08-17 | 2026-08-18 15:16:25-05 |
+| `DGS10` | ok | D | % | 1962-01-02 → 2026-08-17 | 2026-08-18 15:16:25-05 |
+| `DGS20` | ok | D | % | 1962-01-02 → 2026-08-17 | 2026-08-18 15:16:22-05 |
+| `DGS30` | ok | D | % | 1977-02-15 → 2026-08-17 | 2026-08-18 15:16:23-05 |
 | `WALCL` | ok | W | Mil. of U.S. $ | 2002-12-18 → 2026-08-12 | 2026-08-13 15:32:11-05 |
 | `WRESBAL` | ok | W | Mil. of U.S. $ | 2002-12-18 → 2026-08-12 | 2026-08-13 15:31:43-05 |
 | `RRPONTSYD` | ok | D | Bil. of US $ | 2003-02-07 → 2026-08-18 | 2026-08-18 13:02:26-05 |
