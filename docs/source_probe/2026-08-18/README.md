@@ -1,6 +1,6 @@
 # Source probe results
 
-- Probe run (UTC): `2026-08-18T18:16:13.602655+00:00`
+- Probe run (UTC): `2026-08-18T18:21:27.482156+00:00`
 
 Field names below are **observed from live responses**. Anything marked MISSING means `config/sources.yaml` expected a field the API does not return — the contract is wrong and must be corrected before ingestion is written against it.
 
@@ -44,7 +44,7 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 
 - No field drift since the last probe.
 
-- **Opportunistic fields FOUND:** `high_discnt_rate`, `allocation_pctage`
+- **Opportunistic fields FOUND:** `high_discnt_rate`, `low_discnt_rate`, `allocation_pctage`
 
 - Opportunistic fields absent: `median_yield`
 
