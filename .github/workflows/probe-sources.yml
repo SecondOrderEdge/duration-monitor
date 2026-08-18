@@ -1,0 +1,96 @@
+# Verifies the source contract in config/sources.yaml against live responses.
+#
+# This runs here rather than locally because FRED is the one credentialed source
+# and the key lives in repository secrets. Cloud dev environments have no secrets
+# store, so Actions is the only place the probe can verify FRED at all.
+#
+# The job commits the evidence it produces. scripts/probe_sources.py scrubs the
+# API key from everything it writes — see tests/test_probe_redaction.py — because
+# Actions masks secrets in logs but not in files a job commits.
+
+name: Probe sources
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Restrict to one source (fiscaldata, fred, nyfed). Blank probes all."
+        required: false
+        default: ""
+        type: string
+  schedule:
+    # Weekly contract check: a field that disappears should surface on its own,
+    # not the next time someone happens to run ingestion.
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Report credential availability
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          # Presence only. Never echo the value.
+          if [ -n "$FRED_API_KEY" ]; then
+            echo "FRED_API_KEY is set (${#FRED_API_KEY} characters)."
+          else
+            echo "::warning::FRED_API_KEY is not set; FRED series will be skipped."
+          fi
+
+      - name: Run probe
+        id: probe
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          set +e
+          ARGS=""
+          if [ -n "${{ inputs.only }}" ]; then ARGS="--only ${{ inputs.only }}"; fi
+          python scripts/probe_sources.py $ARGS | tee probe_stdout.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise
+        run: |
+          {
+            echo '## Probe result'
+            echo
+            echo '```'
+            cat probe_stdout.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          rm -f probe_stdout.txt
+
+      - name: Commit evidence
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/source_probe
+          if git diff --cached --quiet; then
+            echo "No change in probe evidence."
+          else
+            git commit -m "probe: live source evidence ($(date -u +%Y-%m-%d))"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      # Evidence is committed first, then the contract result decides the job.
+      # A break is most useful with its evidence already in the repo.
+      - name: Fail on contract break
+        if: steps.probe.outputs.exit_code != '0'
+        run: |
+          echo "::error::Probe reported a contract break or an unreachable source."
+          exit 1

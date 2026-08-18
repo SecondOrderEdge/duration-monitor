@@ -24,6 +24,7 @@ import argparse
 import datetime as dt
 import json
 import pathlib
+import re
 import sys
 import traceback
 
@@ -38,6 +39,31 @@ TIMEOUT_DEFAULT = 45
 # --------------------------------------------------------------------------- #
 # helpers
 # --------------------------------------------------------------------------- #
+
+# Credentials must never reach the evidence files. The probe is designed to have
+# its output committed, and a failed request stringifies to the full URL —
+# api_key included. GitHub Actions masks secrets in job logs but not in files a
+# job commits, so masking has to happen here, before anything is written.
+#
+# The likeliest trigger is exactly what the probe exists to check: an unverified
+# series ID that 404s.
+
+_REDACT_TOKENS: set[str] = set()
+_API_KEY_RE = re.compile(r"(api_key=)[^&\s\"']+")
+
+
+def register_secret(value: str | None) -> None:
+    """Register a credential to be scrubbed from every recorded string."""
+    if value:
+        _REDACT_TOKENS.add(value)
+
+
+def _redact(text: str) -> str:
+    """Scrub registered secrets, then any api_key= query parameter."""
+    for token in _REDACT_TOKENS:
+        text = text.replace(token, "***REDACTED***")
+    return _API_KEY_RE.sub(r"\1***REDACTED***", text)
+
 
 def _get_json(url: str, params: dict, timeout: int) -> dict:
     resp = requests.get(url, params=params, timeout=timeout)
@@ -155,7 +181,7 @@ def probe_fiscaldata(cfg: dict, timeout: int) -> dict:
         except Exception as exc:  # noqa: BLE001 - probe reports failures, never raises
             entry.update({
                 "status": "error",
-                "error": f"{type(exc).__name__}: {exc}",
+                "error": _redact(f"{type(exc).__name__}: {exc}"),
                 "critical_unknowns": spec.get("critical_unknowns", []),
             })
 
@@ -208,7 +234,7 @@ def probe_fred(cfg: dict, api_key: str | None, timeout: int) -> dict:
                 results["series"][sid] = {
                     "group": group,
                     "status": "error",
-                    "error": f"{type(exc).__name__}: {exc}",
+                    "error": _redact(f"{type(exc).__name__}: {exc}"),
                 }
 
     return results
@@ -257,13 +283,13 @@ def probe_nyfed(cfg: dict, timeout: int, outdir: pathlib.Path) -> dict:
                 })
                 break
             except Exception as exc:  # noqa: BLE001
-                last_error = f"{type(exc).__name__}: {exc}"
+                last_error = _redact(f"{type(exc).__name__}: {exc}")
         else:
             entry["parse_error"] = last_error
 
         return entry
     except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "url": url, "error": f"{type(exc).__name__}: {exc}"}
+        return {"status": "error", "url": url, "error": _redact(f"{type(exc).__name__}: {exc}")}
 
 
 # --------------------------------------------------------------------------- #
@@ -398,6 +424,8 @@ def main() -> int:
 
     import os
 
+    register_secret(os.environ.get("FRED_API_KEY"))
+
     cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
     run_all = not args.only
     want = set(args.only or [])
@@ -418,7 +446,11 @@ def main() -> int:
         print("probing NY Fed ACM ...", flush=True)
         report["nyfed_acm"] = probe_nyfed(cfg["nyfed_acm"], args.timeout, outdir)
 
-    (outdir / "probe.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    # Defence in depth: scrub the serialised report as a whole, so a secret
+    # reaching it by some path not anticipated above still cannot be written.
+    (outdir / "probe.json").write_text(
+        _redact(json.dumps(report, indent=2, default=str)), encoding="utf-8"
+    )
     write_markdown(report, outdir / "README.md")
 
     # ---- summarise to stdout and set exit status -------------------------- #
