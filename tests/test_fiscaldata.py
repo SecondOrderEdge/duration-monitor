@@ -540,3 +540,61 @@ def test_fred_series_metadata_records_units_and_frequency():
         assert meta.get("freq"), f"{sid}: no observed frequency"
         assert meta.get("units"), f"{sid}: no observed units"
         assert meta.get("start") and meta.get("end"), f"{sid}: no observed coverage"
+
+
+# --------------------------------------------------------------------------- #
+# what the config claims about itself
+# --------------------------------------------------------------------------- #
+
+
+def test_no_convention_is_marked_verified():
+    """`verified` means confirmed against an official source. Nothing else.
+
+    A judgement marked `verified: true` is indistinguishable from a field name
+    confirmed in a live response, and that distinction is the one this project
+    cannot afford to lose.
+    """
+    import yaml
+    from src.config import CONFIG_DIR
+
+    thresholds = yaml.safe_load((CONFIG_DIR / "thresholds.yaml").read_text())
+    offenders = [
+        name for name, block in thresholds.items()
+        if isinstance(block, dict)
+        and block.get("convention")
+        and block.get("verified") not in (None, False)
+    ]
+    assert not offenders, f"conventions marked verified: {offenders}"
+
+
+def test_debt_ceiling_episodes_carry_their_evidence():
+    """The episodes are detected from Debt to the Penny, so they must say how."""
+    import yaml
+    from src.config import CONFIG_DIR
+
+    block = yaml.safe_load((CONFIG_DIR / "thresholds.yaml").read_text())[
+        "debt_ceiling_episodes"
+    ]
+    assert block.get("verified"), "episodes are data-detected and should say so"
+    assert block.get("verified_method"), "a verified claim must record its method"
+
+    for episode in block["episodes"]:
+        assert episode.get("pinned_from"), episode
+        assert episode.get("resolved"), episode
+        assert episode["resolved"] > episode["pinned_from"], episode
+
+
+def test_every_threshold_block_states_which_kind_of_claim_it_is():
+    """Each block is a fact, a calibration or a convention. Silence is not an option."""
+    import yaml
+    from src.config import CONFIG_DIR
+
+    thresholds = yaml.safe_load((CONFIG_DIR / "thresholds.yaml").read_text())
+    exempt = {"meta", "percentiles", "wam", "auctions", "alerts", "alignment",
+              "storage", "validation"}
+    unmarked = [
+        name for name, block in thresholds.items()
+        if name not in exempt and isinstance(block, dict)
+        and not any(k in block for k in ("verified", "calibrated", "convention"))
+    ]
+    assert not unmarked, f"blocks making an unmarked claim: {unmarked}"
