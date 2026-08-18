@@ -286,13 +286,74 @@ def test_higher_coupon_share_lowers_the_score_factor():
     assert light_coupons.iloc[-1] > heavy_coupons.iloc[-1]
 
 
+REGIMES = {
+    "levels": {
+        "green_normal": {"score_at_least": 0},
+        "yellow_shortening": {"score_at_least": 40},
+        "orange_duration_pressure": {"score_at_least": 60},
+        "red_fiscal_dominance_risk": {"score_at_least": 80},
+    },
+    "corroboration": {
+        "orange_duration_pressure": {"term_premium_10y_percentile_at_least": 70},
+        "red_fiscal_dominance_risk": {"term_premium_10y_percentile_at_least": 85,
+                                      "long_end_auction_stress_percentile_at_least": 90},
+    },
+}
+
+
 def test_regime_conditions_naming_an_absent_input_raise():
     """Silently skipping a condition would promote a regime by dropping a test."""
-    inputs = pd.DataFrame({"duration_shift_score": [90.0]})
-    regimes = {"red": {"duration_shift_score_at_least": 80,
-                       "long_end_auction_stress_at_least": 25}}
-    with pytest.raises(ValueError, match="long_end_auction_stress"):
-        classify_regime(inputs, regimes)
+    inputs = pd.DataFrame({"duration_shift_score": [90.0],
+                           "term_premium_10y_percentile": [95.0]})
+    with pytest.raises(ValueError, match="long_end_auction_stress_percentile"):
+        classify_regime(inputs, REGIMES)
+
+
+def test_every_scored_month_gets_a_regime():
+    """The previous scheme left 41% of scored months matching no regime at all."""
+    inputs = pd.DataFrame({
+        "duration_shift_score": [5.0, 45.0, 55.0, 65.0, 75.0, 85.0, 99.0],
+        "term_premium_10y_percentile": [10.0] * 7,
+        "long_end_auction_stress_percentile": [10.0] * 7,
+    })
+    out = classify_regime(inputs, REGIMES)
+    assert out.notna().all()
+
+
+def test_absent_market_evidence_caps_rather_than_erases():
+    """A high score with a falling term premium is yellow, not nothing.
+
+    This is the 2020-versus-2023 distinction: both were bill-heavy, but in 2020
+    the Fed absorbed the issuance and the term premium fell.
+    """
+    inputs = pd.DataFrame({
+        "duration_shift_score": [85.0, 85.0],
+        "term_premium_10y_percentile": [10.0, 95.0],
+        "long_end_auction_stress_percentile": [10.0, 95.0],
+    })
+    out = classify_regime(inputs, REGIMES)
+    assert out.iloc[0] == "yellow_shortening"          # capped, not dropped
+    assert out.iloc[1] == "red_fiscal_dominance_risk"  # corroborated
+
+
+def test_a_low_score_stays_green_however_stressed_the_market():
+    inputs = pd.DataFrame({
+        "duration_shift_score": [12.0],
+        "term_premium_10y_percentile": [99.0],
+        "long_end_auction_stress_percentile": [99.0],
+    })
+    assert classify_regime(inputs, REGIMES).iloc[0] == "green_normal"
+
+
+def test_the_most_severe_regime_is_reachable():
+    """Red previously required an auction-stress reading of 25 on a series whose
+    observed maximum is 22.4, so it could not fire in any state of the world."""
+    inputs = pd.DataFrame({
+        "duration_shift_score": [95.0],
+        "term_premium_10y_percentile": [99.0],
+        "long_end_auction_stress_percentile": [99.0],
+    })
+    assert classify_regime(inputs, REGIMES).iloc[0] == "red_fiscal_dominance_risk"
 
 
 def test_score_bands_are_half_open_so_a_boundary_lands_upward():

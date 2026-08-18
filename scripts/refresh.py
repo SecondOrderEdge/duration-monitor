@@ -457,14 +457,21 @@ def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
         scored["score"], thresholds["duration_shift_score_bands"]["bands"]
     )
 
-    # Regime conditions are measurable statements, so their inputs are supplied
-    # explicitly and a condition naming an absent input raises.
-    tp_pct = ranks["term_premium_10y_trend"]
+    # Corroboration thresholds are percentiles of each input's own point-in-time
+    # history, so they are calibrated rather than guessed and cannot be silently
+    # unreachable. Supplied explicitly; a condition naming an absent input raises.
+    corroboration = percentile_ranks(
+        pd.DataFrame({
+            "bill_share_12m_change": bill_share(debt).diff(12),
+            "long_end_auction_stress": stress,
+        }),
+        window=pct_cfg["window_months"], min_periods=pct_cfg["min_history_months"],
+    )
     regime_inputs = pd.DataFrame({
         "duration_shift_score": scored["score"],
-        "bill_share_12m_change": bill_share(debt).diff(12),
-        "term_premium_10y_percentile": tp_pct,
-        "long_end_auction_stress": stress,
+        "term_premium_10y_percentile": ranks["term_premium_10y_trend"],
+        "bill_share_12m_change_percentile": corroboration["bill_share_12m_change"],
+        "long_end_auction_stress_percentile": corroboration["long_end_auction_stress"],
     })
     scored["regime"] = classify_regime(regime_inputs, thresholds["regimes"])
 

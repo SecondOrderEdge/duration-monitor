@@ -204,8 +204,6 @@ def score_band(score: pd.Series, bands: list[dict]) -> pd.Series:
     return score.map(label).rename("band")
 
 
-# Condition suffixes understood in the regime config. Each maps to a comparison
-# against a named input, so a regime is a measurable statement rather than a label.
 _COMPARATORS = {
     "_at_least": lambda series, threshold: series >= threshold,
     "_below": lambda series, threshold: series < threshold,
@@ -213,27 +211,60 @@ _COMPARATORS = {
 }
 
 
-def classify_regime(inputs: pd.DataFrame, regimes: dict) -> pd.Series:
-    """Assign the highest regime whose every condition holds.
+def _score_level(score: pd.Series, levels: dict) -> pd.Series:
+    """Ordinal regime level implied by the score alone.
 
-    Regimes are defined by measurable conditions in `config/thresholds.yaml`,
-    never by hand-applied labels, so a regime call can always be traced to the
-    readings that produced it. Every listed condition must hold; the last
-    satisfied regime in config order wins, which is why they are ordered from
-    least to most severe there.
-
-    A condition naming an input the caller did not supply raises. Silently
-    ignoring it would quietly promote a regime by dropping one of its
-    requirements — a red call that only ever tested three of its four conditions
-    looks identical to one that tested all four.
+    The thresholds start at zero and are ascending, so this is total over the
+    score's range: every scored month gets a level.
     """
-    order = [k for k in regimes if k != "verified"]
-    result = pd.Series(None, index=inputs.index, dtype="object")
+    edges = [spec["score_at_least"] for spec in levels.values()]
+    if edges != sorted(edges) or edges[0] != 0:
+        raise ValueError(
+            f"regime score thresholds must ascend from 0, got {edges}; otherwise "
+            "the levels do not cover the score range"
+        )
+    return pd.Series(
+        np.searchsorted(edges, score.to_numpy(dtype=float), side="right") - 1,
+        index=score.index,
+    ).where(score.notna())
 
-    for name in order:
-        conditions = regimes[name]
+
+def classify_regime(inputs: pd.DataFrame, regimes: dict) -> pd.Series:
+    """Regime from the score band, capped by how far market evidence corroborates it.
+
+    Two properties this is built to have, both of which the previous scheme
+    lacked.
+
+    **Total.** Every scored month gets a regime. Conditions that must ALL hold to
+    earn a label leave anything failing them unlabelled — 41% of months, under
+    the previous conditions, sat in no regime at all rather than in a low one.
+    Here the score band is the base and it partitions the range by construction.
+
+    **Escalation requires corroboration; the absence of it caps rather than
+    erases.** Quantity evidence alone is enough to call shortening. Calling
+    duration PRESSURE requires the market to agree, so a high score with a
+    falling term premium is capped at yellow instead of promoted to orange. That
+    is the 2020-versus-2023 distinction: both were bill-heavy, but in 2020 the
+    Fed was absorbing the issuance and the term premium fell.
+
+    Corroboration thresholds are percentiles of each input's own point-in-time
+    history. Raw levels cannot be calibrated and can be silently unreachable —
+    the previous red regime required an auction-stress reading of 25 against a
+    series whose observed maximum is 22.4.
+    """
+    levels = list(regimes["levels"])
+    corroboration = regimes.get("corroboration", {})
+
+    band = _score_level(inputs["duration_shift_score"], regimes["levels"])
+
+    # Ceiling starts at the first escalated level: lacking market evidence caps a
+    # reading, it never pushes it below what the score alone already established.
+    ceiling = pd.Series(1, index=inputs.index, dtype="float64")
+    for index, name in enumerate(levels):
+        if name not in corroboration:
+            continue
         holds = pd.Series(True, index=inputs.index)
-        for key, threshold in conditions.items():
+        for key, threshold in corroboration[name].items():
             for suffix, compare in _COMPARATORS.items():
                 if key.endswith(suffix):
                     column = key[: -len(suffix)]
@@ -249,9 +280,13 @@ def classify_regime(inputs: pd.DataFrame, regimes: dict) -> pd.Series:
                     f"regime {name!r} has condition {key!r} with no recognised "
                     f"comparator suffix ({sorted(_COMPARATORS)})"
                 )
-        result = result.where(~holds, name)
+        ceiling = ceiling.where(~holds, index)
 
-    return result.rename("regime")
+    # A score in the lowest band is green whatever the market is doing.
+    level = pd.concat([band, ceiling], axis=1).min(axis=1).where(band > 0, band)
+    return level.map(
+        lambda v: levels[int(v)] if pd.notna(v) else None
+    ).rename("regime")
 
 
 def build_factors(
