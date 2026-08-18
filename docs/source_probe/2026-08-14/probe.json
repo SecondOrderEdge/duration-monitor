@@ -1,6 +1,6 @@
 {
-  "probe_timestamp_utc": "2026-08-17T14:31:29.390744+00:00",
-  "config_version": 1,
+  "probe_timestamp_utc": "2026-08-14T14:53:28.661005+00:00",
+  "config_version": 2,
   "fiscaldata": {
     "mspd_table_1": {
       "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/debt/mspd/mspd_table_1",
@@ -205,38 +205,36 @@
       "earliest_date": "2001-01-31",
       "contract": {
         "n_fields": 24,
-        "missing": [
-          "cusip"
-        ],
+        "missing": [],
         "unexpected": [
-          "inflation_adj_amt",
           "interest_pay_date_1",
           "interest_pay_date_2",
           "interest_pay_date_3",
           "interest_pay_date_4",
-          "issued_amt",
           "record_calendar_day",
           "record_calendar_month",
           "record_calendar_quarter",
           "record_calendar_year",
           "record_fiscal_quarter",
           "record_fiscal_year",
-          "redeemed_amt",
-          "security_type_desc",
           "series_cd",
           "src_line_nbr"
         ],
         "matched": [
+          "inflation_adj_amt",
           "interest_rate_pct",
           "issue_date",
+          "issued_amt",
           "maturity_date",
           "outstanding_amt",
           "record_date",
+          "redeemed_amt",
           "security_class1_desc",
           "security_class2_desc",
+          "security_type_desc",
           "yield_pct"
         ],
-        "contract_ok": false
+        "contract_ok": true
       },
       "probe_extra_fields_present": [],
       "probe_extra_fields_absent": [],
@@ -305,11 +303,7 @@
           "record_calendar_day": "31"
         }
       ],
-      "critical_unknowns": [
-        "Does this table expose maturity_date per CUSIP for the full history?",
-        "Is TIPS outstanding reported at par or inflation-adjusted?",
-        "Row count per month (drives storage strategy)."
-      ]
+      "critical_unknowns": []
     },
     "auctions_query": {
       "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/auctions_query",
@@ -675,7 +669,6 @@
           "accrued_int_per1000",
           "adj_accrued_int_per1000",
           "adj_price",
-          "allocation_pctage",
           "allocation_pctage_decimals",
           "announcemt_date",
           "announcemtd_cusip",
@@ -684,7 +677,6 @@
           "avg_med_discnt_rate",
           "avg_med_investment_rate",
           "avg_med_price",
-          "avg_med_yield",
           "back_dated",
           "back_dated_date",
           "call_date",
@@ -724,7 +716,6 @@
           "low_discnt_rate",
           "low_investment_rate",
           "low_price",
-          "low_yield",
           "mat_date",
           "max_comp_award",
           "max_noncomp_award",
@@ -765,7 +756,6 @@
           "tiin_conversion_factor_per1000",
           "tint_cusip_1",
           "tint_cusip_2",
-          "total_tendered",
           "treas_retail_accepted",
           "treas_retail_tenders_accepted",
           "unadj_accrued_int_per1000",
@@ -774,30 +764,31 @@
           "xml_filenm_comp_results"
         ],
         "matched": [
+          "allocation_pctage",
           "auction_date",
+          "avg_med_yield",
           "bid_to_cover_ratio",
           "cusip",
           "direct_bidder_accepted",
           "high_yield",
           "indirect_bidder_accepted",
           "issue_date",
+          "low_yield",
           "maturity_date",
           "offering_amt",
           "primary_dealer_accepted",
           "security_term",
           "security_type",
-          "total_accepted"
+          "total_accepted",
+          "total_tendered"
         ],
         "contract_ok": true
       },
       "probe_extra_fields_present": [
-        "low_yield",
         "high_discnt_rate",
-        "allocation_pctage"
+        "low_discnt_rate"
       ],
-      "probe_extra_fields_absent": [
-        "median_yield"
-      ],
+      "probe_extra_fields_absent": [],
       "null_audit": {
         "fields_with_string_null": [
           "accrued_int_per100",
@@ -1100,11 +1091,7 @@
           "pdf_filenm_spec_announcemt": "null"
         }
       ],
-      "critical_unknowns": [
-        "Are low_yield / median_yield published? (enables a real free tail proxy)",
-        "Is allotment-at-high published?",
-        "First date with primary dealer / direct / indirect breakdown."
-      ]
+      "critical_unknowns": []
     },
     "debt_to_penny": {
       "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny",
@@ -1150,8 +1137,8 @@
         "record_calendar_month": "Calendar Month Number",
         "record_calendar_day": "Calendar Day Number"
       },
-      "total_rows_available": 8371,
-      "latest_date": "2026-08-13",
+      "total_rows_available": 8370,
+      "latest_date": "2026-08-12",
       "earliest_date": "1993-04-01",
       "contract": {
         "n_fields": 11,
@@ -1181,19 +1168,6 @@
       },
       "sample_rows": [
         {
-          "record_date": "2026-08-13",
-          "debt_held_public_amt": "32200971487306.14",
-          "intragov_hold_amt": "7733844720538.23",
-          "tot_pub_debt_out_amt": "39934816207844.37",
-          "src_line_nbr": "1",
-          "record_fiscal_year": "2026",
-          "record_fiscal_quarter": "4",
-          "record_calendar_year": "2026",
-          "record_calendar_quarter": "3",
-          "record_calendar_month": "08",
-          "record_calendar_day": "13"
-        },
-        {
           "record_date": "2026-08-12",
           "debt_held_public_amt": "32180112234304.32",
           "intragov_hold_amt": "7733417085160.39",
@@ -1205,6 +1179,19 @@
           "record_calendar_quarter": "3",
           "record_calendar_month": "08",
           "record_calendar_day": "12"
+        },
+        {
+          "record_date": "2026-08-11",
+          "debt_held_public_amt": "32182460756111.37",
+          "intragov_hold_amt": "7759469075959.40",
+          "tot_pub_debt_out_amt": "39941929832070.77",
+          "src_line_nbr": "1",
+          "record_fiscal_year": "2026",
+          "record_fiscal_quarter": "4",
+          "record_calendar_year": "2026",
+          "record_calendar_quarter": "3",
+          "record_calendar_month": "08",
+          "record_calendar_day": "11"
         }
       ],
       "critical_unknowns": []
@@ -1369,8 +1356,6 @@
         "n_fields": 13,
         "missing": [],
         "unexpected": [
-          "expense_catg_desc",
-          "expense_group_desc",
           "record_calendar_day",
           "record_calendar_month",
           "record_calendar_quarter",
@@ -1380,6 +1365,8 @@
           "src_line_nbr"
         ],
         "matched": [
+          "expense_catg_desc",
+          "expense_group_desc",
           "expense_type_desc",
           "fytd_expense_amt",
           "month_expense_amt",
@@ -1486,8 +1473,8 @@
         "record_calendar_month": "Calendar Month Number",
         "record_calendar_day": "Calendar Day Number"
       },
-      "total_rows_available": 16526,
-      "latest_date": "2026-08-13",
+      "total_rows_available": 16522,
+      "latest_date": "2026-08-12",
       "earliest_date": "2005-10-03",
       "contract": {
         "n_fields": 16,
@@ -1502,15 +1489,15 @@
           "record_fiscal_quarter",
           "record_fiscal_year",
           "src_line_nbr",
-          "sub_table_name",
-          "table_nbr",
           "table_nm"
         ],
         "matched": [
           "account_type",
           "close_today_bal",
           "open_today_bal",
-          "record_date"
+          "record_date",
+          "sub_table_name",
+          "table_nbr"
         ],
         "contract_ok": true
       },
@@ -1524,10 +1511,10 @@
       },
       "sample_rows": [
         {
-          "record_date": "2026-08-13",
+          "record_date": "2026-08-12",
           "account_type": "Treasury General Account (TGA) Opening Balance",
           "close_today_bal": "null",
-          "open_today_bal": "959405",
+          "open_today_bal": "997330",
           "open_month_bal": "876566",
           "open_fiscal_year_bal": "890825",
           "table_nbr": "I",
@@ -1539,15 +1526,15 @@
           "record_calendar_year": "2026",
           "record_calendar_quarter": "3",
           "record_calendar_month": "08",
-          "record_calendar_day": "13"
+          "record_calendar_day": "12"
         },
         {
-          "record_date": "2026-08-13",
+          "record_date": "2026-08-12",
           "account_type": "Total TGA Deposits (Table II)",
           "close_today_bal": "null",
-          "open_today_bal": "289110",
-          "open_month_bal": "1401792",
-          "open_fiscal_year_bal": "34505812",
+          "open_today_bal": "17279",
+          "open_month_bal": "1112682",
+          "open_fiscal_year_bal": "34216702",
           "table_nbr": "I",
           "table_nm": "Operating Cash Balance",
           "sub_table_name": "Cash Balance Details",
@@ -1557,7 +1544,7 @@
           "record_calendar_year": "2026",
           "record_calendar_quarter": "3",
           "record_calendar_month": "08",
-          "record_calendar_day": "13"
+          "record_calendar_day": "12"
         }
       ],
       "critical_unknowns": []
@@ -1641,18 +1628,9 @@
       "earliest_date": "2015-03-31",
       "contract": {
         "n_fields": 21,
-        "missing": [
-          "current_fytd_budget_amt",
-          "current_month_budget_amt"
-        ],
+        "missing": [],
         "unexpected": [
-          "classification_id",
-          "current_month_dfct_sur_amt",
-          "current_month_gross_outly_amt",
-          "current_month_gross_rcpt_amt",
           "data_type_cd",
-          "line_code_nbr",
-          "parent_id",
           "print_order_nbr",
           "record_calendar_day",
           "record_calendar_month",
@@ -1660,17 +1638,23 @@
           "record_calendar_year",
           "record_fiscal_quarter",
           "record_fiscal_year",
-          "record_type_cd",
-          "sequence_level_nbr",
           "sequence_number_cd",
           "src_line_nbr",
           "table_nbr"
         ],
         "matched": [
           "classification_desc",
-          "record_date"
+          "classification_id",
+          "current_month_dfct_sur_amt",
+          "current_month_gross_outly_amt",
+          "current_month_gross_rcpt_amt",
+          "line_code_nbr",
+          "parent_id",
+          "record_date",
+          "record_type_cd",
+          "sequence_level_nbr"
         ],
-        "contract_ok": false
+        "contract_ok": true
       },
       "probe_extra_fields_present": [],
       "probe_extra_fields_absent": [],
@@ -1742,8 +1726,8 @@
     "status": "ok",
     "url": "https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls",
     "content_type": "application/vnd.ms-excel",
-    "content_length_bytes": 10133504,
-    "saved_sample": "docs/source_probe/2026-08-17/ACMTermPremium_sample.bin",
+    "content_length_bytes": 10130944,
+    "saved_sample": "docs/source_probe/2026-08-14/ACMTermPremium_sample.bin",
     "parsed_with_engine": "xlrd",
     "columns": [
       "DATE",

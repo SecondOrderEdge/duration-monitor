@@ -515,3 +515,28 @@ def test_shipped_config_declares_a_type_for_every_contracted_field():
         assert not (contracted - typed), (
             f"{name}: contracted but untyped: {sorted(contracted - typed)}"
         )
+
+
+def test_every_fred_series_has_observed_metadata():
+    """A series ID in the pull list with no observed row was never confirmed.
+
+    FRED is the one credentialed source, so it is the easiest place for an ID to
+    sit unverified: nothing fails until ingestion asks for a series that has been
+    renamed or discontinued.
+    """
+    fred = load_sources()["fred"]
+    configured = {sid for group in fred["series"].values() for sid in group}
+    observed = set(fred.get("series_observed") or {})
+
+    assert configured == observed, (
+        f"unverified: {sorted(configured - observed)}; "
+        f"observed but not pulled: {sorted(observed - configured)}"
+    )
+
+
+def test_fred_series_metadata_records_units_and_frequency():
+    """Units differ across this feed by a factor of 1000, so they must be recorded."""
+    for sid, meta in load_sources()["fred"]["series_observed"].items():
+        assert meta.get("freq"), f"{sid}: no observed frequency"
+        assert meta.get("units"), f"{sid}: no observed units"
+        assert meta.get("start") and meta.get("end"), f"{sid}: no observed coverage"

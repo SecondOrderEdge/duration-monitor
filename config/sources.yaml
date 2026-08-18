@@ -22,8 +22,12 @@
 meta:
   version: 2
   probe_required: true
-  last_probe: 2026-08-17
-  evidence: docs/source_probe/2026-08-17/
+  last_probe: 2026-08-18
+  evidence: docs/source_probe/2026-08-18/
+  # Every source is now verified against a live response. The 2026-08-18 run was
+  # executed by .github/workflows/probe-sources.yml, which is the only place FRED
+  # can be probed: it is the one credentialed source and the key lives in
+  # repository secrets.
 
 fiscaldata:
   base_url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/
@@ -96,6 +100,10 @@ fiscaldata:
         nothing numerically, but the choice belongs in thresholds.yaml rather than
         in whichever filter happens to be written first.
 
+        Amounts are in MILLIONS (per the endpoint's own field labels), unlike
+        debt_to_penny which reports whole dollars. Do not compare the two without
+        scaling.
+
     mspd_table_3_market:
       path: v1/debt/mspd/mspd_table_3_market
       purpose: Security-level detail (issue/maturity date, outstanding). Drives WAM.
@@ -131,6 +139,11 @@ fiscaldata:
         65,000.2010 == 251,804.9787, the single populated outstanding_amt.
         Summing `outstanding_amt` over rows is therefore correct and summing
         `issued_amt` over rows is also correct, but mixing them double-counts.
+        Independently confirmed at 2026-07-31: 887 rows, 463 distinct CUSIPs, with
+        outstanding_amt null on 46% of rows. Selecting rows where outstanding_amt
+        is non-null is an equivalent way to reach one row per security, PROVIDED
+        subtotal rows are excluded first — they also carry a non-null
+        outstanding_amt, so that filter alone silently includes them.
       subtotal_rows: >
         Subtotal rows carry a null `maturity_date` and put a label in
         `security_class2_desc`. Observed labels, stable 2001 → 2026:
@@ -201,6 +214,13 @@ fiscaldata:
         ~840 rows per month at 2024, ~220 at 2001; 153k rows over the full history.
         Small enough to hold in memory, large enough that D7 (keep full history out
         of git) still stands.
+
+        `interest_rate_pct` is "null" for bills, which are discount securities and
+        carry no coupon. That is expected, not a parse failure, and a WAM weighted
+        by coupon would silently drop the entire bill book.
+
+        The TIPS accretion identity was separately confirmed across all 53 TIPS
+        CUSIPs at 2026-07-31, not only on the Total Marketable row.
 
     auctions_query:
       path: v1/accounting/od/auctions_query
@@ -377,10 +397,32 @@ fiscaldata:
       probe_extra_fields:
         - median_yield          # absent — avg_med_yield is the published median
         - high_discnt_rate
+        - low_discnt_rate
         - allocation_pctage
+      resolved_unknowns:
+        dealer_breakdown_start: >
+          2008-04-07 is the first auction_date carrying a non-zero primary /
+          direct / indirect breakdown. Auctions back to 1979-10-31 exist but have
+          no breakdown at all, and those zeros mean "not reported", never "no
+          dealer demand". This answers Open Question 3 on its facts: a stress
+          series using bidder shares cannot start before 2008 without a reduced
+          factor set.
       notes: >
-        History reaches 1979 but bidder-class detail is materially richer from 2008.
-        Open Question 3 (whether to start the stress series in 2008) is still open.
+        THE ENDPOINT PUBLISHES AUCTIONS THAT HAVE NOT HAPPENED YET. At probe time
+        the maximum auction_date was 2026-08-20, days ahead of the last auction
+        actually held, and every announced-but-unheld row carries "null" for
+        bid_to_cover_ratio, high_yield, low_yield and avg_med_yield.
+
+        Ingestion must therefore drop rows whose result fields are null rather
+        than filtering on `auction_date <= today`, and any "latest auction" metric
+        must resolve to the last row WITH RESULTS. A rolling stress score that
+        takes the last N rows by date will otherwise silently average in
+        scheduled auctions as missing data.
+
+        Bills report on a discount basis: `high_discnt_rate` / `low_discnt_rate`
+        are populated exactly where the yield fields are null, so a yield-only
+        stress measure covers coupons and silently excludes the entire bill book —
+        which is the part of the curve this project is most interested in.
 
     debt_to_penny:
       path: v2/accounting/od/debt_to_penny
@@ -456,6 +498,7 @@ fiscaldata:
       expected_fields:
         - record_date
         - expense_type_desc
+        - expense_group_desc
         - expense_catg_desc
         - month_expense_amt
         - fytd_expense_amt
@@ -476,6 +519,7 @@ fiscaldata:
       schema:
         record_date: date
         expense_type_desc: category
+        expense_group_desc: category
         expense_catg_desc: category
         month_expense_amt: decimal
         fytd_expense_amt: decimal
@@ -494,6 +538,7 @@ fiscaldata:
         - open_today_bal
         - close_today_bal
         - table_nbr
+        - sub_table_name
       observed_fields_at_probe:
         - account_type
         - close_today_bal
@@ -517,6 +562,7 @@ fiscaldata:
         open_today_bal: decimal
         close_today_bal: decimal
         table_nbr: string
+        sub_table_name: string
       notes: >
         Multiple account types per day, and the DTS restructured its tables in 2022.
         `account_type` must be filtered explicitly rather than assuming one row/day.
@@ -538,6 +584,7 @@ fiscaldata:
         - current_month_dfct_sur_amt
         - record_type_cd
         - sequence_level_nbr
+        - line_code_nbr
       observed_fields_at_probe:
         - classification_desc
         - classification_id
@@ -570,6 +617,7 @@ fiscaldata:
         current_month_dfct_sur_amt: decimal
         record_type_cd: category
         sequence_level_nbr: string
+        line_code_nbr: string
       contract_correction: >
         The v1 contract expected `current_month_budget_amt` and
         `current_fytd_budget_amt`. Neither exists. The published fields are
@@ -589,16 +637,37 @@ fiscaldata:
         `record_type_cd` distinguishes month rows (MTH) from subtotals (SL).
         Reading `record_date` as the observation date silently stamps every row of a
         fiscal year with the publication month.
+        (3) There is NO fiscal-year-to-date column on this endpoint — confirmed
+        against its full field list, not a sample. FYTD must be accumulated from
+        the monthly rows within each record_fiscal_year, or taken from a different
+        MTS table. The absent `current_fytd_budget_amt` was not renamed; it does
+        not exist here in any spelling.
 
 fred:
   base_url: https://api.stlouisfed.org/fred/
   api_key_env: FRED_API_KEY
-  verified: false     # host reachable (HTTP 400 on a bad key), but no key available
-                      # in the probe environment, so no series was confirmed.
+  verified: true
+  verified_on: 2026-08-18
+  evidence: docs/source_probe/2026-08-18/
   verified_note: >
-    api.stlouisfed.org responds, so this is a credential gap and not a network
-    block. Set FRED_API_KEY and re-run scripts/probe_sources.py to verify series
-    IDs, frequencies, units and coverage before ingestion is written against them.
+    All 21 series confirmed against live responses. The probe runs in GitHub
+    Actions (.github/workflows/probe-sources.yml) because FRED is the one
+    credentialed source and the key lives in repository secrets — cloud dev
+    environments have no secrets store, so this cannot be verified from one.
+    Frequencies, units and coverage below are observed, not assumed.
+
+  # UNITS ARE NOT CONSISTENT ACROSS THIS FEED, and the inconsistency sits inside a
+  # single group: RRPONTSYD is BILLIONS while WALCL, WRESBAL and WTREGEN are
+  # MILLIONS. Netting them without scaling is a 1000x error that still plots as a
+  # plausible line. Every series therefore carries its observed units below, and
+  # the transformation layer converts to single currency units on the way in.
+  #
+  # SEASONAL ADJUSTMENT IS NOT CONSISTENT EITHER. GDP, FGRECPT and
+  # A091RC1Q027SBEA are SAAR — seasonally adjusted ANNUAL RATES — while every
+  # other series is NSA. A SAAR quarterly figure is already annualised, so
+  # comparing it to a quarterly flow from MSPD, or summing four quarters of it,
+  # overstates by roughly 4x.
+
   series:
     rates:
       [DGS3MO, DGS6MO, DGS1, DGS2, DGS5, DGS10, DGS20, DGS30]
@@ -608,22 +677,72 @@ fred:
       [GFDEBTN, FYFSGDA188S, A091RC1Q027SBEA, FGRECPT, GDP]
     term_premium_crosscheck:
       [THREEFYTP10]
+
+  # observed: {frequency, units, seasonal adjustment, coverage} as at 2026-08-18.
+  series_observed:
+    DGS3MO:          {freq: D, units: percent,        sa: NSA,  start: 1981-09-01, end: 2026-08-14}
+    DGS6MO:          {freq: D, units: percent,        sa: NSA,  start: 1981-09-01, end: 2026-08-14}
+    DGS1:            {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS2:            {freq: D, units: percent,        sa: NSA,  start: 1976-06-01, end: 2026-08-14}
+    DGS5:            {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS10:           {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS20:           {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS30:           {freq: D, units: percent,        sa: NSA,  start: 1977-02-15, end: 2026-08-14}
+    WALCL:           {freq: W, units: millions_usd,   sa: NSA,  start: 2002-12-18, end: 2026-08-12}
+    WRESBAL:         {freq: W, units: millions_usd,   sa: NSA,  start: 2002-12-18, end: 2026-08-12}
+    RRPONTSYD:       {freq: D, units: billions_usd,   sa: NSA,  start: 2003-02-07, end: 2026-08-18}
+    WTREGEN:         {freq: W, units: millions_usd,   sa: NSA,  start: 2002-12-18, end: 2026-08-12}
+    SOFR:            {freq: D, units: percent,        sa: NSA,  start: 2018-04-03, end: 2026-08-17}
+    EFFR:            {freq: D, units: percent,        sa: NSA,  start: 2000-07-03, end: 2026-08-17}
+    MMMFFAQ027S:     {freq: Q, units: millions_usd,   sa: NSA,  start: 1945-10-01, end: 2026-01-01}
+    GFDEBTN:         {freq: Q, units: millions_usd,   sa: NSA,  start: 1966-01-01, end: 2026-01-01}
+    FYFSGDA188S:     {freq: A, units: percent_of_gdp, sa: NSA,  start: 1929-01-01, end: 2025-01-01}
+    A091RC1Q027SBEA: {freq: Q, units: billions_usd,   sa: SAAR, start: 1947-01-01, end: 2026-04-01}
+    FGRECPT:         {freq: Q, units: billions_usd,   sa: SAAR, start: 1947-01-01, end: 2026-01-01}
+    GDP:             {freq: Q, units: billions_usd,   sa: SAAR, start: 1947-01-01, end: 2026-04-01}
+    THREEFYTP10:     {freq: D, units: percent,        sa: NSA,  start: 1990-01-02, end: 2026-08-07}
+
   known_gaps:
-    DGS20: Series discontinued 1987-01 to 1993-09. Flag as missing; never fill.
-    MMMFFAQ027S: Quarterly frequency; do not forward-fill onto a daily axis.
+    DGS20: >
+      Config has long asserted the series is discontinued 1987-01 to 1993-09. The
+      probe records observation_start 1962-01-02 and an end in 2026, which spans
+      the gap and therefore neither confirms nor refutes it — start/end cannot
+      reveal an interior hole. Treat as UNVERIFIED and check the observations
+      themselves before the 20Y is used in any curve calculation. Flag as missing;
+      never fill.
+    MMMFFAQ027S: Quarterly frequency, confirmed. Do not forward-fill onto a daily axis.
+    FYFSGDA188S: >
+      ANNUAL, and the latest observation is 2025-01-01 — both coarser and more
+      lagged than anything else here. It cannot contribute to a monthly signal
+      without an interpolation this project forbids. Suitable as chart context
+      only, not as a score input.
 
 nyfed_acm:
   # No API. Scheduled file pull, parsed with pandas.
   url: https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls
   landing_page: https://www.newyorkfed.org/research/data_indicators/term-premia-tabs
   verified: true
-  coverage: {rows_at_probe: 782, note: monthly observations}
+
+  # THE WORKBOOK HAS TWO SHEETS AND THE PANDAS DEFAULT IS THE WRONG ONE.
+  # Reading without an explicit sheet_name returns "ACM Monthly" — 782 month-end
+  # rows — which then gets treated as the daily series it is not. The failure is
+  # invisible: month-end term premia are entirely plausible daily values, and
+  # Deviation D8 (resample the daily premium to month end) would be silently
+  # skipped rather than performed.
+  engine: xlrd            # openpyxl cannot read this file; the engine is not optional
+  sheet: ACM Daily        # always name it
+  sheets:
+    ACM Daily:   {rows: 16252, start: 1961-06-14, end: 2026-08-07}
+    ACM Monthly: {rows: 782,   start: 1961-06-30, end: 2026-07-31}
   format: >
-    Genuine .xls (Content-Type application/vnd.ms-excel, ~9.7MB), parsed with the
-    `xlrd` engine — openpyxl will not read it. xlrd is therefore a hard runtime
-    dependency, not an optional one.
+    Genuine legacy .xls (Content-Type application/vnd.ms-excel, ~10MB).
   observed_columns: >
-    DATE, ACMY01..ACMY10, ACMTP01..ACMTP10, ACMRNY01..ACMRNY10 (31 columns).
+    31 columns on both sheets: DATE, ACMY01..ACMY10 (fitted yields),
+    ACMTP01..ACMTP10 (term premia), ACMRNY01..ACMRNY10 (risk-neutral yields).
+  date_parsing: >
+    DATE arrives as a STRING formatted "07-Aug-2026" (%d-%b-%Y) — not an Excel
+    serial and not a datetime. Parse it explicitly; pandas inference on this
+    format is locale-sensitive and will silently produce NaT or a wrong year.
   series_of_interest: [ACMTP02, ACMTP05, ACMTP10]
   series_of_interest_confirmed: [ACMTP02, ACMTP05, ACMTP10]
   revision_policy: >
