@@ -58,6 +58,13 @@ DEFAULT_COMPONENTS: dict[str, Component] = {
     "bid_to_cover": Component("bid_to_cover", sign=-1, weight=1.0),
     "indirect": Component("indirect_pct", sign=-1, weight=1.0),
     "dealer": Component("primary_dealer_pct", sign=+1, weight=1.0),
+    # Deviation D3, resolved by the probe: Treasury publishes the median yield and
+    # allotment-at-high, so both genuine dispersion measures are available free.
+    # Wider high-minus-median, and more of the bids filled at the stop, both mean
+    # bidders had to be reached further for the auction to clear.
+    "dispersion": Component("dispersion_bps", sign=+1, weight=1.0),
+    "allotment_at_high": Component("allotment_at_high_pct", sign=+1, weight=1.0),
+    # The CMT-based fallback, kept at zero weight as a labelled diagnostic.
     "tail": Component("tail_proxy_bps", sign=+1, weight=0.0),
 }
 

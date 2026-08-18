@@ -244,9 +244,12 @@ fiscaldata:
         - maturity_date
         - security_type
         - security_term
+        - original_security_term
         - cusip
         - offering_amt
         - total_accepted
+        - comp_accepted
+        - soma_accepted
         - total_tendered
         - bid_to_cover_ratio
         - high_yield
@@ -381,9 +384,12 @@ fiscaldata:
         maturity_date: date
         security_type: category
         security_term: string
+        original_security_term: string
         cusip: string
         offering_amt: decimal
         total_accepted: decimal
+        comp_accepted: decimal
+        soma_accepted: decimal
         total_tendered: decimal
         bid_to_cover_ratio: decimal
         high_yield: decimal

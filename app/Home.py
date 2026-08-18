@@ -61,8 +61,8 @@ def _mtime(path: pathlib.Path) -> float:
 
 
 @st.cache_data(show_spinner=False)
-def load_debt_outstanding(_mtime_key: float) -> pd.DataFrame:
-    return pd.read_parquet(PROCESSED / "debt_outstanding.parquet")
+def load_processed(name: str, _mtime_key: float) -> pd.DataFrame:
+    return pd.read_parquet(PROCESSED / f"{name}.parquet")
 
 
 def processed_available(name: str) -> bool:
@@ -120,8 +120,29 @@ if not processed_available("debt_outstanding"):
     )
     st.stop()
 
-path = PROCESSED / "debt_outstanding.parquet"
-debt = load_debt_outstanding(_mtime(path))
+debt = load_processed("debt_outstanding", _mtime(PROCESSED / "debt_outstanding.parquet"))
+
+has_tp = processed_available("term_premium")
+term_premium = (
+    load_processed("term_premium", _mtime(PROCESSED / "term_premium.parquet"))
+    if has_tp
+    else None
+)
+
+has_stress = processed_available("long_end_stress")
+stress = (
+    load_processed("long_end_stress", _mtime(PROCESSED / "long_end_stress.parquet"))
+    .set_index("date")["long_end_stress"]
+    if has_stress
+    else None
+)
+
+has_wam = processed_available("wam")
+wam = (
+    load_processed("wam", _mtime(PROCESSED / "wam.parquet")).set_index("observation_date")
+    if has_wam
+    else None
+)
 
 share = bill_share(debt)
 changes = bill_share_changes(share)
@@ -152,12 +173,39 @@ else:
     kpi(c3, "Incremental bill funding", "", unavailable=True,
         note="denominator masked in every period")
 
-kpi(c4, "Weighted average maturity", "", unavailable=True,
-    note="needs securities_detail ingestion (step 4)")
+if has_wam:
+    wam_now = wam["wam_years"].iloc[-1]
+    wam_12m = wam_now - wam["wam_years"].iloc[-13] if len(wam) > 13 else float("nan")
+    kpi(c4, "Weighted average maturity", f"{wam_now:.2f}y", f"{wam_12m:+.2f}y / 1y",
+        note=f"{wam['within_1y'].iloc[-1]:.0%} matures within 1y")
+else:
+    kpi(c4, "Weighted average maturity", "", unavailable=True,
+        note="run scripts/refresh.py --only wam")
 
 c5, c6, c7, c8 = st.columns(4)
-kpi(c5, "10y term premium (ACM)", "", unavailable=True, note="needs NY Fed ingestion (step 5)")
-kpi(c6, "Long-end auction stress", "", unavailable=True, note="needs auctions ingestion (step 6)")
+if has_tp:
+    tp10 = (
+        term_premium[term_premium["maturity"] == "10Y"]
+        .set_index("date")["value"]
+        .sort_index()
+    )
+    # Daily to month end, per the stated alignment convention (Deviation D8).
+    # Monthly data is never forward-filled onto a daily axis for signal purposes.
+    tp10_m = tp10.resample("ME").last()
+    tp10_m.index = tp10_m.index.to_period("M")
+    tp_change_12m = tp10_m.iloc[-1] - tp10_m.iloc[-13] if len(tp10_m) > 13 else float("nan")
+    kpi(c5, "10y term premium (ACM)", f"{tp10.iloc[-1]:.2f}%",
+        f"{tp_change_12m:+.2f}pp / 1y", note=f"as at {tp10.index[-1]:%Y-%m-%d}")
+else:
+    kpi(c5, "10y term premium (ACM)", "", unavailable=True,
+        note="run scripts/refresh.py --only term_premium")
+if has_stress:
+    stress_now = stress.iloc[-1]
+    kpi(c6, "Long-end auction stress", f"{stress_now:+.0f}",
+        note=f"10/20/30y, 90d rolling · as at {stress.index[-1]:%Y-%m-%d}")
+else:
+    kpi(c6, "Long-end auction stress", "", unavailable=True,
+        note="run scripts/refresh.py --only auctions")
 kpi(c7, "Fiscal Duration Shift Score", "", unavailable=True, note="Phase 2")
 kpi(c8, "Global score", "", unavailable=True, note="Phase 3")
 
@@ -214,16 +262,95 @@ st.caption(
     "current quarter stays blank until its third month is published."
 )
 
-# ---- Chart 3+: not yet built --------------------------------------------- #
+# ---- Chart 3: WAM vs bill share ------------------------------------------ #
+if has_wam:
+    st.markdown("##### Weighted average maturity, with bill share")
+
+    wx = pd.to_datetime(wam.index)
+    fig3 = go.Figure()
+    fig3.add_trace(go.Scatter(x=wx, y=wam["wam_years"], name="WAM (years)",
+                              line=dict(color=WARM, width=2), yaxis="y"))
+    fig3.add_trace(go.Scatter(x=x, y=share.values, name="Bill share",
+                              line=dict(color=ACCENT, width=1.5, dash="dot"), yaxis="y2"))
+    fig3.update_layout(
+        yaxis=dict(title="WAM, years", gridcolor=GRID, tickfont=dict(color=MUTED)),
+        yaxis2=dict(title="bill share", overlaying="y", side="right",
+                    tickformat=".0%", showgrid=False, tickfont=dict(color=MUTED)),
+    )
+    st.plotly_chart(style(fig3), use_container_width=True)
+    st.caption(
+        f"WAM ranges {wam['wam_years'].min():.2f}y to {wam['wam_years'].max():.2f}y. "
+        "The two series are the stock counterparts of one another — a rising bill "
+        "share mechanically shortens WAM — so they are shown together rather than "
+        "treated as independent evidence. Weighted at par: TIPS are published "
+        "inflation-adjusted and weighting them on that basis would count accretion "
+        "as duration."
+    )
+
+# ---- Chart 4: term premium vs bill share --------------------------------- #
+if has_tp:
+    st.markdown("##### 10y term premium and bill share")
+
+    horizon = config.load("thresholds")["alignment"]["interaction_flag_horizon_months"]
+    aligned = pd.DataFrame({"bill_share": share, "term_premium": tp10_m}).dropna()
+    both_rising = (
+        (aligned["bill_share"].diff(horizon) > 0)
+        & (aligned["term_premium"].diff(horizon) > 0)
+    )
+
+    ax = aligned.index.to_timestamp()
+    fig4 = go.Figure()
+    # Shade the periods where both are rising — the signature the thesis predicts.
+    for period in aligned.index[both_rising]:
+        fig4.add_vrect(x0=period.to_timestamp(), x1=(period + 1).to_timestamp(),
+                       line_width=0, fillcolor=WARM, opacity=0.16, layer="below")
+    fig4.add_trace(go.Scatter(x=ax, y=aligned["term_premium"], name="10y ACM term premium",
+                              line=dict(color=WARM, width=2), yaxis="y"))
+    fig4.add_trace(go.Scatter(x=ax, y=aligned["bill_share"], name="Bill share",
+                              line=dict(color=ACCENT, width=1.5, dash="dot"), yaxis="y2"))
+    fig4.update_layout(
+        yaxis=dict(title="term premium, %", gridcolor=GRID, tickfont=dict(color=MUTED)),
+        yaxis2=dict(title="bill share", overlaying="y", side="right",
+                    tickformat=".0%", showgrid=False, tickfont=dict(color=MUTED)),
+    )
+    st.plotly_chart(style(fig4), use_container_width=True)
+
+    flagged_now = bool(both_rising.iloc[-1]) if len(both_rising) else False
+    st.caption(
+        f"Shading marks months where bill share and the 10y term premium have BOTH "
+        f"risen over {horizon} months — the signature the thesis predicts, and the "
+        f"one reading that requires quantity and market-price evidence to agree. "
+        f"{'Currently flagged.' if flagged_now else 'Not currently flagged.'} "
+        f"{int(both_rising.sum())} of {len(both_rising)} aligned months since "
+        f"{aligned.index[0]}. Daily term premium is resampled to month end; monthly "
+        "data is never forward-filled onto a daily axis."
+    )
+
+# ---- Chart 5: long-end auction stress ------------------------------------ #
+if has_stress:
+    st.markdown("##### Long-end auction stress")
+
+    fig5 = go.Figure()
+    fig5.add_hline(y=0, line=dict(color=MUTED, width=1))
+    fig5.add_trace(go.Scatter(x=stress.index, y=stress.values, name="Long-end stress",
+                              line=dict(color=WARM, width=1.6)))
+    st.plotly_chart(style(fig5, ytitle="stress score"), use_container_width=True)
+    st.caption(
+        "Rolling 90-day mean across 10/20/30y auctions. **Higher means weaker "
+        "absorption.** Composite of bid-to-cover, indirect share and dealer "
+        "takedown against each tenor's trailing 12 auctions, plus two genuine "
+        "published dispersion measures — high-minus-median yield and "
+        "allotment-at-high. The constant-maturity tail proxy the brief proposed "
+        "is kept at zero weight: the median is published, so a noisier substitute "
+        "is not needed. Scored from 2008-04, the first auction with a bidder-class "
+        "breakdown."
+    )
+
+# ---- Not yet built -------------------------------------------------------- #
 st.divider()
 st.markdown("##### Not yet available")
 st.info(
-    "**WAM history** needs `securities_detail` ingestion · "
-    "**10y term premium vs bill share** needs NY Fed ACM ingestion · "
-    "**Long-end auction stress** needs auctions ingestion · "
-    "**Global comparison** is Phase 3.\n\n"
-    "The calculations for WAM and auction stress are written and tested; what is "
-    "missing is the ingestion that feeds them."
+    "**Fiscal Duration Shift Score** is Phase 2 · **Global comparison** is Phase 3."
 )
 
 with st.sidebar:

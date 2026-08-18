@@ -229,3 +229,117 @@ def test_quarter_containing_an_unmeasurable_month_is_voided():
 
     q = aggregate_net_issuance(net_issuance(debt), freq="Q").set_index("period")
     assert pd.isna(q.loc["2024Q1", "net_issuance"])       # January delta is NaN
+
+
+# --------------------------------------------------------------------------- #
+# auctions
+# --------------------------------------------------------------------------- #
+
+from src.transformation.normalize import normalize_auctions, normalize_term  # noqa: E402
+
+
+def test_original_term_gives_the_canonical_tenor():
+    """`security_term` is the REMAINING term, so a reopened 10y reads 9-Year 11-Month.
+
+    Grouping on that scatters one tenor across a dozen labels and leaves the
+    trailing-window comparison with nothing to compare against.
+    """
+    assert normalize_term("10-Year") == "10Y"
+    assert normalize_term("9-Year 11-Month") == "10Y"
+    assert normalize_term("29-Year 9-Month") == "30Y"
+    assert normalize_term("26-Week") == "26W"
+    assert normalize_term("119-Day") == "119D"
+
+
+def test_normalize_term_handles_missing_values():
+    """pandas 3 keeps NaN through .astype(str), so non-strings reach this."""
+    assert normalize_term(None) is None
+    assert normalize_term(float("nan")) is None
+    assert normalize_term("nan") is None
+    assert normalize_term("") is None
+
+
+def auction_rows() -> pd.DataFrame:
+    return pd.DataFrame({
+        "auction_date": pd.to_datetime(
+            ["1985-03-01", "2024-06-13", "2026-08-18", "2026-08-20"]
+        ),
+        "security_type": ["Bond", "Bond", "Note", "Note"],
+        "original_security_term": ["30-Year", "30-Year", "10-Year", "10-Year"],
+        "total_accepted": [1_000.0, 22_711_606_600.0, 30_000_000_000.0, None],
+        # Competitive accepted excludes SOMA add-ons; the 2024 auction had none.
+        "comp_accepted": [None, 21_967_151_800.0, 30_000_000_000.0, None],
+        "soma_accepted": [None, 744_454_800.0, 0.0, None],
+        # Bid-to-cover was not published before about 2000 — the 1985 row is a
+        # genuine auction with unreported results, not a scheduled one.
+        "bid_to_cover_ratio": [None, 2.49, 2.61, None],
+        "high_yield": [None, 4.4030, 4.1000, None],
+        "avg_med_yield": [None, 4.3500, 4.0800, None],
+        "allocation_pctage": [None, 8.49, 51.2, None],
+        "primary_dealer_accepted": [None, 3_009_118_500.0, 6_000_000_000.0, None],
+        "indirect_bidder_accepted": [None, 15_047_133_300.0, 20_000_000_000.0, None],
+        "direct_bidder_accepted": [None, 3_910_900_000.0, 4_000_000_000.0, None],
+    })
+
+
+AS_OF = pd.Timestamp("2026-08-18")
+
+
+def test_only_genuinely_unheld_auctions_are_dropped():
+    """Dropping on a null bid-to-cover discards 3,215 real pre-2000 auctions.
+
+    It looks tidy — the remaining series is clean and simply starts in 1994 — which
+    is exactly why the test is on the date instead.
+    """
+    out = normalize_auctions(auction_rows(), retrieval_date=AS_OF)
+
+    assert len(out) == 3                                  # only the future one goes
+    assert out.attrs["n_unheld_dropped"] == 1
+    assert out["auction_date"].min() == pd.Timestamp("1985-03-01")
+
+
+def test_held_auctions_without_published_results_are_kept_and_flagged():
+    out = normalize_auctions(auction_rows(), retrieval_date=AS_OF).set_index("auction_date")
+
+    assert not out.loc["1985-03-01", "has_results"]
+    assert out.loc["2024-06-13", "has_results"]
+    assert out.attrs["n_without_results"] == 1
+
+
+def test_dispersion_uses_the_published_median():
+    """Deviation D3: the median is published, so no constant-maturity proxy is needed."""
+    out = normalize_auctions(auction_rows(), retrieval_date=AS_OF).set_index("auction_date")
+
+    # 4.4030 - 4.3500 = 0.0530 percent = 5.30 bps
+    assert out.loc["2024-06-13", "dispersion_bps"] == pytest.approx(5.30)
+    assert out.loc["2024-06-13", "tail_proxy_method"] == "high_minus_published_median"
+
+
+def test_dispersion_is_unavailable_where_yields_are_not_published():
+    out = normalize_auctions(auction_rows(), retrieval_date=AS_OF).set_index("auction_date")
+    assert pd.isna(out.loc["1985-03-01", "dispersion_bps"])
+    assert out.loc["1985-03-01", "tail_proxy_method"] == "unavailable"
+
+
+def test_bidder_shares_use_the_competitive_base_not_the_total():
+    """`total_accepted` includes SOMA add-ons, which reached 37% of an auction in 2021.
+
+    Dividing by the total depresses dealer and indirect shares in exactly the QE
+    years, feeding a central-bank artefact into the stress score as if it were
+    weakening private demand. On the competitive base the three classes sum to 1.
+    """
+    out = normalize_auctions(auction_rows(), retrieval_date=AS_OF).set_index("auction_date")
+    row = out.loc["2024-06-13"]
+
+    assert row["indirect_pct"] == pytest.approx(15_047_133_300 / 21_967_151_800)
+    total = row["indirect_pct"] + row["primary_dealer_pct"] + row["direct_pct"]
+    assert total == pytest.approx(1.0, abs=1e-4)
+    assert row["bidder_share_basis"] == "competitive"
+
+
+def test_missing_competitive_figure_falls_back_and_is_recorded():
+    rows = auction_rows()
+    rows.loc[2, "comp_accepted"] = None
+    out = normalize_auctions(rows, retrieval_date=AS_OF).set_index("auction_date")
+
+    assert out.loc["2026-08-18", "bidder_share_basis"] == "total_accepted"

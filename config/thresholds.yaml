@@ -61,6 +61,12 @@ debt_ceiling_episodes:
 # --------------------------------------------------------------------------- #
 wam:
   days_per_year: 365.25
+  # Deviation D9(b). TIPS are published inflation-adjusted, so a total WAM mixing
+  # them with par-reported classes weights TIPS by roughly their accretion. Par is
+  # recoverable (outstanding - accretion) and is the basis used, so every class is
+  # weighted on one footing. To be confirmed against Treasury's own published
+  # average length of the marketable debt, which is the external check on this.
+  tips_weighting_basis: PAR
   maturity_buckets_years: [1, 2, 3, 5]
   use_final_maturity_for_frn: true
   use_final_maturity_for_tips: true

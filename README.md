@@ -11,10 +11,10 @@ credential at all.
 
 ## Status
 
-**Phase 1: the dashboard renders live data.** Bill share and net issuance are built
-end-to-end from Treasury Fiscal Data and reconciled against the published totals.
-WAM, term premium and auction stress have tested calculations but no ingestion yet,
-and are shown on the dashboard as explicitly unavailable rather than blank.
+**Phase 1: six of eight headline metrics render from live official data.** Bill
+share, incremental bill funding, WAM, the 10y ACM term premium and long-end auction
+stress are all built end-to-end and reconciled against published figures. The two
+remaining cards are the Phase 2 composite score and the Phase 3 global score.
 
 ```bash
 python scripts/refresh.py     # pull → normalize → validate → data/processed/
@@ -25,21 +25,29 @@ Every source is verified against live responses; evidence is committed under
 `docs/source_probe/`. The FRED probe runs in GitHub Actions, the only place it can:
 FRED is the one credentialed source and the key lives in repository secrets.
 
-What the current data says: bill share is **22.2%** as at 2026-07, above the 15–20%
-band TBAC has long referenced, and up 1.5pp over twelve months.
+What the data currently says, as at 2026-07:
+
+| metric | reading |
+|---|---|
+| Bill share of marketable | **22.2%**, above the 15–20% band TBAC references |
+| 1y change in bill share | **+1.5pp** |
+| Incremental bill funding | **78%** of net marketable borrowing |
+| Weighted average maturity | **5.82y**, −0.16y over twelve months |
+| 10y term premium (ACM) | **0.89%**, +0.12pp over twelve months |
+| Long-end auction stress | **−10** (negative = better absorbed than trailing average) |
 
 ### Build sequence
 
 | step | state |
 |---|---|
-| 0 · probe sources, correct the contract | done — all 8 fiscaldata endpoints, FRED, NY Fed |
+| 0 · probe sources, correct the contract | done — all 8 fiscaldata endpoints, 21 FRED series, NY Fed |
 | 1 · typed parsing + fiscaldata client | done |
 | 2 · MSPD Table 1 → `debt_outstanding` | done — reconciles to 3e-5% |
 | 3 · bill share, net issuance, funding ratios | done, on the dashboard |
-| 4 · `securities_detail` → WAM | calculations done, ingestion not written |
-| 5 · FRED + NY Fed ACM ingestion | not written |
-| 6 · auctions ingestion + stress score | calculations done, ingestion not written |
-| 7 · validation + `data_quality_events` | reconciliation done, rest not written |
+| 4 · `securities_detail` → WAM | done — 5.82y, matches Treasury's published average length |
+| 5 · FRED + NY Fed ACM ingestion | done — ACM live; FRED client written, needs the key |
+| 6 · auctions ingestion + stress score | done — 11,078 auctions from 1979, scored from 2008-04 |
+| 7 · validation + `data_quality_events` | reconciliation and revision detection done; event table not written |
 | 8 · Streamlit subpages | Home only |
 | 9 · QRA input, data quality, methodology pages | not written |
 | 10 · scheduled refresh workflow | not written |
@@ -48,17 +56,30 @@ band TBAC has long referenced, and up 1.5pp over twelve months.
 |---|---|
 | `src/ingestion/typed.py` | declared per-field coercion; `"null"` → NaN with failure counting |
 | `src/ingestion/fiscaldata.py` | paginating, retrying client; contract and completeness enforcement |
-| `src/transformation/normalize.py` | raw → `debt_outstanding`; class renames, units, TIPS basis |
+| `src/ingestion/fred.py` | FRED observations; credential scrubbing, `"."` gap handling |
+| `src/ingestion/nyfed.py` | ACM workbook; sheet pinning, date format, revision detection |
+| `src/transformation/normalize.py` | raw → `debt_outstanding`, `securities_detail`, `auctions` |
 | `src/validation/reconciliation.py` | components vs the published marketable total |
 | `src/calculations/timegrid.py` | period-aware changes; missing months never closed up |
 | `src/calculations/percentiles.py` | point-in-time percentile ranks and trailing z-scores |
 | `src/calculations/wam.py` | weighted average maturity, maturity buckets |
 | `src/calculations/issuance.py` | bill share, net issuance, funding ratios and their guards |
 | `src/signals/auction_stress.py` | per-auction stress score, long-end rolling stress |
-| `app/Home.py` | KPI row, bill share, quarterly net issuance |
+| `app/Home.py` | KPI row and five charts |
+
+### Resolved deviations
+
+- **D2** TIPS accretion is published separately, so net issuance is accretion-aware
+  and par is recoverable rather than TIPS being dropped.
+- **D3** Treasury publishes the median yield and allotment-at-high, so the stress
+  score uses two genuine dispersion measures. The constant-maturity tail proxy the
+  brief proposed stays at zero weight as a labelled diagnostic.
+- **D9(b)** WAM is weighted at par, pinned in `config/thresholds.yaml`.
+- Open Question 1 (WAM source) and Question 3 (auction history depth, 2008-04) are
+  both closed on evidence.
 
 ```bash
-python -m pytest tests/ -q      # 157 tests
+python -m pytest tests/ -q      # 180 tests
 ```
 
 - [`docs/implementation_plan.md`](docs/implementation_plan.md) — plan, schema, recommended

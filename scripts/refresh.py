@@ -33,7 +33,21 @@ from src.ingestion.fiscaldata import (  # noqa: E402
     parse_endpoint,
     write_raw,
 )
-from src.transformation.normalize import normalize_debt_outstanding  # noqa: E402
+from src.calculations.wam import wam_series  # noqa: E402
+from src.ingestion.fred import FredClient, MissingCredential  # noqa: E402
+from src.ingestion.nyfed import detect_revisions, fetch_acm  # noqa: E402
+from src.signals.auction_stress import (  # noqa: E402
+    DEFAULT_COMPONENTS,
+    Component,
+    auction_stress_score,
+    long_end_stress,
+)
+from src.transformation.normalize import (  # noqa: E402
+    normalize_auctions,
+    normalize_debt_outstanding,
+    normalize_securities_detail,
+    wam_input,
+)
 from src.validation.reconciliation import reconcile_components_to_total  # noqa: E402
 
 PROCESSED = REPO_ROOT / "data" / "processed"
@@ -71,7 +85,166 @@ def build_debt_outstanding(client: FiscalDataClient, *, keep_raw: bool) -> pd.Da
     return table
 
 
-BUILDERS = {"debt_outstanding": build_debt_outstanding}
+def build_wam(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """mspd_table_3_market → WAM and maturity-bucket series.
+
+    Only the derived series is returned for the processed store. The CUSIP-level
+    detail behind it is ~150k rows and would be rewritten in full on every refresh,
+    so it stays in `data/raw/` (git-ignored) with only the latest snapshot
+    published alongside — Deviation D7.
+    """
+    print("  fetching mspd_table_3_market ...", flush=True)
+    result = client.fetch("mspd_table_3_market")
+    print(f"    {result.n_rows} rows over {result.n_pages} page(s)")
+
+    if keep_raw:
+        raw = write_raw(result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+
+    typed, report = parse_endpoint(result)
+    report.raise_if_failed()
+
+    securities = normalize_securities_detail(typed, retrieval_date=result.retrieval_date)
+    print(f"    {len(securities)} security-months over "
+          f"{securities.observation_date.nunique()} months")
+
+    basis = _thresholds()["wam"]["tips_weighting_basis"]
+    series = wam_series(wam_input(securities, basis=basis))
+    series["amount_basis"] = basis
+    series["source"] = "fiscaldata/mspd_table_3_market"
+    series["retrieval_date"] = result.retrieval_date
+    series["country"] = "US"
+    print(f"    WAM {series.wam_years.iloc[-1]:.2f}y at "
+          f"{series.observation_date.iloc[-1]:%Y-%m} (weighted on {basis})")
+
+    # The latest CUSIP snapshot is small and useful on the page; the history is not.
+    latest = securities[securities.observation_date == securities.observation_date.max()]
+    snapshot = PROCESSED / "securities_detail_latest.parquet"
+    latest.to_parquet(snapshot, index=False)
+    print(f"    latest snapshot ({len(latest)} securities) → "
+          f"{snapshot.relative_to(REPO_ROOT)}")
+
+    return series
+
+
+def build_term_premium(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """NY Fed ACM term premium, with revision detection against the prior vintage.
+
+    ACM is model output and is re-estimated retroactively, so a value dated 2010
+    can change between pulls. Overwriting silently would make a backtest
+    irreproducible with no trace of why, so changed history is counted and flagged.
+    """
+    print("  fetching NY Fed ACM workbook ...", flush=True)
+    table, retrieved = fetch_acm()
+    print(f"    {len(table)} rows, {table.date.nunique()} dates, "
+          f"{table.date.min():%Y-%m-%d} → {table.date.max():%Y-%m-%d}")
+
+    existing = PROCESSED / "term_premium.parquet"
+    if existing.exists():
+        report = detect_revisions(pd.read_parquet(existing), table)
+        print(f"    revision check: {report.n_compared} overlapping observations, "
+              f"{len(report.changed)} changed")
+        if report.has_revisions:
+            table["revision_flag"] = table.set_index(["date", "maturity", "model"]).index.isin(
+                report.changed.set_index(["date", "maturity", "model"]).index
+            )
+            worst = report.changed["abs_change"].max()
+            print(f"    ACM re-estimated: largest historical change {worst:.4f}pp")
+    else:
+        print("    no prior vintage to compare against")
+
+    return table
+
+
+def build_rates(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """FRED series. Requires FRED_API_KEY."""
+    print("  fetching FRED series ...", flush=True)
+    fred = FredClient()
+    configured = fred.configured_series()
+    table = fred.fetch_many(configured)
+    print(f"    {len(table)} observations across {table.series_id.nunique()} series")
+
+    gaps = table[table["value"].isna()].groupby("series_id").size()
+    if len(gaps):
+        print(f"    documented missing observations: {gaps.to_dict()}")
+    return table
+
+
+def build_auctions(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """auctions_query → per-auction stress score and the long-end rolling series."""
+    print("  fetching auctions_query ...", flush=True)
+    result = client.fetch("auctions_query")
+    print(f"    {result.n_rows} rows over {result.n_pages} page(s)")
+
+    if keep_raw:
+        raw = write_raw(result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+
+    typed, report = parse_endpoint(result)
+    report.raise_if_failed()
+
+    auctions = normalize_auctions(typed, retrieval_date=result.retrieval_date)
+    print(f"    {len(auctions)} held auctions, "
+          f"{auctions.auction_date.min():%Y-%m} → {auctions.auction_date.max():%Y-%m} "
+          f"({auctions.attrs['n_unheld_dropped']} scheduled-but-unheld dropped; "
+          f"{auctions.attrs['n_without_results']} held with results never published)")
+
+    cfg = _thresholds()["auctions"]
+    weights = yaml.safe_load(
+        (REPO_ROOT / "config" / "factor_weights.yaml").read_text(encoding="utf-8")
+    )["auction_stress_components"]
+    components = {
+        name: Component(spec.column, sign=spec.sign, weight=float(weights.get(name, 0.0)))
+        for name, spec in DEFAULT_COMPONENTS.items()
+    }
+    active = {n: c.weight for n, c in components.items() if c.weight > 0}
+    print(f"    components: {active}")
+
+    # Bidder detail only exists from 2008; earlier auctions are kept but excluded
+    # from the composite so a reduced factor set is never scored as a full one.
+    start = pd.Timestamp(cfg["composite_start_date"])
+    scored_input = (
+        auctions if cfg["include_pre_2008_in_composite"]
+        else auctions[auctions.auction_date >= start]
+    )
+    scored = auction_stress_score(
+        scored_input,
+        components=components,
+        trailing_auctions=cfg["trailing_auctions"],
+        min_trailing=cfg["min_trailing_auctions"],
+        min_components=cfg["min_components"],
+        scale_sigma=cfg["scale_sigma"],
+    )
+    n_scored = int(scored["stress_score"].notna().sum())
+    print(f"    scored {n_scored} of {len(scored)} auctions since "
+          f"{start:%Y-%m} (min {cfg['min_trailing_auctions']} trailing per tenor)")
+
+    rolling = long_end_stress(
+        scored,
+        terms=tuple(cfg["long_end_terms"]),
+        window_days=cfg["long_end_window_days"],
+        min_auctions=cfg["long_end_min_auctions"],
+    )
+    latest = rolling.dropna()
+    if len(latest):
+        print(f"    long-end stress {latest.iloc[-1]:+.1f} at {latest.index[-1]:%Y-%m-%d}")
+
+    rolling_frame = latest.reset_index()
+    rolling_frame.columns = ["date", "long_end_stress"]
+    rolling_frame["country"] = "US"
+    rolling_frame.to_parquet(PROCESSED / "long_end_stress.parquet", index=False)
+    print(f"    processed → data/processed/long_end_stress.parquet")
+
+    return scored
+
+
+BUILDERS = {
+    "debt_outstanding": build_debt_outstanding,
+    "auctions": build_auctions,
+    "wam": build_wam,
+    "term_premium": build_term_premium,
+    "rates": build_rates,
+}
 
 
 def main() -> int:
@@ -84,17 +257,34 @@ def main() -> int:
     PROCESSED.mkdir(parents=True, exist_ok=True)
     client = FiscalDataClient()
 
+    failures: list[str] = []
+
     for name in wanted:
         print(f"\n{name}:")
         try:
             table = BUILDERS[name](client, keep_raw=not args.no_raw)
+        except MissingCredential as exc:
+            # A configuration gap, not a broken feed. Still a failure — a refresh
+            # that quietly skipped a source would leave a stale table looking current.
+            print(f"    SKIPPED: {exc}", file=sys.stderr)
+            failures.append(f"{name}: no credential")
+            continue
         except Exception as exc:  # noqa: BLE001 - the point is to fail loudly
-            print(f"\n  FAILED: {type(exc).__name__}: {exc}", file=sys.stderr)
-            return 1
+            print(f"    FAILED: {type(exc).__name__}: {exc}", file=sys.stderr)
+            failures.append(f"{name}: {type(exc).__name__}")
+            continue
 
+        # Written only after its checks have passed, so a half-finished refresh
+        # cannot leave a plausible-but-wrong file behind.
         target = PROCESSED / f"{name}.parquet"
         table.to_parquet(target, index=False)
         print(f"    processed → {target.relative_to(REPO_ROOT)}")
+
+    if failures:
+        print(f"\n{len(failures)} source(s) failed:", file=sys.stderr)
+        for f in failures:
+            print(f"  - {f}", file=sys.stderr)
+        return 1
 
     print("\nRefresh complete.")
     return 0
