@@ -11,7 +11,9 @@ credential at all.
 
 ## Status
 
-**Phase 1: six of eight headline metrics render from live official data.** Bill
+**Phase 1 is complete.** Eight pages, six of eight headline metrics live (the other
+two are the Phase 2 and Phase 3 scores), every source verified, and a scheduled
+refresh that fails loudly. Bill
 share, incremental bill funding, WAM, the 10y ACM term premium and long-end auction
 stress are all built end-to-end and reconciled against published figures. The two
 remaining cards are the Phase 2 composite score and the Phase 3 global score.
@@ -45,12 +47,12 @@ What the data currently says, as at 2026-07:
 | 2 · MSPD Table 1 → `debt_outstanding` | done — reconciles to 3e-5% |
 | 3 · bill share, net issuance, funding ratios | done, on the dashboard |
 | 4 · `securities_detail` → WAM | done — 5.82y, matches Treasury's published average length |
-| 5 · FRED + NY Fed ACM ingestion | done — ACM live; FRED client written, needs the key |
+| 5 · FRED + NY Fed ACM ingestion | done — both live; 21 FRED series, 148,799 observations |
 | 6 · auctions ingestion + stress score | done — 11,078 auctions from 1979, scored from 2008-04 |
-| 7 · validation + `data_quality_events` | reconciliation and revision detection done; event table not written |
-| 8 · Streamlit subpages | Home only |
-| 9 · QRA input, data quality, methodology pages | not written |
-| 10 · scheduled refresh workflow | not written |
+| 7 · validation + `data_quality_events` | done — reconciliation, staleness, revisions, event table |
+| 8 · Streamlit subpages | done — Auctions, Issuance, Term premium, Fiscal & liquidity |
+| 9 · QRA input, data quality, methodology pages | done |
+| 10 · scheduled refresh workflow | done — runs weekdays, FRED included |
 
 | module | covers |
 |---|---|
@@ -79,7 +81,7 @@ What the data currently says, as at 2026-07:
   both closed on evidence.
 
 ```bash
-python -m pytest tests/ -q      # 180 tests
+python -m pytest tests/ -q      # 188 tests
 ```
 
 - [`docs/implementation_plan.md`](docs/implementation_plan.md) — plan, schema, recommended

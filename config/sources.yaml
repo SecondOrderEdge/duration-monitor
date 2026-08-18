@@ -710,12 +710,12 @@ fred:
 
   known_gaps:
     DGS20: >
-      Config has long asserted the series is discontinued 1987-01 to 1993-09. The
-      probe records observation_start 1962-01-02 and an end in 2026, which spans
-      the gap and therefore neither confirms nor refutes it — start/end cannot
-      reveal an interior hole. Treat as UNVERIFIED and check the observations
-      themselves before the 20Y is used in any curve calculation. Flag as missing;
-      never fill.
+      VERIFIED against the observations, not just the coverage window. The series
+      has a single 2,466-day hole between 1986-12-31 and 1993-10-01, which matches
+      the long-asserted 1987-01 to 1993-09 discontinuation. 2,408 of its 16,859
+      observations are FRED's "." marker in total; the rest are ordinary
+      non-trading days. Flag as missing; never fill, and never interpolate a 20Y
+      point across the discontinuation for a curve spread.
     MMMFFAQ027S: Quarterly frequency, confirmed. Do not forward-fill onto a daily axis.
     FYFSGDA188S: >
       ANNUAL, and the latest observation is 2025-01-01 — both coarser and more

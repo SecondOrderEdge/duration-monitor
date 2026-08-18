@@ -48,10 +48,14 @@ from src.transformation.normalize import (  # noqa: E402
     normalize_securities_detail,
     wam_input,
 )
+from src.validation.quality import QualityLog, check_staleness  # noqa: E402
 from src.validation.reconciliation import reconcile_components_to_total  # noqa: E402
 
 PROCESSED = REPO_ROOT / "data" / "processed"
 THRESHOLDS = REPO_ROOT / "config" / "thresholds.yaml"
+
+# Builders append informational notes here; main() folds them into the event log.
+QUALITY_NOTES: list[dict] = []
 
 
 def _thresholds() -> dict:
@@ -249,6 +253,24 @@ def build_auctions(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     if len(latest):
         print(f"    long-end stress {latest.iloc[-1]:+.1f} at {latest.index[-1]:%Y-%m-%d}")
 
+    # The processed table is the SCORED universe. Auctions before the composite
+    # start are normalized and archived in data/raw but not published here, so
+    # their absence is recorded rather than left to look like the source having
+    # no earlier history (Deviation D7, same boundary logic as term premium).
+    excluded = auctions[auctions.auction_date < start]
+    if len(excluded):
+        detail = (
+            f"{len(excluded)} auctions before {start:%Y-%m} are archived in "
+            f"data/raw but excluded from the processed store, of which "
+            f"{int((~excluded['has_results']).sum())} were held without published "
+            "results (bid-to-cover was not reported before about 2000)"
+        )
+        print(f"    note: {detail}")
+        QUALITY_NOTES.append(
+            {"source": "auctions", "endpoint": "auctions_query",
+             "event_type": "staleness", "severity": "info", "detail": detail}
+        )
+
     rolling_frame = latest.reset_index()
     rolling_frame.columns = ["date", "long_end_stress"]
     rolling_frame["country"] = "US"
@@ -278,27 +300,68 @@ def main() -> int:
     client = FiscalDataClient()
 
     failures: list[str] = []
+    quality = QualityLog()
+    staleness_cfg = _thresholds()["validation"]["staleness_days"]
+    built: dict[str, pd.DataFrame] = {}
 
     for name in wanted:
         print(f"\n{name}:")
         try:
             table = BUILDERS[name](client, keep_raw=not args.no_raw)
-        except MissingCredential as exc:
+        except MissingCredential as exc:  # noqa: PERF203
             # A configuration gap, not a broken feed. Still a failure — a refresh
             # that quietly skipped a source would leave a stale table looking current.
             print(f"    SKIPPED: {exc}", file=sys.stderr)
             failures.append(f"{name}: no credential")
+            quality.record(source=name, endpoint=name, event_type="fetch_failure",
+                           severity="error", detail=f"missing credential: {exc}")
             continue
         except Exception as exc:  # noqa: BLE001 - the point is to fail loudly
             print(f"    FAILED: {type(exc).__name__}: {exc}", file=sys.stderr)
             failures.append(f"{name}: {type(exc).__name__}")
+            kind = ("contract_break" if "Contract" in type(exc).__name__
+                    else "reconciliation_break" if "reconcil" in str(exc).lower()
+                    else "fetch_failure")
+            quality.record(source=name, endpoint=name, event_type=kind,
+                           severity="error", detail=f"{type(exc).__name__}: {exc}")
             continue
 
         # Written only after its checks have passed, so a half-finished refresh
         # cannot leave a plausible-but-wrong file behind.
         target = PROCESSED / f"{name}.parquet"
         table.to_parquet(target, index=False)
+        built[name] = table
         print(f"    processed → {target.relative_to(REPO_ROOT)}")
+
+    # Staleness is judged against the latest OBSERVATION, not the retrieval time:
+    # a feed fetched successfully every morning that has published nothing for a
+    # month is stale, and a check on retrieval would call it healthy.
+    date_columns = {"debt_outstanding": ("observation_date", "mspd"),
+                    "wam": ("observation_date", "mspd"),
+                    "term_premium": ("date", "nyfed_acm"),
+                    "auctions": ("auction_date", "auctions"),
+                    "rates": ("date", "fred_daily")}
+    for name, table in built.items():
+        column, threshold_key = date_columns.get(name, (None, None))
+        if column is None or column not in table.columns:
+            continue
+        event = check_staleness(
+            pd.to_datetime(table[column]).max(),
+            source=name, endpoint=name,
+            max_age_days=staleness_cfg[threshold_key],
+        )
+        if event:
+            print(f"  STALE {name}: {event['detail']}", file=sys.stderr)
+            quality.record(**event)
+            failures.append(f"{name}: stale")
+
+    for note in QUALITY_NOTES:
+        quality.record(**note)
+
+    events = quality.to_frame()
+    events.to_parquet(PROCESSED / "data_quality_events.parquet", index=False)
+    print(f"\n{len(events)} data quality event(s) → "
+          f"data/processed/data_quality_events.parquet")
 
     if failures:
         print(f"\n{len(failures)} source(s) failed:", file=sys.stderr)
