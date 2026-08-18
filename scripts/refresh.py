@@ -153,6 +153,26 @@ def build_term_premium(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFr
     else:
         print("    no prior vintage to compare against")
 
+    # Storage boundary (Deviation D7). The full daily series back to 1961 is 449KB
+    # and would be rewritten on every scheduled run, which is permanent git
+    # history for a file the app re-reads whole. The processed store keeps daily
+    # data from 1991: that is a ten-year lead-in before the 2001 backtest start,
+    # which is exactly the minimum history D1 requires before a point-in-time
+    # percentile may publish. Earlier history stays in data/raw, git-ignored, and
+    # is reproducible by re-running ingestion.
+    boundary = pd.Timestamp(_thresholds().get("storage", {}).get(
+        "term_premium_processed_start", "1991-01-01"
+    ))
+    full_rows = len(table)
+    table = table[table["date"] >= boundary].copy()
+    print(f"    processed store keeps {len(table)} of {full_rows} rows "
+          f"(daily from {boundary:%Y}; earlier history in data/raw)")
+
+    for column in ("country", "maturity", "model", "units", "source"):
+        if column in table.columns:
+            table[column] = table[column].astype("category")
+    table["value"] = table["value"].astype("float32")
+
     return table
 
 

@@ -434,7 +434,22 @@ def main() -> int:
     outdir = REPO_ROOT / "docs" / "source_probe" / stamp.strftime("%Y-%m-%d")
     outdir.mkdir(parents=True, exist_ok=True)
 
-    report: dict = {"probe_timestamp_utc": stamp.isoformat(), "config_version": cfg["meta"]["version"]}
+    # A partial run must not erase the rest of the day's evidence. `--only fred`
+    # writes a report containing only FRED, so replacing the file wholesale would
+    # silently drop the fiscaldata and NY Fed sections probed an hour earlier —
+    # leaving a file that looks like a complete run of one source.
+    existing_path = outdir / "probe.json"
+    report: dict = {}
+    if existing_path.exists():
+        try:
+            report = json.loads(existing_path.read_text(encoding="utf-8"))
+            if args.only:
+                print(f"merging into existing evidence for {stamp:%Y-%m-%d}", flush=True)
+        except json.JSONDecodeError:
+            report = {}
+
+    report["probe_timestamp_utc"] = stamp.isoformat()
+    report["config_version"] = cfg["meta"]["version"]
 
     if run_all or "fiscaldata" in want:
         print("probing fiscaldata ...", flush=True)
