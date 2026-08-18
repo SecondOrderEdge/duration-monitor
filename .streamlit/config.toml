@@ -1,0 +1,15 @@
+# Dark, restrained, data-forward. The charts set their own colours to match these
+# values, so a change here needs the palette constants in app/Home.py changed too.
+[theme]
+base = "dark"
+primaryColor = "#4c9be8"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#161a23"
+textColor = "#e6e9ef"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

@@ -5,45 +5,60 @@ duration**, and whether the sovereign is deliberately shortening its financing p
 Level of debt is context; direction of travel is the signal.
 
 Free official data only — Treasury Fiscal Data, FRED, NY Fed. No paid vendors. The one
-credential is a FRED API key, supplied via `FRED_API_KEY` or Streamlit secrets.
+credential is a FRED API key, read from `FRED_API_KEY`. It belongs to ingestion, not to
+the app: the dashboard reads `data/processed/` and never calls an API, so it needs no
+credential at all.
 
 ## Status
 
-**Phase 1: sources verified, calculation layer and fiscaldata client built and tested.**
-Transformation, validation and the Streamlit app are not written yet.
+**Phase 1: the dashboard renders live data.** Bill share and net issuance are built
+end-to-end from Treasury Fiscal Data and reconciled against the published totals.
+WAM, term premium and auction stress have tested calculations but no ingestion yet,
+and are shown on the dashboard as explicitly unavailable rather than blank.
 
-The network block that stalled step 0 has cleared. Every Treasury Fiscal Data endpoint and
-the NY Fed ACM file were probed live on 2026-08-17, `config/sources.yaml` was corrected
-against what they actually return, and all eight endpoints now match their contract with no
-field drift. Evidence is committed under `docs/source_probe/`.
+```bash
+python scripts/refresh.py     # pull → normalize → validate → data/processed/
+streamlit run app/Home.py     # reads data/processed/ only; no API calls at page load
+```
 
-Three questions the plan called load-bearing are answered, all favourably:
+Every source is verified against live responses; evidence is committed under
+`docs/source_probe/`. The FRED probe runs in GitHub Actions, the only place it can:
+FRED is the one credentialed source and the key lives in repository secrets.
 
-- **WAM is computable.** `mspd_table_3_market` carries `maturity_date` per security for the
-  full 2001 → 2026 history, so no TreasuryDirect fallback is needed — which matters, as that
-  host is the one still blocked.
-- **TIPS accretion is separately published** as `inflation_adj_amt`, so net issuance can be
-  accretion-adjusted rather than dropping TIPS (Deviation D2).
-- **Auction dispersion is available** — `low_yield`, `avg_med_yield` and `allocation_pctage`
-  — so the preferred high-minus-median and allotment-at-high measures are usable and the
-  noisy CMT tail proxy stays a weight-0 diagnostic (Deviation D3).
+What the current data says: bill share is **22.2%** as at 2026-07, above the 15–20%
+band TBAC has long referenced, and up 1.5pp over twelve months.
 
-Still open: `FRED_API_KEY` is not set anywhere the probe can see it, so FRED remains
-`verified: false` — a credential gap, not a network one. MTS coverage starts 2015-03, not
-2001, which constrains any factor built on the monthly deficit.
+### Build sequence
+
+| step | state |
+|---|---|
+| 0 · probe sources, correct the contract | done — all 8 fiscaldata endpoints, FRED, NY Fed |
+| 1 · typed parsing + fiscaldata client | done |
+| 2 · MSPD Table 1 → `debt_outstanding` | done — reconciles to 3e-5% |
+| 3 · bill share, net issuance, funding ratios | done, on the dashboard |
+| 4 · `securities_detail` → WAM | calculations done, ingestion not written |
+| 5 · FRED + NY Fed ACM ingestion | not written |
+| 6 · auctions ingestion + stress score | calculations done, ingestion not written |
+| 7 · validation + `data_quality_events` | reconciliation done, rest not written |
+| 8 · Streamlit subpages | Home only |
+| 9 · QRA input, data quality, methodology pages | not written |
+| 10 · scheduled refresh workflow | not written |
 
 | module | covers |
 |---|---|
 | `src/ingestion/typed.py` | declared per-field coercion; `"null"` → NaN with failure counting |
-| `src/ingestion/fiscaldata.py` | paginating, retrying API client; contract and completeness enforcement |
+| `src/ingestion/fiscaldata.py` | paginating, retrying client; contract and completeness enforcement |
+| `src/transformation/normalize.py` | raw → `debt_outstanding`; class renames, units, TIPS basis |
+| `src/validation/reconciliation.py` | components vs the published marketable total |
 | `src/calculations/timegrid.py` | period-aware changes; missing months never closed up |
 | `src/calculations/percentiles.py` | point-in-time percentile ranks and trailing z-scores |
 | `src/calculations/wam.py` | weighted average maturity, maturity buckets |
 | `src/calculations/issuance.py` | bill share, net issuance, funding ratios and their guards |
 | `src/signals/auction_stress.py` | per-auction stress score, long-end rolling stress |
+| `app/Home.py` | KPI row, bill share, quarterly net issuance |
 
 ```bash
-python -m pytest tests/ -q      # 134 tests
+python -m pytest tests/ -q      # 157 tests
 ```
 
 - [`docs/implementation_plan.md`](docs/implementation_plan.md) — plan, schema, recommended
