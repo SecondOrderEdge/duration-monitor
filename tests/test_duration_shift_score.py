@@ -13,6 +13,10 @@ import pytest
 
 from src.calculations.issuance import cash_adjusted_bill_funding, net_issuance
 from src.signals.duration_shift_score import (
+    FACTOR_DIRECTION,
+    build_factors,
+    classify_regime,
+    score_band,
     correlation_weights,
     duration_shift_score,
     expanding_weights,
@@ -234,3 +238,65 @@ def test_cash_adjustment_leaves_a_deficit_funded_month_alone():
 
     out = cash_adjusted_bill_funding(net, flat_cash, min_abs_denominator=1.0)
     assert out["incremental_bill_funding_adjusted"].iloc[-1] == pytest.approx(1.0)
+
+
+
+# --------------------------------------------------------------------------- #
+# factor directions
+# --------------------------------------------------------------------------- #
+
+
+def test_coupon_restraint_direction_is_inverted():
+    """`build_factors` computes the coupon SHARE of need, so high means NOT restraint.
+
+    This is a regression guard for a sign error that broke nothing visibly: the
+    score stayed in range, the series still looked plausible, and the only
+    symptom was that the 2020 spike the brief says MUST appear flattened from
+    +17.5 points to +3.3.
+    """
+    assert FACTOR_DIRECTION["coupon_restraint"] == -1
+    assert FACTOR_DIRECTION["wam_trend"] == -1
+    assert FACTOR_DIRECTION["bill_share_trend"] == +1
+
+
+def test_higher_coupon_share_lowers_the_score_factor():
+    idx = pd.period_range("2020-01", periods=14, freq="M")
+    flat = pd.Series(1.0, index=idx)
+    net = pd.DataFrame({
+        "period": list(idx) * 2,
+        "security_class": ["BILLS"] * 14 + ["NOTES"] * 14,
+        "net_issuance": [100.0] * 14 + [900.0] * 14,     # coupons dominate
+        "method": ["mspd_delta"] * 28,
+    })
+    heavy_coupons = build_factors(
+        bill_share_series=flat, net=net, incremental_funding=flat, wam_years=flat,
+        term_premium_10y=flat, auction_stress=flat,
+        coupon_classes=("NOTES",), min_abs_denominator=1.0,
+    )["coupon_restraint"].dropna()
+
+    net_light = net.copy()
+    net_light.loc[net_light.security_class == "NOTES", "net_issuance"] = 100.0
+    light_coupons = build_factors(
+        bill_share_series=flat, net=net_light, incremental_funding=flat, wam_years=flat,
+        term_premium_10y=flat, auction_stress=flat,
+        coupon_classes=("NOTES",), min_abs_denominator=1.0,
+    )["coupon_restraint"].dropna()
+
+    # Restrained coupons must score HIGHER than coupons that kept pace.
+    assert light_coupons.iloc[-1] > heavy_coupons.iloc[-1]
+
+
+def test_regime_conditions_naming_an_absent_input_raise():
+    """Silently skipping a condition would promote a regime by dropping a test."""
+    inputs = pd.DataFrame({"duration_shift_score": [90.0]})
+    regimes = {"red": {"duration_shift_score_at_least": 80,
+                       "long_end_auction_stress_at_least": 25}}
+    with pytest.raises(ValueError, match="long_end_auction_stress"):
+        classify_regime(inputs, regimes)
+
+
+def test_score_bands_are_half_open_so_a_boundary_lands_upward():
+    bands = [{"name": "neutral", "from": 40, "to": 60},
+             {"name": "meaningful shortening", "from": 60, "to": 80}]
+    out = score_band(pd.Series([59.9, 60.0, 79.9]), bands)
+    assert list(out) == ["neutral", "meaningful shortening", "meaningful shortening"]

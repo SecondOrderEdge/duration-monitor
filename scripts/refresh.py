@@ -36,6 +36,20 @@ from src.ingestion.fiscaldata import (  # noqa: E402
 from src.calculations.wam import wam_series  # noqa: E402
 from src.ingestion.fred import FredClient, MissingCredential  # noqa: E402
 from src.ingestion.nyfed import detect_revisions, fetch_acm  # noqa: E402
+from src.calculations.issuance import (  # noqa: E402
+    bill_share,
+    cash_adjusted_bill_funding,
+    incremental_bill_funding,
+    net_issuance,
+)
+from src.signals.duration_shift_score import (  # noqa: E402
+    build_factors,
+    classify_regime,
+    duration_shift_score,
+    expanding_weights,
+    percentile_ranks,
+    score_band,
+)
 from src.signals.auction_stress import (  # noqa: E402
     DEFAULT_COMPONENTS,
     Component,
@@ -361,6 +375,139 @@ def build_cash_balance(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFr
     return cash
 
 
+def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """Fiscal Duration Shift Score, from tables the other builders produced.
+
+    Reads the processed store rather than the API — every input is already
+    validated, and recomputing them here would let the score drift away from what
+    the pages display.
+    """
+    needed = ["debt_outstanding", "wam", "term_premium", "long_end_stress", "cash_balance"]
+    missing = [n for n in needed if not (PROCESSED / f"{n}.parquet").exists()]
+    if missing:
+        raise FileNotFoundError(
+            f"the score needs {missing}; run those builders first "
+            f"(python scripts/refresh.py --only {missing[0]})"
+        )
+
+    read = {n: pd.read_parquet(PROCESSED / f"{n}.parquet") for n in needed}
+    thresholds = _thresholds()
+    weights_cfg = yaml.safe_load(
+        (REPO_ROOT / "config" / "factor_weights.yaml").read_text(encoding="utf-8")
+    )["weighting"]
+    floor = float(thresholds["issuance"]["min_abs_denominator_monthly_musd"]) * 1_000_000
+    coupon_classes = tuple(thresholds["issuance"]["coupon_classes"])
+
+    debt = read["debt_outstanding"]
+    net = net_issuance(debt)
+
+    wam_years = read["wam"].set_index(
+        pd.PeriodIndex(pd.to_datetime(read["wam"].observation_date), freq="M")
+    )["wam_years"]
+
+    tp = read["term_premium"]
+    tp10 = tp[tp["maturity"].astype(str) == "10Y"].set_index("date")["value"].sort_index()
+    tp10 = tp10.resample("ME").last()
+    tp10.index = tp10.index.to_period("M")
+
+    stress = read["long_end_stress"].set_index("date")["long_end_stress"].sort_index()
+    stress = stress.resample("ME").last()
+    stress.index = stress.index.to_period("M")
+
+    cash = month_end_cash_balance(read["cash_balance"])
+
+    # Deviation D5. The cash-adjusted ratio is the published one: borrowing that
+    # rebuilt the Treasury General Account after a debt-ceiling episode did not
+    # finance a deficit, and counting it as duration shortening is the most likely
+    # false positive here. The unadjusted ratio is kept alongside, because it is
+    # what actually happened to the debt stock.
+    adjusted = thresholds["debt_ceiling_episodes"].get("cash_adjustment", True)
+    unadj = incremental_bill_funding(net, min_abs_denominator=floor)[
+        "incremental_bill_funding"
+    ]
+    adj = cash_adjusted_bill_funding(net, cash, min_abs_denominator=floor)[
+        "incremental_bill_funding_adjusted"
+    ]
+    funding = adj if adjusted else unadj
+    print(f"    incremental bill funding: {'cash-adjusted' if adjusted else 'unadjusted'}")
+
+    factors = build_factors(
+        bill_share_series=bill_share(debt),
+        net=net,
+        incremental_funding=funding,
+        wam_years=wam_years,
+        term_premium_10y=tp10,
+        auction_stress=stress,
+        coupon_classes=coupon_classes,
+        min_abs_denominator=floor,
+    )
+
+    pct_cfg = thresholds["percentiles"]
+    ranks = percentile_ranks(
+        factors, window=pct_cfg["window_months"], min_periods=pct_cfg["min_history_months"]
+    )
+    weights = expanding_weights(
+        ranks, ridge=float(weights_cfg["ridge"]),
+        min_months=int(weights_cfg["min_months_for_weights"]),
+    )
+    scored = duration_shift_score(
+        ranks, weights, min_factors=int(weights_cfg["min_factors"])
+    )
+    scored["band"] = score_band(
+        scored["score"], thresholds["duration_shift_score_bands"]["bands"]
+    )
+
+    # Regime conditions are measurable statements, so their inputs are supplied
+    # explicitly and a condition naming an absent input raises.
+    tp_pct = ranks["term_premium_10y_trend"]
+    regime_inputs = pd.DataFrame({
+        "duration_shift_score": scored["score"],
+        "bill_share_12m_change": bill_share(debt).diff(12),
+        "term_premium_10y_percentile": tp_pct,
+        "long_end_auction_stress": stress,
+    })
+    scored["regime"] = classify_regime(regime_inputs, thresholds["regimes"])
+
+    for name in ranks.columns:
+        scored[f"rank_{name}"] = ranks[name]
+        scored[f"weight_{name}"] = weights[name]
+
+    out = scored.reset_index().rename(columns={"index": "period"})
+    out["period"] = out["period"].astype(str)
+    out["country"] = "US"
+    out["cash_adjusted"] = adjusted
+    out["retrieval_date"] = pd.Timestamp.now("UTC")
+
+    # The regime conditions in config do not partition the score range: a month
+    # with a score of 55 and a bill-share change below the yellow threshold
+    # satisfies neither green (which requires < 40) nor yellow. That is a config
+    # design gap, so it is counted and surfaced rather than filled with a default
+    # regime nobody chose.
+    unclassified = int(scored["score"].notna().sum() - scored["regime"].notna().sum())
+    if unclassified:
+        share = unclassified / max(int(scored["score"].notna().sum()), 1)
+        detail = (
+            f"{unclassified} scored months ({share:.0%}) match no regime. The "
+            "conditions in thresholds.yaml do not cover the whole score range — "
+            "green_normal requires a score below 40 while yellow_shortening "
+            "requires 40 or above AND a bill-share condition, so readings in "
+            "between fall through. Needs a config decision, not a default."
+        )
+        print(f"    note: {detail}")
+        QUALITY_NOTES.append(
+            {"source": "score", "endpoint": "duration_shift_score",
+             "event_type": "contract_break", "severity": "warning", "detail": detail}
+        )
+
+    live = scored["score"].dropna()
+    if len(live):
+        last = live.index[-1]
+        print(f"    score {live.iloc[-1]:.1f} at {last} "
+              f"({scored.loc[last, 'band']}, regime {scored.loc[last, 'regime']})")
+        print(f"    {len(live)} scored months, {live.index[0]} → {last}")
+    return out
+
+
 BUILDERS = {
     "debt_outstanding": build_debt_outstanding,
     "cash_balance": build_cash_balance,
@@ -368,6 +515,8 @@ BUILDERS = {
     "wam": build_wam,
     "term_premium": build_term_premium,
     "rates": build_rates,
+    # Last: it reads what the others wrote.
+    "score": build_score,
 }
 
 

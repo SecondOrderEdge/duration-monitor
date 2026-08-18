@@ -44,8 +44,14 @@ from src.calculations.percentiles import point_in_time_percentile
 FACTOR_DIRECTION = {
     "bill_share_trend": +1,
     "incremental_bill_funding": +1,
-    "wam_trend": -1,               # falling WAM means shortening
-    "coupon_restraint": +1,
+    # Falling WAM means shortening.
+    "wam_trend": -1,
+    # `build_factors` computes the COUPON SHARE of financing need, so a high
+    # value means coupons kept pace — the opposite of restraint. Getting this
+    # sign wrong does not break anything visibly: the score stays in range, the
+    # chart still looks like a plausible series, and the only symptom is that
+    # the 2020 spike the brief says MUST appear flattens to +3 points.
+    "coupon_restraint": -1,
     "term_premium_10y_trend": +1,
     "long_end_auction_stress": +1,
 }
@@ -176,16 +182,112 @@ def duration_shift_score(
     return out
 
 
-def classify_regime(score: pd.Series, bands: dict) -> pd.Series:
-    """Map the score onto the named regime bands from config."""
-    edges = sorted((v["upper"], k) for k, v in bands.items())
+def score_band(score: pd.Series, bands: list[dict]) -> pd.Series:
+    """Map the score onto the named interpretation bands from config.
+
+    Bands are `{name, from, to}` and are treated as [from, to) so a reading of
+    exactly 60 lands in "meaningful shortening" rather than "neutral". Boundary
+    readings are common — a percentile composite clusters near round numbers —
+    so which side they fall on is a stated convention, not an accident.
+    """
+    ordered = sorted(bands, key=lambda b: b["from"])
 
     def label(value):
         if pd.isna(value):
             return None
-        for upper, name in edges:
-            if value <= upper:
-                return name
-        return edges[-1][1]
+        for band in ordered:
+            if value < band["to"] or band is ordered[-1]:
+                if value >= band["from"]:
+                    return band["name"]
+        return ordered[-1]["name"]
 
-    return score.map(label).rename("regime")
+    return score.map(label).rename("band")
+
+
+# Condition suffixes understood in the regime config. Each maps to a comparison
+# against a named input, so a regime is a measurable statement rather than a label.
+_COMPARATORS = {
+    "_at_least": lambda series, threshold: series >= threshold,
+    "_below": lambda series, threshold: series < threshold,
+    "_above": lambda series, threshold: series > threshold,
+}
+
+
+def classify_regime(inputs: pd.DataFrame, regimes: dict) -> pd.Series:
+    """Assign the highest regime whose every condition holds.
+
+    Regimes are defined by measurable conditions in `config/thresholds.yaml`,
+    never by hand-applied labels, so a regime call can always be traced to the
+    readings that produced it. Every listed condition must hold; the last
+    satisfied regime in config order wins, which is why they are ordered from
+    least to most severe there.
+
+    A condition naming an input the caller did not supply raises. Silently
+    ignoring it would quietly promote a regime by dropping one of its
+    requirements — a red call that only ever tested three of its four conditions
+    looks identical to one that tested all four.
+    """
+    order = [k for k in regimes if k != "verified"]
+    result = pd.Series(None, index=inputs.index, dtype="object")
+
+    for name in order:
+        conditions = regimes[name]
+        holds = pd.Series(True, index=inputs.index)
+        for key, threshold in conditions.items():
+            for suffix, compare in _COMPARATORS.items():
+                if key.endswith(suffix):
+                    column = key[: -len(suffix)]
+                    if column not in inputs.columns:
+                        raise ValueError(
+                            f"regime {name!r} tests {column!r}, which was not "
+                            f"supplied; available: {list(inputs.columns)}"
+                        )
+                    holds &= compare(inputs[column], threshold).fillna(False)
+                    break
+            else:
+                raise ValueError(
+                    f"regime {name!r} has condition {key!r} with no recognised "
+                    f"comparator suffix ({sorted(_COMPARATORS)})"
+                )
+        result = result.where(~holds, name)
+
+    return result.rename("regime")
+
+
+def build_factors(
+    *,
+    bill_share_series: pd.Series,
+    net: pd.DataFrame,
+    incremental_funding: pd.Series,
+    wam_years: pd.Series,
+    term_premium_10y: pd.Series,
+    auction_stress: pd.Series,
+    coupon_classes: tuple[str, ...],
+    min_abs_denominator: float,
+    horizon: int = 12,
+) -> pd.DataFrame:
+    """Assemble the six factors on a common monthly axis.
+
+    Signs are applied here so that HIGHER ALWAYS MEANS MORE SHORTENING, and the
+    direction of each is fixed in `FACTOR_DIRECTION` rather than in config —
+    a weights file should not be able to silently invert a factor's meaning.
+    """
+    from src.calculations.issuance import _aggregate
+
+    coupons = _aggregate(net, coupon_classes)
+    coupons_12m = coupons.rolling(horizon).sum()
+    bills_12m = _aggregate(net, ["BILLS"]).rolling(horizon).sum()
+    need_12m = bills_12m + coupons_12m
+
+    factors = pd.DataFrame({
+        "bill_share_trend": bill_share_series.diff(horizon),
+        "incremental_bill_funding": incremental_funding,
+        "wam_trend": wam_years.diff(horizon),
+        "coupon_restraint": coupons_12m
+        / need_12m.where(need_12m.abs() > min_abs_denominator),
+        "term_premium_10y_trend": term_premium_10y.diff(horizon),
+        "long_end_auction_stress": auction_stress,
+    })
+    for name, direction in FACTOR_DIRECTION.items():
+        factors[name] = factors[name] * direction
+    return factors[list(FACTOR_DIRECTION)]
