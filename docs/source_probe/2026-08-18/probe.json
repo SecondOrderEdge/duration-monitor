@@ -1,5 +1,5 @@
 {
-  "probe_timestamp_utc": "2026-08-18T20:23:09.142981+00:00",
+  "probe_timestamp_utc": "2026-08-18T20:46:47.726384+00:00",
   "config_version": 2,
   "fiscaldata": {
     "mspd_table_1": {
@@ -895,7 +895,7 @@
           "allocation_pctage_decimals": "2",
           "announcemtd_cusip": "null",
           "announcemt_date": "2026-08-18",
-          "auction_format": "Single Price",
+          "auction_format": "Single-Price",
           "avg_med_discnt_rate": "null",
           "avg_med_investment_rate": "null",
           "avg_med_price": "null",
@@ -2034,20 +2034,20 @@
         "last_updated": "2026-06-11 21:15:44-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-06-13",
-            "realtime_end": "2026-06-13",
+            "realtime_start": "2026-07-13",
+            "realtime_end": "2026-07-13",
             "date": "2026-01-01",
             "value": "8289569.0"
           },
           {
-            "realtime_start": "2026-06-13",
-            "realtime_end": "2026-06-13",
+            "realtime_start": "2026-07-13",
+            "realtime_end": "2026-07-13",
             "date": "2025-10-01",
             "value": "8190235.0"
           },
           {
-            "realtime_start": "2026-06-13",
-            "realtime_end": "2026-06-13",
+            "realtime_start": "2026-07-13",
+            "realtime_end": "2026-07-13",
             "date": "2025-07-01",
             "value": "7774054.0"
           }
@@ -2065,20 +2065,20 @@
         "last_updated": "2026-06-18 14:30:20-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-06-19",
-            "realtime_end": "2026-06-19",
+            "realtime_start": "2026-06-18",
+            "realtime_end": "2026-06-18",
             "date": "2026-01-01",
             "value": "39065421.0"
           },
           {
-            "realtime_start": "2026-06-19",
-            "realtime_end": "2026-06-19",
+            "realtime_start": "2026-06-18",
+            "realtime_end": "2026-06-18",
             "date": "2025-10-01",
             "value": "38514009.0"
           },
           {
-            "realtime_start": "2026-06-19",
-            "realtime_end": "2026-06-19",
+            "realtime_start": "2026-06-18",
+            "realtime_end": "2026-06-18",
             "date": "2025-07-01",
             "value": "37637552.59555763"
           }
@@ -2096,20 +2096,20 @@
         "last_updated": "2026-04-09 08:07:35-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-06-06",
-            "realtime_end": "2026-06-06",
+            "realtime_start": "2026-06-10",
+            "realtime_end": "2026-06-10",
             "date": "2025-01-01",
             "value": "-5.76906"
           },
           {
-            "realtime_start": "2026-06-06",
-            "realtime_end": "2026-06-06",
+            "realtime_start": "2026-06-10",
+            "realtime_end": "2026-06-10",
             "date": "2024-01-01",
             "value": "-6.19625"
           },
           {
-            "realtime_start": "2026-06-06",
-            "realtime_end": "2026-06-06",
+            "realtime_start": "2026-06-10",
+            "realtime_end": "2026-06-10",
             "date": "2023-01-01",
             "value": "-6.06751"
           }
@@ -2158,20 +2158,20 @@
         "last_updated": "2026-06-25 07:51:13-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-08-18",
-            "realtime_end": "2026-08-18",
+            "realtime_start": "2026-07-14",
+            "realtime_end": "2026-07-14",
             "date": "2026-01-01",
             "value": "5872.497"
           },
           {
-            "realtime_start": "2026-08-18",
-            "realtime_end": "2026-08-18",
+            "realtime_start": "2026-07-14",
+            "realtime_end": "2026-07-14",
             "date": "2025-10-01",
             "value": "5898.479"
           },
           {
-            "realtime_start": "2026-08-18",
-            "realtime_end": "2026-08-18",
+            "realtime_start": "2026-07-14",
+            "realtime_end": "2026-07-14",
             "date": "2025-07-01",
             "value": "5793.596"
           }
