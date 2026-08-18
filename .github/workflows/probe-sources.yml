@@ -18,6 +18,15 @@ on:
         required: false
         default: ""
         type: string
+  push:
+    # Any change to the contract or the probe itself should be re-verified
+    # against live responses. Deliberately narrow: the evidence the job commits
+    # lives under docs/source_probe/, which is not in this list, so a run cannot
+    # retrigger itself.
+    paths:
+      - config/sources.yaml
+      - scripts/probe_sources.py
+      - .github/workflows/probe-sources.yml
   schedule:
     # Weekly contract check: a field that disappears should surface on its own,
     # not the next time someone happens to run ingestion.
