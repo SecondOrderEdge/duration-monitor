@@ -84,6 +84,45 @@ weakening private demand.
 - QRA PDFs are not NLP-extracted in Phase 1.
 - No third-party source is substituted where an official one exists.
 
+## Validation
+
+Two reconciliations gate publication, both against Treasury's own published
+figures and both run on every refresh.
+
+**Component classes vs the published marketable total.** 307 months, worst
+residual 3.3e-05% — Treasury's own rounding.
+
+**Security-level detail vs the published per-class subtotal.** 935 (month, class)
+pairs. This is the check that makes WAM publishable: WAM is weighted by the
+security rows, so if those rows do not reproduce the published subtotal the
+weights are wrong and nothing downstream would reveal it.
+
+The comparison is against the UNMATURED subtotal rather than the class total.
+Matured but unredeemed securities remain outstanding debt and sit inside the
+class total — for FRNs in 2023-04 that was $85bn on $601bn — but they carry no
+remaining maturity and are correctly outside a duration calculation.
+
+Treasury's subtotal labels are not stable across the history and include one
+outright typo (`Total Tresasury Floating Rate Notes`, 2016-07 to 2017-01), a
+trailing-period variant, and months where the "Total Unmatured" prefix is absent
+entirely. Labels are normalised and classified by pattern, testing FRN before
+NOTES (the former contains the latter) and Unmatured before Matured.
+
+**One known source defect** is excluded by exact date and class, never by
+loosening the tolerance: at 2012-06-30 the published "Total Unmatured Treasury
+Bills" reads 1,571,401.2775mn, understated by exactly 25,000.5804mn. The detail
+sums to 1,596,401.4mn, which agrees with the same table's "Total Treasury Bills"
+and with Table 1 to within rounding — two independent published figures
+corroborate the detail against one defective subtotal.
+
+**Still outstanding.** WAM has not been reconciled against Treasury's own
+published *average length of the marketable debt*. That figure is not in the
+Fiscal Data API; it appears in the Treasury Bulletin and the Quarterly Refunding
+documents. Note the definitional gap when it is: Treasury publishes average
+length for debt held by *private investors*, which excludes Federal Reserve and
+intragovernmental holdings, while the WAM here covers all marketable debt. The
+two are not expected to be equal and the difference is not an error.
+
 ## Known limitations
 
 - **ACM revisions.** The backtest uses today's ACM vintage for history, because

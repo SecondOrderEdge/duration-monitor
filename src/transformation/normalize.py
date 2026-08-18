@@ -447,3 +447,97 @@ def normalize_auctions(
     out.attrs["n_without_results"] = int((~out["has_results"]).sum())
 
     return out.sort_values("auction_date").reset_index(drop=True)
+
+
+# --------------------------------------------------------------------------- #
+# subtotal rows (validation inputs)
+# --------------------------------------------------------------------------- #
+
+# Treasury's own subtotal labels are not stable. Observed across 2001-2026:
+#   "Total Tresasury Floating Rate Notes"          (typo, 2016-07 to 2017-01)
+#   "Total Unmatured Treasury Floating Rate Notes." (trailing period, 2021)
+#   "Treasury Floating Rate Notes"                  (no prefix, 2016-04 to 06)
+#   "Matured Treasury Floating Rate Notes"          (no "Total", 2016-04)
+# and TIPS renamed twice: "Inflation-Indexed Notes/Bonds" → "Inflation-Protected
+# Securities" → "TIPS". Matching on exact strings silently loses whichever months
+# use a variant, so labels are normalised and then classified by pattern.
+_LABEL_TYPOS = {"Tresasury": "Treasury"}
+
+
+def parse_subtotal_label(label: str) -> tuple[str, str] | None:
+    """Classify a subtotal label as (kind, security_class), or None if it is neither.
+
+    `kind` is 'unmatured', 'matured' or 'total'.
+
+    Two ordering traps, both of which produce a confident wrong answer:
+    "Floating Rate Notes" contains "Notes", so FRN must be tested before NOTES;
+    and "Unmatured" contains "Matured", so the unmatured test must come first.
+    """
+    if not isinstance(label, str):
+        return None
+    text = label.strip().rstrip(".")
+    for wrong, right in _LABEL_TYPOS.items():
+        text = text.replace(wrong, right)
+    if not text or text.lower() in {"nan", "null", "none"}:
+        return None
+
+    # FRN before NOTES, TIPS before NOTES/BONDS.
+    if "Floating Rate" in text:
+        security_class = "FRN"
+    elif "Inflation" in text or "TIPS" in text:
+        security_class = "TIPS"
+    elif "Bills" in text:
+        security_class = "BILLS"
+    elif "Bonds" in text:
+        security_class = "BONDS"
+    elif "Notes" in text:
+        security_class = "NOTES"
+    else:
+        return None                      # not a class subtotal at all
+
+    if "Unmatured" in text:              # before the "Matured" test
+        kind = "unmatured"
+    elif "Matured" in text:
+        kind = "matured"
+    elif text.startswith("Total Treasury"):
+        kind = "total"
+    elif text.startswith("Treasury "):   # the 2016 bare variant
+        kind = "unmatured"
+    else:
+        return None
+
+    return kind, security_class
+
+
+def extract_subtotals(typed: pd.DataFrame) -> pd.DataFrame:
+    """Published per-class subtotals from mspd_table_3_market.
+
+    These are what the security-level detail is validated against: the detail must
+    reproduce the published UNMATURED subtotal exactly, since that is the same
+    universe by construction.
+    """
+    df = typed[typed["maturity_date"].isna()].copy()
+    parsed = df["security_class2_desc"].map(parse_subtotal_label)
+
+    df["kind"] = [p[0] if p else None for p in parsed]
+    df["security_class"] = [p[1] if p else None for p in parsed]
+
+    out = df.dropna(subset=["kind", "security_class"])[
+        ["record_date", "security_class", "kind", "outstanding_amt"]
+    ].copy()
+    out = out.rename(columns={"record_date": "observation_date"})
+    out["amount"] = out["outstanding_amt"] * MILLIONS
+    return out.drop(columns=["outstanding_amt"]).reset_index(drop=True)
+
+
+def unclassified_subtotal_rows(typed: pd.DataFrame) -> pd.DataFrame:
+    """Rows with no maturity date that are not recognisable subtotals.
+
+    Observed once: a bare CUSIP (`9127950`, 2003-11) sitting where a label belongs,
+    i.e. a security whose maturity date the source omitted. Excluding it from WAM
+    is right — there is no duration to compute without a maturity — but it is a
+    source defect and is surfaced rather than quietly dropped.
+    """
+    df = typed[typed["maturity_date"].isna()].copy()
+    parsed = df["security_class2_desc"].map(parse_subtotal_label)
+    return df[[p is None for p in parsed]].copy()

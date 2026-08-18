@@ -152,6 +152,18 @@ validation:
   # Computed marketable total vs published MSPD total. A break is an error, not a
   # warning: a WAM that cannot reproduce the official total is not fit to publish.
   reconciliation_tolerance_pct: 0.1
+  # Known defects in Treasury's own published subtotals. Each is corroborated by
+  # two independent published figures before being listed here, and the check
+  # stays strict everywhere else rather than being loosened to accommodate them.
+  known_subtotal_defects:
+    - observation_date: 2012-06-30
+      security_class: BILLS
+      reason: >
+        "Total Unmatured Treasury Bills" reads 1,571,401.2775mn, understated by
+        exactly 25,000.5804mn. The security-level detail sums to 1,596,401.4mn,
+        which agrees with the same table's "Total Treasury Bills"
+        (1,596,401.8579mn) and with mspd_table_1 BILLS to within rounding. The
+        detail is right and the unmatured subtotal is wrong for this month.
   debt_to_penny_tolerance_pct: 0.1
   staleness_days:
     mspd: 45          # monthly, published around the 8th business day

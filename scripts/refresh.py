@@ -43,13 +43,18 @@ from src.signals.auction_stress import (  # noqa: E402
     long_end_stress,
 )
 from src.transformation.normalize import (  # noqa: E402
+    extract_subtotals,
     normalize_auctions,
     normalize_debt_outstanding,
     normalize_securities_detail,
+    unclassified_subtotal_rows,
     wam_input,
 )
 from src.validation.quality import QualityLog, check_staleness  # noqa: E402
-from src.validation.reconciliation import reconcile_components_to_total  # noqa: E402
+from src.validation.reconciliation import (  # noqa: E402
+    reconcile_components_to_total,
+    reconcile_detail_to_published_subtotal,
+)
 
 PROCESSED = REPO_ROOT / "data" / "processed"
 THRESHOLDS = REPO_ROOT / "config" / "thresholds.yaml"
@@ -111,6 +116,41 @@ def build_wam(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     securities = normalize_securities_detail(typed, retrieval_date=result.retrieval_date)
     print(f"    {len(securities)} security-months over "
           f"{securities.observation_date.nunique()} months")
+
+    # The check that makes WAM publishable: the security rows WAM is weighted by
+    # must reproduce Treasury's own published per-class unmatured subtotal. If they
+    # do not, the weights are wrong and nothing downstream would reveal it.
+    validation = _thresholds()["validation"]
+    check = reconcile_detail_to_published_subtotal(
+        securities,
+        extract_subtotals(typed),
+        tolerance_pct=validation["reconciliation_tolerance_pct"],
+        known_defects=validation.get("known_subtotal_defects") or [],
+    )
+    print(f"    detail vs published subtotal: {check.n_periods} (month, class) pairs, "
+          f"worst {check.max_abs_diff_pct:.2e}%")
+    check.raise_if_failed()
+
+    orphans = unclassified_subtotal_rows(typed)
+    orphans = orphans[
+        ~orphans["security_class1_desc"].astype(str).isin(
+            ["Federal Financing Bank", "Total Marketable"]
+        )
+    ]
+    if len(orphans):
+        detail = (
+            f"{len(orphans)} row(s) with no maturity date and no recognisable "
+            f"subtotal label, e.g. CUSIP "
+            f"{orphans['security_class2_desc'].astype(str).iloc[0]} at "
+            f"{orphans['record_date'].iloc[0]:%Y-%m}. Excluded from WAM — there is "
+            "no duration to compute without a maturity — and reported rather than "
+            "silently dropped."
+        )
+        print(f"    note: {detail}")
+        QUALITY_NOTES.append(
+            {"source": "wam", "endpoint": "mspd_table_3_market",
+             "event_type": "parse_failure", "severity": "warning", "detail": detail}
+        )
 
     basis = _thresholds()["wam"]["tips_weighting_basis"]
     series = wam_series(wam_input(securities, basis=basis))

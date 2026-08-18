@@ -343,3 +343,137 @@ def test_missing_competitive_figure_falls_back_and_is_recorded():
     out = normalize_auctions(rows, retrieval_date=AS_OF).set_index("auction_date")
 
     assert out.loc["2026-08-18", "bidder_share_basis"] == "total_accepted"
+
+
+# --------------------------------------------------------------------------- #
+# subtotal labels and the WAM input check
+# --------------------------------------------------------------------------- #
+
+from src.transformation.normalize import (  # noqa: E402
+    extract_subtotals,
+    normalize_securities_detail,
+    parse_subtotal_label,
+    unclassified_subtotal_rows,
+)
+from src.validation.reconciliation import (  # noqa: E402
+    reconcile_detail_to_published_subtotal,
+)
+
+
+def test_frn_is_classified_before_notes():
+    """"Floating Rate Notes" contains "Notes", so order decides the answer."""
+    assert parse_subtotal_label("Total Unmatured Treasury Floating Rate Notes") == (
+        "unmatured", "FRN",
+    )
+    assert parse_subtotal_label("Total Unmatured Treasury Notes") == ("unmatured", "NOTES")
+
+
+def test_unmatured_is_classified_before_matured():
+    """"Unmatured" contains "Matured" — the wrong order silently swaps the two."""
+    assert parse_subtotal_label("Total Unmatured Treasury Bills") == ("unmatured", "BILLS")
+    assert parse_subtotal_label("Total Matured Treasury Bills") == ("matured", "BILLS")
+
+
+def test_source_label_variants_all_parse():
+    """Treasury's own labels are not stable, including one outright typo."""
+    assert parse_subtotal_label("Total Tresasury Floating Rate Notes") == ("total", "FRN")
+    assert parse_subtotal_label("Total Unmatured Treasury Floating Rate Notes.") == (
+        "unmatured", "FRN",
+    )
+    assert parse_subtotal_label("Treasury Floating Rate Notes") == ("unmatured", "FRN")
+    assert parse_subtotal_label("Matured Treasury Floating Rate Notes") == ("matured", "FRN")
+
+
+def test_tips_renames_all_map_to_tips():
+    for label in (
+        "Total Treasury Inflation-Indexed Notes",
+        "Total Treasury Inflation-Indexed Bonds",
+        "Total Treasury Inflation-Protected Securities",
+        "Total Treasury TIPS",
+    ):
+        assert parse_subtotal_label(label) == ("total", "TIPS")
+
+
+def test_a_bare_cusip_is_not_a_subtotal():
+    """Observed once in the source: a security whose maturity date is missing."""
+    assert parse_subtotal_label("9127950") is None
+    assert parse_subtotal_label(None) is None
+    assert parse_subtotal_label("nan") is None
+
+
+def detail_and_subtotals():
+    typed = pd.DataFrame({
+        "record_date": pd.to_datetime(["2024-06-30"] * 4),
+        "security_class1_desc": ["Notes", "Notes", "Notes", "Notes"],
+        "security_class2_desc": ["912828AA1", "912828BB2",
+                                 "Total Unmatured Treasury Notes",
+                                 "Total Matured Treasury Notes"],
+        "maturity_date": pd.to_datetime(["2030-01-31", "2031-01-31", None, None]),
+        "issue_date": pd.to_datetime(["2020-01-31", "2021-01-31", None, None]),
+        "outstanding_amt": [100.0, 50.0, 150.0, 7.0],
+        "inflation_adj_amt": [0.0, 0.0, 0.0, 0.0],
+        "interest_rate_pct": [2.0, 2.5, None, None],
+    })
+    return typed
+
+
+def test_detail_reconciles_to_the_published_unmatured_subtotal():
+    typed = detail_and_subtotals()
+    securities = normalize_securities_detail(typed)
+    result = reconcile_detail_to_published_subtotal(
+        securities, extract_subtotals(typed), tolerance_pct=0.1
+    )
+    assert result.ok
+    assert result.n_periods == 1
+
+
+def test_check_is_against_unmatured_not_the_class_total():
+    """Matured-but-unredeemed debt sits inside the class total but carries no duration.
+
+    Checking against the class total would fail for a legitimate reason — for FRNs
+    in 2023-04 that was $85bn on $601bn — and hide any real break behind it.
+    """
+    typed = detail_and_subtotals()
+    subtotals = extract_subtotals(typed)
+    unmatured = subtotals[subtotals["kind"] == "unmatured"]["amount"].iloc[0]
+    total = subtotals[subtotals["kind"] == "matured"]["amount"].iloc[0] + unmatured
+
+    assert unmatured == pytest.approx(150.0 * MILLIONS)
+    assert total == pytest.approx(157.0 * MILLIONS)
+
+
+def test_a_real_break_still_fails():
+    typed = detail_and_subtotals()
+    typed.loc[0, "outstanding_amt"] = 10.0          # detail no longer sums to 150
+    securities = normalize_securities_detail(typed)
+    result = reconcile_detail_to_published_subtotal(
+        securities, extract_subtotals(typed), tolerance_pct=0.1
+    )
+    assert not result.ok
+
+
+def test_a_known_source_defect_is_excluded_by_exact_key():
+    """Excluded by (date, class), never by loosening the tolerance for everyone."""
+    typed = detail_and_subtotals()
+    typed.loc[0, "outstanding_amt"] = 10.0
+    securities = normalize_securities_detail(typed)
+    subtotals = extract_subtotals(typed)
+
+    result = reconcile_detail_to_published_subtotal(
+        securities, subtotals, tolerance_pct=0.1,
+        known_defects=[{"observation_date": "2024-06-30", "security_class": "NOTES"}],
+    )
+    assert result.ok
+
+    wrong_class = reconcile_detail_to_published_subtotal(
+        securities, subtotals, tolerance_pct=0.1,
+        known_defects=[{"observation_date": "2024-06-30", "security_class": "BILLS"}],
+    )
+    assert not wrong_class.ok
+
+
+def test_rows_with_no_maturity_and_no_label_are_surfaced():
+    typed = detail_and_subtotals()
+    typed.loc[2, "security_class2_desc"] = "9127950"     # a CUSIP where a label belongs
+    orphans = unclassified_subtotal_rows(typed)
+    assert len(orphans) == 1
