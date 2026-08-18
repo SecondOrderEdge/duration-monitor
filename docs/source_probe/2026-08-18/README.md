@@ -1,6 +1,6 @@
 # Source probe results
 
-- Probe run (UTC): `2026-08-18T18:21:27.482156+00:00`
+- Probe run (UTC): `2026-08-18T19:36:34.442580+00:00`
 
 Field names below are **observed from live responses**. Anything marked MISSING means `config/sources.yaml` expected a field the API does not return — the contract is wrong and must be corrected before ingestion is written against it.
 
@@ -117,7 +117,7 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 | `A091RC1Q027SBEA` | ok | Q | Bil. of $ | 1947-01-01 → 2026-04-01 | 2026-07-30 10:09:18-05 |
 | `FGRECPT` | ok | Q | Bil. of $ | 1947-01-01 → 2026-01-01 | 2026-06-25 07:51:13-05 |
 | `GDP` | ok | Q | Bil. of $ | 1947-01-01 → 2026-04-01 | 2026-07-30 10:07:52-05 |
-| `THREEFYTP10` | ok | D | % | 1990-01-02 → 2026-08-07 | 2026-08-11 14:03:24-05 |
+| `THREEFYTP10` | ok | D | % | 1990-01-02 → 2026-08-14 | 2026-08-18 14:04:21-05 |
 
 ## NY Fed ACM term premium
 
