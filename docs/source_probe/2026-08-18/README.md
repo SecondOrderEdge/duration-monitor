@@ -1,6 +1,6 @@
 # Source probe results
 
-- Probe run (UTC): `2026-08-18T19:36:34.442580+00:00`
+- Probe run (UTC): `2026-08-18T20:11:46.871925+00:00`
 
 Field names below are **observed from live responses**. Anything marked MISSING means `config/sources.yaml` expected a field the API does not return — the contract is wrong and must be corrected before ingestion is written against it.
 
@@ -14,7 +14,7 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 | `debt_to_penny` | ok | 8372 | 1993-04-01 → 2026-08-14 | OK |
 | `avg_interest_rates` | ok | 4993 | 2001-01-31 → 2026-07-31 | OK |
 | `interest_expense` | ok | 7283 | 2010-05-31 → 2026-07-31 | OK |
-| `operating_cash_balance` | ok | 16530 | 2005-10-03 → 2026-08-14 | OK |
+| `operating_cash_balance` | ok | 16534 | 2005-10-03 → 2026-08-17 | OK |
 | `mts_table_1` | ok | 3090 | 2015-03-31 → 2026-07-31 | OK |
 
 ### `mspd_table_1`
@@ -79,7 +79,7 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 
 `https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/dts/operating_cash_balance`
 
-- Coverage: **2005-10-03 → 2026-08-14** (16530 rows)
+- Coverage: **2005-10-03 → 2026-08-17** (16534 rows)
 - Observed fields (16): `account_type`, `close_today_bal`, `open_fiscal_year_bal`, `open_month_bal`, `open_today_bal`, `record_calendar_day`, `record_calendar_month`, `record_calendar_quarter`, `record_calendar_year`, `record_date`, `record_fiscal_quarter`, `record_fiscal_year`, `src_line_nbr`, `sub_table_name`, `table_nbr`, `table_nm`
 
 - No field drift since the last probe.
