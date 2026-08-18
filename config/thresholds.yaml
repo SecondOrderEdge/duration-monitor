@@ -45,6 +45,19 @@ issuance:
 # DATES BELOW ARE UNVERIFIED and must be checked against Treasury's own debt limit
 # record before use. Month granularity is deliberate: MSPD is monthly.
 debt_ceiling_episodes:
+  # The post-resolution bill surge is a mechanical rebuild of the Treasury General
+  # Account, not a decision to shorten the financing profile, and it is the most
+  # likely false positive in the system (Deviation D5). Rather than relying on
+  # these hand-entered dates alone, the score removes the change in cash balance
+  # from both sides of the funding ratio — both series are published officially,
+  # so it is a correction rather than an assumption.
+  #
+  # Measured effect on the 2023 resolution (Jun-Sep): bill share of net borrowing
+  # falls from 90.8% to 83.6% once the $608bn cash rebuild is removed, and the
+  # composite score falls from 66.7 to 60.2. It moderates the episode; it does
+  # not erase it. Even ex-cash, 2023 was genuinely bill-heavy — so 2023 is not a
+  # pure false positive and should not be treated as one.
+  cash_adjustment: true
   verified: false
   source_to_confirm: https://fiscaldata.treasury.gov/  # plus Treasury debt limit letters
   episodes:

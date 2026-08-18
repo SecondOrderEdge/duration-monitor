@@ -308,3 +308,64 @@ def aggregate_net_issuance(
     out["method"] = "mspd_delta"
     out["period_complete"] = (~incomplete).values
     return out
+
+
+def cash_adjusted_bill_funding(
+    net: pd.DataFrame,
+    cash_balance: pd.Series,
+    *,
+    coupon_classes: tuple[str, ...] = DEFAULT_COUPON_CLASSES,
+    min_abs_denominator: float,
+) -> pd.DataFrame:
+    """Incremental bill funding with the change in cash balance removed.
+
+    Net borrowing finances two different things: the deficit, and the cash balance
+    itself. After a debt-ceiling episode resolves, Treasury rebuilds the Treasury
+    General Account, and that rebuild is funded almost entirely with bills — which
+    is a mechanical consequence of the ceiling, not a decision to shorten the
+    financing profile. It is the single most likely false positive in the whole
+    system (Deviation D5).
+
+    Removing the change in cash from both numerator and denominator isolates the
+    borrowing that financed the underlying deficit:
+
+        adjusted bill funding = (net bills - Δcash) / (net borrowing - Δcash)
+
+    Both series are published officially, so this is a correction rather than an
+    assumption. It is reported ALONGSIDE the unadjusted ratio, never instead of
+    it: the unadjusted figure is what actually happened to the debt stock, and the
+    adjusted figure is what happened net of cash management. They answer different
+    questions and the gap between them is itself informative.
+    """
+    if min_abs_denominator <= 0:
+        raise ValueError("min_abs_denominator must be positive")
+
+    bills = _aggregate(net, [BILL_CLASS])
+    coupons = _aggregate(net, coupon_classes)
+    borrowing = bills + coupons
+
+    delta_cash = ensure_complete(cash_balance).diff()
+    delta_cash = delta_cash.reindex(borrowing.index)
+
+    adjusted_bills = bills - delta_cash
+    adjusted_borrowing = borrowing - delta_cash
+
+    masked = (
+        adjusted_borrowing.isna()
+        | (adjusted_borrowing.abs() < min_abs_denominator)
+    )
+    safe = adjusted_borrowing.where(~masked)
+
+    out = pd.DataFrame(
+        {
+            "net_bills": bills,
+            "net_borrowing": borrowing,
+            "delta_cash_balance": delta_cash,
+            "adjusted_net_bills": adjusted_bills,
+            "adjusted_net_borrowing": adjusted_borrowing,
+            "incremental_bill_funding_adjusted": adjusted_bills / safe,
+            "denominator_masked": masked,
+        }
+    )
+    out.index.name = "period"
+    return out

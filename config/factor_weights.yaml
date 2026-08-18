@@ -74,6 +74,33 @@ interaction_flag:
 
 # Auction stress composite. Signs are fixed in code (higher always means weaker);
 # only weights are configurable.
+# --------------------------------------------------------------------------- #
+# How the six factors are combined (Deviation D6)
+# --------------------------------------------------------------------------- #
+weighting:
+  method: correlation_adjusted        # w proportional to C^-1 1, shrunk
+  # Measured on the percentile ranks the score actually uses, bill share trend,
+  # WAM trend and coupon restraint are mutually correlated 0.91-0.97, and at
+  # matched horizons incremental bill funding and coupon restraint are the SAME
+  # number. Equal weights would give one measurement about half the score while
+  # auction stress — the only orthogonal factor — received a sixth. Deriving the
+  # weights from the correlation structure keeps all six factors and lets the
+  # data decide how much a duplicate is worth.
+  ridge: 0.5
+  # Shrinkage toward equal weighting, chosen by WALK-FORWARD STABILITY rather
+  # than taste. Unshrunk, the inversion is singular when two factors are
+  # perfectly correlated, and small correlation changes swing the weights: at
+  # ridge 0.15 one factor was driven to exactly zero in three of five vintages,
+  # silently removing it. Measured max drift across vintages:
+  #   0.15 -> 0.109 (one factor zeroed)    0.50 -> 0.050 (none zeroed)
+  #   0.30 -> 0.087 (one factor zeroed)    0.70 -> 0.024 (none zeroed)
+  expanding_window: true
+  # Weights are recomputed from history available at each date, for the same
+  # reason percentiles are point-in-time: fitting them on the full sample leaks
+  # the future into the backtest through the weighting (Deviation D1).
+  min_months_for_weights: 36
+  min_factors: 4
+
 auction_stress_components:
   bid_to_cover: 1.0
   indirect: 1.0

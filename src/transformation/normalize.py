@@ -541,3 +541,95 @@ def unclassified_subtotal_rows(typed: pd.DataFrame) -> pd.DataFrame:
     df = typed[typed["maturity_date"].isna()].copy()
     parsed = df["security_class2_desc"].map(parse_subtotal_label)
     return df[[p is None for p in parsed]].copy()
+
+
+# --------------------------------------------------------------------------- #
+# Treasury General Account
+# --------------------------------------------------------------------------- #
+
+# The same account under three successive names, and the endpoint restructured
+# under the third. Verified continuous: the 2021-09-30 closing balance (215,160)
+# is exactly the 2021-10-01 opening balance under the new name.
+TGA_LEGACY_ACCOUNTS = frozenset({
+    "Federal Reserve Account",              # 2005-10 → 2021-09
+    "Treasury General Account (TGA)",       # 2021-10 → 2022-04
+})
+TGA_MODERN_ACCOUNT = "Treasury General Account (TGA) Closing Balance"  # 2022-04 →
+
+
+def normalize_cash_balance(
+    typed: pd.DataFrame,
+    *,
+    country: str = "US",
+    currency: str = "USD",
+    source: str = "fiscaldata/operating_cash_balance",
+    retrieval_date: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    """Daily Treasury General Account closing balance, as one continuous series.
+
+    The column holding the balance CHANGES with the 2022-04-18 restructure, and
+    the trap is quiet in both directions.
+
+    Before the restructure there is one row per day and the closing balance is in
+    `close_today_bal`. From 2022-04-18 the endpoint publishes four rows per day —
+    opening balance, deposits, withdrawals, closing balance — as separate
+    `account_type` values, `close_today_bal` is null on every one of them, and the
+    figure lives in `open_today_bal`, which despite its name carries that line
+    item's value. So the closing-balance row's `open_today_bal` IS the close.
+
+    Reading `close_today_bal` throughout silently truncates the series at
+    2022-04. Reading `open_today_bal` throughout silently shifts every pre-2022
+    observation back by one day. Neither raises.
+    """
+    required = {"record_date", "account_type", "open_today_bal", "close_today_bal"}
+    missing = sorted(required - set(typed.columns))
+    if missing:
+        raise NormalizationError(f"operating_cash_balance frame is missing {missing}")
+
+    df = typed.copy()
+    df["account_type"] = df["account_type"].astype(str)
+
+    legacy = df[df["account_type"].isin(TGA_LEGACY_ACCOUNTS)][
+        ["record_date", "close_today_bal"]
+    ].rename(columns={"close_today_bal": "balance"})
+    modern = df[df["account_type"] == TGA_MODERN_ACCOUNT][
+        ["record_date", "open_today_bal"]
+    ].rename(columns={"open_today_bal": "balance"})
+
+    if legacy.empty and modern.empty:
+        raise NormalizationError(
+            "no Treasury General Account rows found under any known account_type; "
+            f"observed: {sorted(set(df['account_type']))[:6]}"
+        )
+
+    combined = (
+        pd.concat([legacy, modern], ignore_index=True)
+        .dropna(subset=["balance"])
+        .sort_values("record_date")
+        .drop_duplicates("record_date", keep="last")
+    )
+
+    out = pd.DataFrame(
+        {
+            "date": pd.to_datetime(combined["record_date"]),
+            "country": country,
+            "balance": combined["balance"] * MILLIONS,
+            "currency": currency,
+            "source": source,
+        }
+    )
+    out["retrieval_date"] = (
+        pd.Timestamp(retrieval_date) if retrieval_date is not None else pd.NaT
+    )
+    return out.reset_index(drop=True)
+
+
+def month_end_cash_balance(cash: pd.DataFrame) -> pd.Series:
+    """Month-end TGA balance, indexed by monthly Period."""
+    series = cash.set_index(pd.PeriodIndex(pd.to_datetime(cash["date"]), freq="M"))[
+        "balance"
+    ]
+    out = series.groupby(level=0).last()
+    out.index.name = "period"
+    out.name = "tga_balance"
+    return out

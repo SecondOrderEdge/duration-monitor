@@ -44,6 +44,8 @@ from src.signals.auction_stress import (  # noqa: E402
 )
 from src.transformation.normalize import (  # noqa: E402
     extract_subtotals,
+    month_end_cash_balance,
+    normalize_cash_balance,
     normalize_auctions,
     normalize_debt_outstanding,
     normalize_securities_detail,
@@ -320,8 +322,48 @@ def build_auctions(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     return scored
 
 
+def build_cash_balance(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """Daily Treasury General Account balance.
+
+    Feeds the cash adjustment that separates borrowing which financed the deficit
+    from borrowing which rebuilt the cash balance after a debt-ceiling episode
+    (Deviation D5).
+    """
+    print("  fetching operating_cash_balance ...", flush=True)
+    result = client.fetch("operating_cash_balance")
+    print(f"    {result.n_rows} rows over {result.n_pages} page(s)")
+
+    if keep_raw:
+        raw = write_raw(result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+
+    typed, report = parse_endpoint(result)
+    report.raise_if_failed()
+
+    cash = normalize_cash_balance(typed, retrieval_date=result.retrieval_date)
+    print(f"    TGA {len(cash)} days, {cash.date.min():%Y-%m} → {cash.date.max():%Y-%m}, "
+          f"latest ${cash.balance.iloc[-1]/1e9:,.0f}bn")
+
+    # The account was renamed twice and the endpoint restructured under the third
+    # name. A break in the daily series is the symptom of having followed the
+    # wrong column across the changeover, so it is checked rather than assumed.
+    gaps = cash["date"].diff().dt.days
+    if (gaps > 7).any():
+        worst = cash.loc[gaps.idxmax(), "date"]
+        QUALITY_NOTES.append(
+            {"source": "cash_balance", "endpoint": "operating_cash_balance",
+             "event_type": "staleness", "severity": "warning",
+             "detail": f"gap of {int(gaps.max())} days in the TGA series before "
+                       f"{worst:%Y-%m-%d}; check the account_type mapping"}
+        )
+        print(f"    WARNING: {int(gaps.max())}-day gap before {worst:%Y-%m-%d}")
+
+    return cash
+
+
 BUILDERS = {
     "debt_outstanding": build_debt_outstanding,
+    "cash_balance": build_cash_balance,
     "auctions": build_auctions,
     "wam": build_wam,
     "term_premium": build_term_premium,
