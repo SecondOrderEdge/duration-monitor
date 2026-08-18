@@ -1,33 +1,53 @@
 # Source registry — single source of truth for every endpoint, file and series ID.
 #
-# `verified: false` means the path / field list below is an EXPECTATION that has
-# NOT been confirmed against a live response. Nothing in this file may be treated
-# as fact until `scripts/probe_sources.py` has run and flipped it.
+# `verified: true` means every field name below was OBSERVED in a live response by
+# `scripts/probe_sources.py`, and the evidence is committed under the `evidence`
+# path given per source. Nothing here is written from memory.
 #
-# `expected_fields` is a CONTRACT, not documentation: the probe reports MISSING
-# (expected but absent) and UNEXPECTED (present but not listed) for each endpoint,
-# and ingestion refuses to map a field that is not present in the live response.
+# Three distinct field lists, doing three different jobs:
+#
+#   expected_fields          The CONTRACT. Fields ingestion actually depends on.
+#                            One going missing is a build failure, not a warning.
+#   observed_fields_at_probe Everything the endpoint returned when last probed.
+#                            The probe diffs against this to report fields the API
+#                            has ADDED or DROPPED since — visible, but not fatal
+#                            unless the dropped field is also in expected_fields.
+#   schema                   Declared coercion per field, consumed by
+#                            src/ingestion/typed.py. Never inferred from the data.
+#
+# Amounts: `units` states the reporting unit of the source. Ingestion stores raw
+# exactly as retrieved; the transformation layer converts to single currency units
+# so that no downstream code has to remember which endpoint reports millions.
 
 meta:
   version: 2
   probe_required: true
-  last_probe: 2026-08-14
-  probe_evidence: docs/source_probe/2026-08-14/
-  # fiscaldata and nyfed_acm confirmed against live responses on the date above.
-  # fred remains UNVERIFIED: the probe skipped it because FRED_API_KEY was not set.
+  last_probe: 2026-08-18
+  evidence: docs/source_probe/2026-08-18/
+  # Every source is now verified against a live response. The 2026-08-18 run was
+  # executed by .github/workflows/probe-sources.yml, which is the only place FRED
+  # can be probed: it is the one credentialed source and the key lives in
+  # repository secrets.
 
 fiscaldata:
   base_url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/
-  # All values arrive as strings; nulls arrive as the literal string "null".
+  # Every value arrives as a string. Nulls arrive as the literal string "null".
+  # MSPD additionally uses "*" for a value suppressed as negligible (observed at
+  # 2024-06-30, where matured bills of ~$0.4mn print as "*"). Both are treated as
+  # missing by the typed layer; "*" means "present but below reporting threshold",
+  # which is why it must never be read as zero in a reconciliation.
   page_size_max: 10000
+  pagination: page[number] / page[size]; meta carries total-count and total-pages.
+  verified: true
   endpoints:
 
     mspd_table_1:
       path: v1/debt/mspd/mspd_table_1
       purpose: Marketable debt outstanding by security class, monthly. Drives Bill Share.
       date_field: record_date
+      units: millions_usd
       verified: true
-      coverage: 2001-01-31 → 2026-07-31 (4645 rows)
+      coverage: {start: 2001-01-31, observed_end: 2026-07-31, rows_at_probe: 4645}
       expected_fields:
         - record_date
         - security_type_desc
@@ -35,9 +55,50 @@ fiscaldata:
         - debt_held_public_mil_amt
         - intragov_hold_mil_amt
         - total_mil_amt
+        - src_line_nbr
+      observed_fields_at_probe:
+        - debt_held_public_mil_amt
+        - intragov_hold_mil_amt
+        - record_calendar_day
+        - record_calendar_month
+        - record_calendar_quarter
+        - record_calendar_year
+        - record_date
+        - record_fiscal_quarter
+        - record_fiscal_year
+        - security_class_desc
+        - security_type_desc
+        - src_line_nbr
+        - total_mil_amt
+      schema:
+        record_date: date
+        security_type_desc: category
+        security_class_desc: category
+        debt_held_public_mil_amt: decimal
+        intragov_hold_mil_amt: decimal
+        total_mil_amt: decimal
+        src_line_nbr: integer
+      row_grain: >
+        14 rows per month. Component rows carry `security_type_desc` of
+        "Marketable" or "Nonmarketable" with the class in `security_class_desc`.
+        TOTAL rows put the label in `security_type_desc` — "Total Marketable",
+        "Total Nonmarketable", "Total Public Debt Outstanding" — and set
+        `security_class_desc` to the literal string "_". Filtering on
+        `security_type_desc == "Marketable"` therefore selects exactly the six
+        marketable component rows and excludes every total.
+        Note "_" is a label, not a null: it must not be added to the null-token
+        list, or the total rows become indistinguishable from missing data.
+        Verified at 2024-06-30: Bills 5,765,830.1 + Notes 14,046,707.4 + Bonds
+        4,581,064.9 + TIPS 2,053,866.3 + FRN 598,011.4 + FFB 4,514.1 ==
+        27,049,994.2 == the published Total Marketable row, exactly.
       notes: >
-        Contains subtotal and total rows. Aggregation MUST filter these out
-        explicitly by label rather than summing blindly.
+        Bill share of marketable debt at 2024-06-30 is 21.32% on these figures —
+        above the 15–20% TBAC reference band of Deviation D10.
+        Federal Financing Bank is inside Total Marketable and is not a tradeable
+        security; whether it belongs in the bill-share denominator is a stated
+        convention, not an obvious call. It is 0.02% of the total, so it changes
+        nothing numerically, but the choice belongs in thresholds.yaml rather than
+        in whichever filter happens to be written first.
 
         Amounts are in MILLIONS (per the endpoint's own field labels), unlike
         debt_to_penny which reports whole dollars. Do not compare the two without
@@ -45,67 +106,150 @@ fiscaldata:
 
     mspd_table_3_market:
       path: v1/debt/mspd/mspd_table_3_market
-      purpose: Security-level detail (CUSIP, issue/maturity date, outstanding). Drives WAM.
+      purpose: Security-level detail (issue/maturity date, outstanding). Drives WAM.
       date_field: record_date
+      units: millions_usd
       verified: true
-      # There is NO `cusip` field. The CUSIP is carried in `security_class2_desc`.
-      cusip_field: security_class2_desc
+      coverage: {start: 2001-01-31, observed_end: 2026-07-31, rows_at_probe: 153404}
+      resolved_unknowns:
+        maturity_date_per_security: >
+          CONFIRMED present for the full 2001-01 → 2026-07 history. Open Question 1
+          in the implementation plan is closed: WAM can be computed independently
+          from this table and needs no TreasuryDirect fallback (which is fortunate,
+          since treasurydirect.gov remains blocked by network policy).
+        cusip_field: >
+          There is NO `cusip` field. The CUSIP is published in `security_class2_desc`
+          — the same column that carries subtotal LABELS on subtotal rows. This is
+          the single most dangerous field in the source: read naively, "Total
+          Treasury Notes" is indistinguishable from a security identifier.
+        tips_basis: >
+          `outstanding_amt` is INFLATION-ADJUSTED, not par. Verified by identity on
+          the Total Marketable row at 2024-06-30:
+          issued_amt + inflation_adj_amt + redeemed_amt == outstanding_amt
+          (26,677,744.007 + 392,813.400 + -20,563.200 == 27,049,994.207).
+          Accretion is therefore separately published per row, so Deviation D2 is
+          resolved by subtraction — par == outstanding_amt - inflation_adj_amt —
+          and TIPS need not be excluded from the net-coupon aggregate.
+      row_grain: >
+        One row per (security, issue tranche). A reopened security appears once per
+        reopening, each row carrying that tranche's `issued_amt`. `outstanding_amt`
+        is populated on only the FIRST row of each security and holds the
+        SECURITY-LEVEL total across all its tranches. Verified at 2024-06-30 for
+        CUSIP 912797GB7: tranches of 40,996.0705 + 71,722.7826 + 74,085.9246 +
+        65,000.2010 == 251,804.9787, the single populated outstanding_amt.
+        Summing `outstanding_amt` over rows is therefore correct and summing
+        `issued_amt` over rows is also correct, but mixing them double-counts.
+        Independently confirmed at 2026-07-31: 887 rows, 463 distinct CUSIPs, with
+        outstanding_amt null on 46% of rows. Selecting rows where outstanding_amt
+        is non-null is an equivalent way to reach one row per security, PROVIDED
+        subtotal rows are excluded first — they also carry a non-null
+        outstanding_amt, so that filter alone silently includes them.
+      subtotal_rows: >
+        Subtotal rows carry a null `maturity_date` and put a label in
+        `security_class2_desc`. Observed labels, stable 2001 → 2026:
+        "Total Unmatured Treasury {Bills,Bonds,Notes}",
+        "Total Matured Treasury {Bills,Bonds,Notes}",
+        "Total Treasury {Bills,Bonds,Notes,TIPS,Floating Rate Notes}",
+        plus "Total Marketable" and "Federal Financing Bank" in
+        `security_class1_desc` with a null `security_class2_desc`.
+        Filtering on `maturity_date` being non-null removes every subtotal row and
+        leaves exactly the security-level universe. Reconciliation identity:
+        Σ(security-level outstanding_amt) + Σ(Total Matured *) + Federal Financing
+        Bank == Total Marketable. Verified within 0.001% at 2001-01-31, 2008-09-30,
+        2015-06-30, 2024-06-30 and 2026-07-31.
       expected_fields:
         - record_date
         - security_type_desc
         - security_class1_desc
         - security_class2_desc
-        - interest_rate_pct
-        - yield_pct
         - issue_date
         - maturity_date
+        - interest_rate_pct
+        - yield_pct
         - issued_amt
-        - redeemed_amt
         - inflation_adj_amt
+        - redeemed_amt
         - outstanding_amt
-      resolved_unknowns:
-        maturity_date_history: >
-          Confirmed present per CUSIP for the full history. At 2001-01-31 it is
-          populated on 211/213 detail rows (the 2 blanks are non-security rows).
-          No fallback source is needed — implementation_plan Open Question 1 is closed.
-        tips_outstanding_basis: >
-          INFLATION-ADJUSTED, not par. Verified on all 53 TIPS CUSIPs at 2026-07-31:
-          sum(issued_amt) + sum(redeemed_amt) + sum(inflation_adj_amt) == outstanding_amt
-          exactly. Par is recoverable as outstanding_amt - inflation_adj_amt.
-        rows_per_month: >
-          887 rows at 2026-07-31 (463 distinct CUSIPs), 224 at 2001-01-31.
-          153,404 rows over the full history — small enough to hold in one parquet file.
+        - src_line_nbr
+      observed_fields_at_probe:
+        - inflation_adj_amt
+        - interest_pay_date_1
+        - interest_pay_date_2
+        - interest_pay_date_3
+        - interest_pay_date_4
+        - interest_rate_pct
+        - issue_date
+        - issued_amt
+        - maturity_date
+        - outstanding_amt
+        - record_calendar_day
+        - record_calendar_month
+        - record_calendar_quarter
+        - record_calendar_year
+        - record_date
+        - record_fiscal_quarter
+        - record_fiscal_year
+        - redeemed_amt
+        - security_class1_desc
+        - security_class2_desc
+        - security_type_desc
+        - series_cd
+        - src_line_nbr
+        - yield_pct
+      schema:
+        record_date: date
+        security_type_desc: category
+        security_class1_desc: category
+        security_class2_desc: string      # CUSIP *or* a subtotal label — never a category
+        issue_date: date
+        maturity_date: date
+        interest_rate_pct: decimal
+        yield_pct: decimal
+        issued_amt: decimal
+        inflation_adj_amt: decimal
+        redeemed_amt: decimal
+        outstanding_amt: decimal
+        src_line_nbr: integer
       notes: >
-        Rows are NOT one-per-CUSIP. Each CUSIP has one row per issuance tranche
-        (original + reopenings), and `outstanding_amt` is populated on exactly ONE
-        row per CUSIP carrying the group total; it is the literal string "null" on
-        the other tranche rows (46% of rows at 2026-07-31).
+        ~840 rows per month at 2024, ~220 at 2001; 153k rows over the full history.
+        Small enough to hold in memory, large enough that D7 (keep full history out
+        of git) still stands.
 
-        Therefore: to get one row per security, filter to outstanding_amt != "null".
-        NEVER sum issued_amt across rows and NEVER sum outstanding_amt across
-        tranches — both double-count.
+        `interest_rate_pct` is "null" for bills, which are discount securities and
+        carry no coupon. That is expected, not a parse failure, and a WAM weighted
+        by coupon would silently drop the entire bill book.
 
-        Subtotal rows carry security_class2_desc beginning with "Total"
-        ("Total Treasury Notes", "Total Marketable", ...) and non-security rows
-        (Federal Financing Bank, Total Marketable) carry security_class2_desc ==
-        "null". Both must be excluded before any aggregation.
-
-        interest_rate_pct is "null" for bills (discount securities, no coupon).
+        The TIPS accretion identity was separately confirmed across all 53 TIPS
+        CUSIPs at 2026-07-31, not only on the Total Marketable row.
 
     auctions_query:
       path: v1/accounting/od/auctions_query
       purpose: Auction results. Drives auction stress metrics.
       date_field: auction_date
+      units: usd
       verified: true
+      coverage: {start: 1979-10-31, observed_end: 2026-08-20, rows_at_probe: 11080}
+      resolved_unknowns:
+        dispersion_fields: >
+          Deviation D3 is viable as preferred. `low_yield` and `allocation_pctage`
+          (allotment at the high) are both published. There is no `median_yield`
+          field, but `avg_med_yield` is the median yield and is published — verified
+          at the 2024-06-13 29Y11M auction: high 4.4030, median 4.3500, low 3.8800,
+          allotment 8.49%. High-minus-median and allotment-at-high can therefore be
+          used directly, and the noisy CMT-based tail proxy stays a weight-0
+          diagnostic as planned.
       expected_fields:
         - auction_date
         - issue_date
         - maturity_date
         - security_type
         - security_term
+        - original_security_term
         - cusip
         - offering_amt
         - total_accepted
+        - comp_accepted
+        - soma_accepted
         - total_tendered
         - bid_to_cover_ratio
         - high_yield
@@ -115,65 +259,248 @@ fiscaldata:
         - primary_dealer_accepted
         - direct_bidder_accepted
         - indirect_bidder_accepted
+        - reopening
+      # All 114 fields the endpoint returns. Only the 18 above are contracted;
+      # this list exists so the probe can report what the API has added or dropped.
+      # It must stay complete — a partial baseline reports the rest as newly added.
+      observed_fields_at_probe:
+        - accrued_int_per100
+        - accrued_int_per1000
+        - adj_accrued_int_per1000
+        - adj_price
+        - allocation_pctage
+        - allocation_pctage_decimals
+        - announcemt_date
+        - announcemtd_cusip
+        - auction_date
+        - auction_format
+        - avg_med_discnt_margin
+        - avg_med_discnt_rate
+        - avg_med_investment_rate
+        - avg_med_price
+        - avg_med_yield
+        - back_dated
+        - back_dated_date
+        - bid_to_cover_ratio
+        - call_date
+        - callable
+        - called_date
+        - cash_management_bill_cmb
+        - closing_time_comp
+        - closing_time_noncomp
+        - comp_accepted
+        - comp_bid_decimals
+        - comp_tendered
+        - comp_tenders_accepted
+        - corpus_cusip
+        - cpi_base_reference_period
+        - currently_outstanding
+        - cusip
+        - dated_date
+        - direct_bidder_accepted
+        - direct_bidder_tendered
+        - est_pub_held_mat_by_type_amt
+        - fima_included
+        - fima_noncomp_accepted
+        - fima_noncomp_tendered
+        - first_int_payment_date
+        - first_int_period
+        - floating_rate
+        - frn_index_determination_date
+        - frn_index_determination_rate
+        - high_discnt_margin
+        - high_discnt_rate
+        - high_investment_rate
+        - high_price
+        - high_yield
+        - index_ratio_on_issue_date
+        - indirect_bidder_accepted
+        - indirect_bidder_tendered
+        - inflation_index_security
+        - int_payment_frequency
+        - int_rate
+        - issue_date
+        - low_discnt_margin
+        - low_discnt_rate
+        - low_investment_rate
+        - low_price
+        - low_yield
+        - mat_date
+        - maturity_date
+        - max_comp_award
+        - max_noncomp_award
+        - max_single_bid
+        - min_bid_amt
+        - min_strip_amt
+        - min_to_issue
+        - multiples_to_bid
+        - multiples_to_issue
+        - nlp_exclusion_amt
+        - nlp_reporting_threshold
+        - noncomp_accepted
+        - noncomp_tenders_accepted
+        - offering_amt
+        - original_cusip
+        - original_dated_date
+        - original_issue_date
+        - original_security_term
+        - pdf_filenm_announcemt
+        - pdf_filenm_comp_results
+        - pdf_filenm_noncomp_results
+        - pdf_filenm_spec_announcemt
+        - price_per100
+        - primary_dealer_accepted
+        - primary_dealer_tendered
+        - record_date
+        - ref_cpi_on_dated_date
+        - ref_cpi_on_issue_date
+        - reopening
+        - security_term
+        - security_term_day_month
+        - security_term_week_year
+        - security_type
+        - series
+        - soma_accepted
+        - soma_holdings
+        - soma_included
+        - soma_tendered
+        - spread
+        - std_int_payment_per1000
+        - strippable
+        - tiin_conversion_factor_per1000
+        - tint_cusip_1
+        - tint_cusip_2
+        - total_accepted
+        - total_tendered
+        - treas_retail_accepted
+        - treas_retail_tenders_accepted
+        - unadj_accrued_int_per1000
+        - unadj_price
+        - xml_filenm_announcemt
+        - xml_filenm_comp_results
+      schema:
+        auction_date: date
+        issue_date: date
+        maturity_date: date
+        security_type: category
+        security_term: string
+        original_security_term: string
+        cusip: string
+        offering_amt: decimal
+        total_accepted: decimal
+        comp_accepted: decimal
+        soma_accepted: decimal
+        total_tendered: decimal
+        bid_to_cover_ratio: decimal
+        high_yield: decimal
+        low_yield: decimal
+        avg_med_yield: decimal
+        allocation_pctage: decimal
+        primary_dealer_accepted: decimal
+        direct_bidder_accepted: decimal
+        indirect_bidder_accepted: decimal
+        reopening: string
       probe_extra_fields:
+        - median_yield          # absent — avg_med_yield is the published median
         - high_discnt_rate
         - low_discnt_rate
+        - allocation_pctage
       resolved_unknowns:
-        tail_proxy: >
-          A real tail proxy IS available. low_yield and high_yield are both
-          published. There is no field named `median_yield` — the median is
-          `avg_med_yield`. Tail = high_yield - avg_med_yield.
-        allotment_at_high: >
-          Published as `allocation_pctage` (percent of bids allotted at the high).
         dealer_breakdown_start: >
-          2008-04-07 is the first auction_date with non-zero primary_dealer_accepted,
-          direct_bidder_accepted and indirect_bidder_accepted. Earlier auctions
-          (back to 1979-10-31) exist but carry no bidder breakdown — treat as
-          missing, never as zero.
+          2008-04-07 is the first auction_date carrying a non-zero primary /
+          direct / indirect breakdown. Auctions back to 1979-10-31 exist but have
+          no breakdown at all, and those zeros mean "not reported", never "no
+          dealer demand". This answers Open Question 3 on its facts: a stress
+          series using bidder shares cannot start before 2008 without a reduced
+          factor set.
       notes: >
-        This endpoint contains ANNOUNCED-BUT-NOT-YET-HELD auctions: at probe time
-        (2026-08-14) the max auction_date was 2026-08-20, and every row after the
-        last held auction carries "null" for bid_to_cover_ratio, high_yield,
-        low_yield and avg_med_yield.
+        THE ENDPOINT PUBLISHES AUCTIONS THAT HAVE NOT HAPPENED YET. At probe time
+        the maximum auction_date was 2026-08-20, days ahead of the last auction
+        actually held, and every announced-but-unheld row carries "null" for
+        bid_to_cover_ratio, high_yield, low_yield and avg_med_yield.
 
-        Ingestion must drop rows with a null result field rather than filtering on
-        auction_date <= today, and any "latest auction" metric must resolve to the
-        last row with results, not the last row.
+        Ingestion must therefore drop rows whose result fields are null rather
+        than filtering on `auction_date <= today`, and any "latest auction" metric
+        must resolve to the last row WITH RESULTS. A rolling stress score that
+        takes the last N rows by date will otherwise silently average in
+        scheduled auctions as missing data.
 
-        Bills report on a discount basis: high_discnt_rate / low_discnt_rate are
-        populated where the yield fields are null.
+        Bills report on a discount basis: `high_discnt_rate` / `low_discnt_rate`
+        are populated exactly where the yield fields are null, so a yield-only
+        stress measure covers coupons and silently excludes the entire bill book —
+        which is the part of the curve this project is most interested in.
 
     debt_to_penny:
       path: v2/accounting/od/debt_to_penny
       purpose: Independent sanity check on total outstanding.
       date_field: record_date
+      units: usd
       verified: true
-      coverage: 1993-04-01 → 2026-08-12 (8370 rows)
+      coverage: {start: 1993-04-01, observed_end: 2026-08-13, rows_at_probe: 8371}
       expected_fields:
         - record_date
         - debt_held_public_amt
         - intragov_hold_amt
         - tot_pub_debt_out_amt
-      notes: Amounts are whole dollars, not millions. See mspd_table_1.
+      observed_fields_at_probe:
+        - debt_held_public_amt
+        - intragov_hold_amt
+        - record_calendar_day
+        - record_calendar_month
+        - record_calendar_quarter
+        - record_calendar_year
+        - record_date
+        - record_fiscal_quarter
+        - record_fiscal_year
+        - src_line_nbr
+        - tot_pub_debt_out_amt
+      schema:
+        record_date: date
+        debt_held_public_amt: decimal
+        intragov_hold_amt: decimal
+        tot_pub_debt_out_amt: decimal
+      notes: >
+        Reports in single dollars while MSPD reports in millions. This endpoint is
+        the independent check on MSPD totals, so the unit difference is exactly the
+        kind of thing that would make a real break look like a passing test.
 
     avg_interest_rates:
       path: v2/accounting/od/avg_interest_rates
       purpose: Average interest rate by security class. Context for refinancing cost.
       date_field: record_date
+      units: percent
       verified: true
-      coverage: 2001-01-31 → 2026-07-31 (4993 rows)
+      coverage: {start: 2001-01-31, observed_end: 2026-07-31, rows_at_probe: 4993}
       expected_fields:
         - record_date
         - security_type_desc
         - security_desc
         - avg_interest_rate_amt
+      observed_fields_at_probe:
+        - avg_interest_rate_amt
+        - record_calendar_day
+        - record_calendar_month
+        - record_calendar_quarter
+        - record_calendar_year
+        - record_date
+        - record_fiscal_quarter
+        - record_fiscal_year
+        - security_desc
+        - security_type_desc
+        - src_line_nbr
+      schema:
+        record_date: date
+        security_type_desc: category
+        security_desc: category
+        avg_interest_rate_amt: decimal
 
     interest_expense:
       path: v2/accounting/od/interest_expense
       purpose: Interest expense on the public debt.
       date_field: record_date
+      units: usd
       verified: true
-      coverage: 2010-05-31 → 2026-07-31 (7283 rows)
+      coverage: {start: 2010-05-31, observed_end: 2026-07-31, rows_at_probe: 7283}
       expected_fields:
         - record_date
         - expense_type_desc
@@ -181,17 +508,36 @@ fiscaldata:
         - expense_catg_desc
         - month_expense_amt
         - fytd_expense_amt
-      notes: >
-        Coverage starts 2010-05-31, not 2001. expense_group_desc /
-        expense_catg_desc were not in the original contract but are needed to
-        separate categories from their rollups.
+      observed_fields_at_probe:
+        - expense_catg_desc
+        - expense_group_desc
+        - expense_type_desc
+        - fytd_expense_amt
+        - month_expense_amt
+        - record_calendar_day
+        - record_calendar_month
+        - record_calendar_quarter
+        - record_calendar_year
+        - record_date
+        - record_fiscal_quarter
+        - record_fiscal_year
+        - src_line_nbr
+      schema:
+        record_date: date
+        expense_type_desc: category
+        expense_group_desc: category
+        expense_catg_desc: category
+        month_expense_amt: decimal
+        fytd_expense_amt: decimal
+      notes: History starts 2010-05, not 2001. Any long-run interest chart is bounded by that.
 
     operating_cash_balance:
       path: v1/accounting/dts/operating_cash_balance
       purpose: Daily TGA balance.
       date_field: record_date
+      units: millions_usd
       verified: true
-      coverage: 2005-10-03 → 2026-08-12 (16522 rows)
+      coverage: {start: 2005-10-03, observed_end: 2026-08-13, rows_at_probe: 16526}
       expected_fields:
         - record_date
         - account_type
@@ -199,16 +545,41 @@ fiscaldata:
         - close_today_bal
         - table_nbr
         - sub_table_name
+      observed_fields_at_probe:
+        - account_type
+        - close_today_bal
+        - open_fiscal_year_bal
+        - open_month_bal
+        - open_today_bal
+        - record_calendar_day
+        - record_calendar_month
+        - record_calendar_quarter
+        - record_calendar_year
+        - record_date
+        - record_fiscal_quarter
+        - record_fiscal_year
+        - src_line_nbr
+        - sub_table_name
+        - table_nbr
+        - table_nm
+      schema:
+        record_date: date
+        account_type: category
+        open_today_bal: decimal
+        close_today_bal: decimal
+        table_nbr: string
+        sub_table_name: string
       notes: >
-        Multiple account_type values per record_date, and the endpoint spans more
-        than one DTS sub-table (table_nbr / sub_table_name). Select the TGA row
-        explicitly by account_type — do not assume one row per day.
+        Multiple account types per day, and the DTS restructured its tables in 2022.
+        `account_type` must be filtered explicitly rather than assuming one row/day.
 
     mts_table_1:
       path: v1/accounting/mts/mts_table_1
       purpose: Monthly receipts / outlays / deficit.
       date_field: record_date
+      units: usd
       verified: true
+      coverage: {start: 2015-03-31, observed_end: 2026-07-31, rows_at_probe: 3090}
       expected_fields:
         - record_date
         - classification_desc
@@ -217,38 +588,92 @@ fiscaldata:
         - current_month_gross_rcpt_amt
         - current_month_gross_outly_amt
         - current_month_dfct_sur_amt
-        - line_code_nbr
         - record_type_cd
         - sequence_level_nbr
+        - line_code_nbr
+      observed_fields_at_probe:
+        - classification_desc
+        - classification_id
+        - current_month_dfct_sur_amt
+        - current_month_gross_outly_amt
+        - current_month_gross_rcpt_amt
+        - data_type_cd
+        - line_code_nbr
+        - parent_id
+        - print_order_nbr
+        - record_calendar_day
+        - record_calendar_month
+        - record_calendar_quarter
+        - record_calendar_year
+        - record_date
+        - record_fiscal_quarter
+        - record_fiscal_year
+        - record_type_cd
+        - sequence_level_nbr
+        - sequence_number_cd
+        - src_line_nbr
+        - table_nbr
+      schema:
+        record_date: date
+        classification_desc: string
+        classification_id: string
+        parent_id: string
+        current_month_gross_rcpt_amt: decimal
+        current_month_gross_outly_amt: decimal
+        current_month_dfct_sur_amt: decimal
+        record_type_cd: category
+        sequence_level_nbr: string
+        line_code_nbr: string
+      contract_correction: >
+        The v1 contract expected `current_month_budget_amt` and
+        `current_fytd_budget_amt`. Neither exists. The published fields are
+        `current_month_gross_rcpt_amt`, `current_month_gross_outly_amt` and
+        `current_month_dfct_sur_amt`.
       notes: >
-        The expected `current_month_budget_amt` / `current_fytd_budget_amt` do not
-        exist. Receipts, outlays and deficit are three SEPARATE columns:
-        current_month_gross_rcpt_amt, current_month_gross_outly_amt,
-        current_month_dfct_sur_amt.
-
-        There is NO fiscal-year-to-date column on this endpoint at all (confirmed
-        against the endpoint's full field list, not just a sample). FYTD must be
-        accumulated from monthly rows within each record_fiscal_year, or sourced
-        from a different MTS table.
-
-        Coverage starts 2015-03-31 — materially shorter than the other fiscaldata
-        endpoints, which reach back to 2001. Any metric built on this cannot claim
-        a pre-2015 history.
-
-        Rows are hierarchical: parent_id / sequence_level_nbr define the tree and
-        section-header rows (e.g. classification_desc "FY 2025") carry "null" in
-        all three amount columns. Filter on the hierarchy fields rather than
-        summing blindly.
+        TWO constraints that bind on design, not just on parsing.
+        (1) Coverage starts 2015-03, not 2001. Any factor drawing on the MTS deficit
+        is limited to ~11 years, which is short against the D1 minimum-history rule
+        for point-in-time percentiles. Either the financing-need factor uses a
+        longer FRED series instead, or the composite must tolerate a factor with a
+        later start date.
+        (2) The rows are NOT a monthly time series. Each `record_date` carries a
+        fiscal-year × month matrix: a parent row labelled "FY 2025" with child rows
+        labelled "October", "November", … The observation month must be derived from
+        `classification_desc` joined to its parent via `parent_id`, and
+        `record_type_cd` distinguishes month rows (MTH) from subtotals (SL).
+        Reading `record_date` as the observation date silently stamps every row of a
+        fiscal year with the publication month.
+        (3) There is NO fiscal-year-to-date column on this endpoint — confirmed
+        against its full field list, not a sample. FYTD must be accumulated from
+        the monthly rows within each record_fiscal_year, or taken from a different
+        MTS table. The absent `current_fytd_budget_amt` was not renamed; it does
+        not exist here in any spelling.
 
 fred:
   base_url: https://api.stlouisfed.org/fred/
   api_key_env: FRED_API_KEY
-  # STILL UNVERIFIED. The 2026-08-14 probe SKIPPED every FRED series because
-  # FRED_API_KEY was not set in the environment. Not one series ID, frequency,
-  # units or coverage window below has been confirmed against a live response —
-  # they remain expectations. Re-run with the key set before writing ingestion:
-  #     export FRED_API_KEY=... && python scripts/probe_sources.py --only fred
-  verified: false
+  verified: true
+  verified_on: 2026-08-18
+  evidence: docs/source_probe/2026-08-18/
+  verified_note: >
+    All 21 series confirmed against live responses. The probe runs in GitHub
+    Actions (.github/workflows/probe-sources.yml) because FRED is the one
+    credentialed source and the key lives in repository secrets — cloud dev
+    environments have no secrets store, so this cannot be verified from one.
+    Frequencies, units and coverage below are observed, not assumed.
+
+  # UNITS ARE NOT CONSISTENT ACROSS THIS FEED, and the inconsistency sits inside a
+  # single group: RRPONTSYD is BILLIONS while WALCL, WRESBAL and WTREGEN are
+  # MILLIONS. Netting them without scaling is a 1000x error that still plots as a
+  # plausible line. Every series therefore carries its observed units below, and
+  # the transformation layer converts to single currency units on the way in.
+  #
+  # SEASONAL ADJUSTMENT IS NOT CONSISTENT EITHER. GDP, FGRECPT and
+  # A091RC1Q027SBEA are SAAR — seasonally adjusted ANNUAL RATES — while every
+  # other series is NSA. A SAAR quarterly figure is already annualised, so
+  # comparing it to a quarterly flow from MSPD, or summing four quarters of it,
+  # overstates by roughly 4x.
+
   series:
     rates:
       [DGS3MO, DGS6MO, DGS1, DGS2, DGS5, DGS10, DGS20, DGS30]
@@ -258,37 +683,88 @@ fred:
       [GFDEBTN, FYFSGDA188S, A091RC1Q027SBEA, FGRECPT, GDP]
     term_premium_crosscheck:
       [THREEFYTP10]
+
+  # observed: {frequency, units, seasonal adjustment, coverage} as at 2026-08-18.
+  series_observed:
+    DGS3MO:          {freq: D, units: percent,        sa: NSA,  start: 1981-09-01, end: 2026-08-14}
+    DGS6MO:          {freq: D, units: percent,        sa: NSA,  start: 1981-09-01, end: 2026-08-14}
+    DGS1:            {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS2:            {freq: D, units: percent,        sa: NSA,  start: 1976-06-01, end: 2026-08-14}
+    DGS5:            {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS10:           {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS20:           {freq: D, units: percent,        sa: NSA,  start: 1962-01-02, end: 2026-08-14}
+    DGS30:           {freq: D, units: percent,        sa: NSA,  start: 1977-02-15, end: 2026-08-14}
+    WALCL:           {freq: W, units: millions_usd,   sa: NSA,  start: 2002-12-18, end: 2026-08-12}
+    WRESBAL:         {freq: W, units: millions_usd,   sa: NSA,  start: 2002-12-18, end: 2026-08-12}
+    RRPONTSYD:       {freq: D, units: billions_usd,   sa: NSA,  start: 2003-02-07, end: 2026-08-18}
+    WTREGEN:         {freq: W, units: millions_usd,   sa: NSA,  start: 2002-12-18, end: 2026-08-12}
+    SOFR:            {freq: D, units: percent,        sa: NSA,  start: 2018-04-03, end: 2026-08-17}
+    EFFR:            {freq: D, units: percent,        sa: NSA,  start: 2000-07-03, end: 2026-08-17}
+    MMMFFAQ027S:     {freq: Q, units: millions_usd,   sa: NSA,  start: 1945-10-01, end: 2026-01-01}
+    GFDEBTN:         {freq: Q, units: millions_usd,   sa: NSA,  start: 1966-01-01, end: 2026-01-01}
+    FYFSGDA188S:     {freq: A, units: percent_of_gdp, sa: NSA,  start: 1929-01-01, end: 2025-01-01}
+    A091RC1Q027SBEA: {freq: Q, units: billions_usd,   sa: SAAR, start: 1947-01-01, end: 2026-04-01}
+    FGRECPT:         {freq: Q, units: billions_usd,   sa: SAAR, start: 1947-01-01, end: 2026-01-01}
+    GDP:             {freq: Q, units: billions_usd,   sa: SAAR, start: 1947-01-01, end: 2026-04-01}
+    THREEFYTP10:     {freq: D, units: percent,        sa: NSA,  start: 1990-01-02, end: 2026-08-07}
+
   known_gaps:
-    DGS20: Series discontinued 1987-01 to 1993-09. Flag as missing; never fill.
-    MMMFFAQ027S: Quarterly frequency; do not forward-fill onto a daily axis.
+    DGS20: >
+      VERIFIED against the observations, not just the coverage window. The series
+      has a single 2,466-day hole between 1986-12-31 and 1993-10-01, which matches
+      the long-asserted 1987-01 to 1993-09 discontinuation. 2,408 of its 16,859
+      observations are FRED's "." marker in total; the rest are ordinary
+      non-trading days. Flag as missing; never fill, and never interpolate a 20Y
+      point across the discontinuation for a curve spread.
+    MMMFFAQ027S: Quarterly frequency, confirmed. Do not forward-fill onto a daily axis.
+    FYFSGDA188S: >
+      ANNUAL, and the latest observation is 2025-01-01 — both coarser and more
+      lagged than anything else here. It cannot contribute to a monthly signal
+      without an interpolation this project forbids. Suitable as chart context
+      only, not as a score input.
 
 nyfed_acm:
   # No API. Scheduled file pull, parsed with pandas.
   url: https://www.newyorkfed.org/medialibrary/media/research/data_indicators/ACMTermPremium.xls
   landing_page: https://www.newyorkfed.org/research/data_indicators/term-premia-tabs
   verified: true
-  series_of_interest: [ACMTP02, ACMTP05, ACMTP10]
-  # Genuinely a legacy .xls (Content-Type application/vnd.ms-excel, ~10.1 MB).
-  # openpyxl CANNOT read it; the probe fell through to xlrd. Pin the engine.
-  engine: xlrd
-  # The workbook has TWO sheets and pandas' default (first sheet) is the MONTHLY
-  # one. Reading without sheet_name silently yields month-end data on what the
-  # app treats as a daily axis. Always name the sheet.
-  sheet: ACM Daily
+
+  # THE WORKBOOK HAS TWO SHEETS AND THE PANDAS DEFAULT IS THE WRONG ONE.
+  # Reading without an explicit sheet_name returns "ACM Monthly" — 782 month-end
+  # rows — which then gets treated as the daily series it is not. The failure is
+  # invisible: month-end term premia are entirely plausible daily values, and
+  # Deviation D8 (resample the daily premium to month end) would be silently
+  # skipped rather than performed.
+  engine: xlrd            # openpyxl cannot read this file; the engine is not optional
+  sheet: ACM Daily        # always name it
   sheets:
-    ACM Daily: 16252 rows, 1961-06-14 → 2026-08-07
-    ACM Monthly: 782 rows, 1961-06-30 → 2026-07-31
-  columns: >
-    31 columns on both sheets: DATE, ACMY01-ACMY10 (fitted yields),
-    ACMTP01-ACMTP10 (term premia), ACMRNY01-ACMRNY10 (risk-neutral yields).
-    All three series_of_interest confirmed present.
+    ACM Daily:   {rows: 16252, start: 1961-06-14, end: 2026-08-07}
+    ACM Monthly: {rows: 782,   start: 1961-06-30, end: 2026-07-31}
+  format: >
+    Genuine legacy .xls (Content-Type application/vnd.ms-excel, ~10MB).
+  observed_columns: >
+    31 columns on both sheets: DATE, ACMY01..ACMY10 (fitted yields),
+    ACMTP01..ACMTP10 (term premia), ACMRNY01..ACMRNY10 (risk-neutral yields).
   date_parsing: >
-    DATE arrives as a STRING formatted "07-Aug-2026" (%d-%b-%Y), not an Excel
-    serial or datetime. Parse it explicitly; do not rely on pandas inference.
+    DATE arrives as a STRING formatted "07-Aug-2026" (%d-%b-%Y) — not an Excel
+    serial and not a datetime. Parse it explicitly; pandas inference on this
+    format is locale-sensitive and will silently produce NaT or a wrong year.
+  series_of_interest: [ACMTP02, ACMTP05, ACMTP10]
+  series_of_interest_confirmed: [ACMTP02, ACMTP05, ACMTP10]
   revision_policy: >
     ACM estimates are model output and are re-estimated retroactively. Every pull
     stores retrieval_date and is diffed against the prior vintage; changes to
     historical values raise a revision flag rather than being silently overwritten.
+
+treasurydirect:
+  # Not used. Retained so the reason is on the record rather than rediscovered.
+  base_url: https://www.treasurydirect.gov/TA_WS/
+  verified: false
+  status: >
+    Blocked by network egress policy (403 at CONNECT) at the 2026-08-17 probe,
+    while every other host became reachable. It was only ever the fallback source
+    for per-security maturity dates, and mspd_table_3_market carries those for the
+    full history, so nothing depends on it.
 
 manual:
   qra_log:

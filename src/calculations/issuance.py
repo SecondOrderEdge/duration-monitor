@@ -262,3 +262,49 @@ def bill_to_coupon_ratio(
     )
     out.index.name = "period"
     return out
+
+
+def aggregate_net_issuance(
+    net: pd.DataFrame, *, freq: str = "Q", period_col: str = "period"
+) -> pd.DataFrame:
+    """Roll monthly net issuance up to a coarser period.
+
+    Net issuance is a FLOW, so aggregating it means summing the monthly changes
+    within each period — not recomputing the change on a coarser calendar. Passing
+    monthly data to `net_issuance(freq="Q")` instead maps three months onto one
+    period key and raises, which is the guard working: the two operations give
+    different answers and only one of them is net issuance.
+
+    A period containing any missing month is voided rather than partially summed.
+    A quarter reported as two months of issuance looks like a real, smaller number
+    and there is nothing in the output to say otherwise.
+    """
+    df = net.copy()
+    df[period_col] = df[period_col].dt.asfreq(freq)
+
+    grouped = df.groupby([period_col, "security_class"], observed=True)["net_issuance"]
+    summed = grouped.sum(min_count=1)
+
+    # Two distinct ways a period can be incomplete, and only one of them leaves a
+    # NaN behind to find:
+    #   a month is present but unmeasurable (no prior observation to difference), or
+    #   a month is absent from the input entirely — which is the normal state of
+    #   the trailing period, since the source publishes monthly and the current
+    #   quarter is partial until its third month lands.
+    # The second is the dangerous one: one month of issuance summed and labelled
+    # as a quarter is a complete-looking bar a third the height it will end up.
+    has_nan = grouped.apply(lambda s: s.isna().any())
+    months_present = grouped.apply(lambda s: len(s))
+    months_expected = pd.Series(
+        [
+            len(pd.period_range(p.start_time, p.end_time, freq="M"))
+            for p, _ in months_present.index
+        ],
+        index=months_present.index,
+    )
+    incomplete = has_nan | (months_present < months_expected)
+
+    out = summed.where(~incomplete).rename("net_issuance").reset_index()
+    out["method"] = "mspd_delta"
+    out["period_complete"] = (~incomplete).values
+    return out

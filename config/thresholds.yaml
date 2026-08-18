@@ -61,6 +61,12 @@ debt_ceiling_episodes:
 # --------------------------------------------------------------------------- #
 wam:
   days_per_year: 365.25
+  # Deviation D9(b). TIPS are published inflation-adjusted, so a total WAM mixing
+  # them with par-reported classes weights TIPS by roughly their accretion. Par is
+  # recoverable (outstanding - accretion) and is the basis used, so every class is
+  # weighted on one footing. To be confirmed against Treasury's own published
+  # average length of the marketable debt, which is the external check on this.
+  tips_weighting_basis: PAR
   maturity_buckets_years: [1, 2, 3, 5]
   use_final_maturity_for_frn: true
   use_final_maturity_for_tips: true
@@ -163,3 +169,14 @@ alignment:
   common_frequency: M
   daily_to_monthly: last
   interaction_flag_horizon_months: 12
+
+# --------------------------------------------------------------------------- #
+# Storage boundaries (Deviation D7)
+# --------------------------------------------------------------------------- #
+storage:
+  # The processed store is committed and redeployed with the app, so anything
+  # rewritten on every refresh becomes permanent git history. Daily term premium
+  # from 1991 gives the ten-year lead-in that D1 requires before a point-in-time
+  # percentile may publish against a 2001 backtest start. Earlier history stays in
+  # data/raw and is reproducible by re-running ingestion.
+  term_premium_processed_start: 1991-01-01

@@ -1,0 +1,110 @@
+# Scheduled data refresh.
+#
+# Pulls every source, normalizes, validates, and commits the processed store the
+# app deploys from. FRED runs here rather than locally because it is the one
+# credentialed source and the key lives in repository secrets.
+#
+# The job fails loudly. `scripts/refresh.py` exits non-zero if any source is
+# unreachable, breaks its contract, or fails reconciliation, and it writes each
+# processed file only after that source's checks have passed — so a partial
+# failure leaves the previous good data in place rather than a plausible-looking
+# half-refresh.
+
+name: Refresh data
+
+on:
+  schedule:
+    # Weekday mornings, after MSPD and the DTS have published. UTC.
+    - cron: "30 11 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Restrict to one table (debt_outstanding, wam, term_premium, auctions, rates). Blank refreshes all."
+        required: false
+        default: ""
+        type: string
+  push:
+    # Re-run whenever the pipeline or what it depends on changes, so a refactor
+    # cannot quietly break the refresh and only be discovered on a schedule.
+    paths:
+      - scripts/refresh.py
+      - src/ingestion/**
+      - src/transformation/**
+      - src/validation/**
+      - config/sources.yaml
+      - config/thresholds.yaml
+      - .github/workflows/refresh_data.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  # A second refresh starting while one is mid-commit would race on the branch.
+  group: refresh-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        # The pipeline is only worth running if the calculations behind it hold.
+        run: python -m pytest tests/ -q
+
+      - name: Refresh
+        id: refresh
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          set +e
+          ARGS=""
+          if [ -n "${{ inputs.only }}" ]; then ARGS="--only ${{ inputs.only }}"; fi
+          python scripts/refresh.py $ARGS 2>&1 | tee refresh.log
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo '## Refresh'
+            echo
+            echo '```'
+            cat refresh.log 2>/dev/null || echo "(no output)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          rm -f refresh.log
+
+      - name: Commit processed data
+        # Runs even when a source failed: the sources that did succeed have
+        # already been validated and written, and committing them is better than
+        # discarding good data because an unrelated feed was down.
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/processed
+          if git diff --cached --quiet; then
+            echo "No change in processed data."
+          else
+            git commit -m "data: scheduled refresh ($(date -u +%Y-%m-%d))"
+            git pull --rebase --autostash origin ${{ github.ref_name }} || true
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      - name: Fail on refresh error
+        if: steps.refresh.outputs.exit_code != '0'
+        run: |
+          echo "::error::One or more sources failed to refresh. See the job summary."
+          exit 1

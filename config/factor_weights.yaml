@@ -78,12 +78,17 @@ auction_stress_components:
   bid_to_cover: 1.0
   indirect: 1.0
   dealer: 1.0
-  # Zero by default (Deviation D3). A true tail needs the 1pm when-issued yield,
-  # which is not free. The fallback — high yield against a constant-maturity par
-  # yield at the close — absorbs a full day of market movement plus a maturity
-  # mismatch, and is mostly noise about something other than auction quality.
-  #
-  # If the source probe confirms Treasury publishes low/median yield, replace this
-  # with high-minus-median spread, which is a genuine official measure of bid
-  # dispersion, and give it real weight.
+
+  # Deviation D3, RESOLVED. The 2026-08-18 probe confirmed Treasury publishes the
+  # median (as `avg_med_yield`) and allotment-at-high (as `allocation_pctage`), so
+  # the two genuine official measures of bid dispersion are available free and
+  # carry real weight. Both answer the question a tail proxies for: how far did
+  # bidders have to be reached for the auction to clear.
+  dispersion: 1.0          # high yield minus median yield, in basis points
+  allotment_at_high: 1.0   # percent of bids allotted at the stop
+
+  # The CMT-based fallback stays at zero as a labelled diagnostic. It compares the
+  # auction's high yield to a constant-maturity par yield at the previous close,
+  # absorbing a full day of market movement plus a maturity mismatch. It is kept
+  # only so the weight-sensitivity table can show what it would have done.
   tail: 0.0

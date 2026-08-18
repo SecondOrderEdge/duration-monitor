@@ -1,0 +1,377 @@
+#!/usr/bin/env python3
+"""Pull sources, normalize, validate, and write the processed store.
+
+The layering the app depends on, in one place: ingestion writes `data/raw/`
+exactly as retrieved, transformation writes `data/processed/`, and validation
+sits between them with the authority to stop the run. The Streamlit app reads
+`data/processed/` and nothing else.
+
+Validation failures exit non-zero. A refresh that half-succeeded and left a
+stale-but-plausible processed store is the failure mode worth being loud about,
+so the processed file is only replaced once its checks have passed.
+
+Usage:
+    python scripts/refresh.py                  # all Phase 1 tables
+    python scripts/refresh.py --only debt_outstanding
+    python scripts/refresh.py --no-raw         # skip the raw archive
+"""
+
+from __future__ import annotations
+
+import argparse
+import pathlib
+import sys
+
+import pandas as pd
+import yaml
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
+
+from src.ingestion.fiscaldata import (  # noqa: E402
+    FiscalDataClient,
+    parse_endpoint,
+    write_raw,
+)
+from src.calculations.wam import wam_series  # noqa: E402
+from src.ingestion.fred import FredClient, MissingCredential  # noqa: E402
+from src.ingestion.nyfed import detect_revisions, fetch_acm  # noqa: E402
+from src.signals.auction_stress import (  # noqa: E402
+    DEFAULT_COMPONENTS,
+    Component,
+    auction_stress_score,
+    long_end_stress,
+)
+from src.transformation.normalize import (  # noqa: E402
+    normalize_auctions,
+    normalize_debt_outstanding,
+    normalize_securities_detail,
+    wam_input,
+)
+from src.validation.quality import QualityLog, check_staleness  # noqa: E402
+from src.validation.reconciliation import reconcile_components_to_total  # noqa: E402
+
+PROCESSED = REPO_ROOT / "data" / "processed"
+THRESHOLDS = REPO_ROOT / "config" / "thresholds.yaml"
+
+# Builders append informational notes here; main() folds them into the event log.
+QUALITY_NOTES: list[dict] = []
+
+
+def _thresholds() -> dict:
+    return yaml.safe_load(THRESHOLDS.read_text(encoding="utf-8"))
+
+
+def build_debt_outstanding(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """mspd_table_1 → debt_outstanding, reconciled against the published total."""
+    print("  fetching mspd_table_1 ...", flush=True)
+    result = client.fetch("mspd_table_1")
+    print(f"    {result.n_rows} rows over {result.n_pages} page(s)")
+
+    if keep_raw:
+        raw = write_raw(result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+
+    typed, report = parse_endpoint(result)
+    report.raise_if_failed()
+    print(f"    parsed, {report.total_parse_failures} coercion failure(s)")
+
+    table = normalize_debt_outstanding(typed, retrieval_date=result.retrieval_date)
+    print(f"    normalized to {len(table)} rows, "
+          f"{table.observation_date.min():%Y-%m} → {table.observation_date.max():%Y-%m}")
+
+    tol = _thresholds()["validation"]["reconciliation_tolerance_pct"]
+    check = reconcile_components_to_total(table, tolerance_pct=tol)
+    print(f"    reconciliation: {check.n_periods} periods, worst "
+          f"{check.max_abs_diff_pct:.2e}% (tolerance {tol}%)")
+    check.raise_if_failed()
+
+    return table
+
+
+def build_wam(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """mspd_table_3_market → WAM and maturity-bucket series.
+
+    Only the derived series is returned for the processed store. The CUSIP-level
+    detail behind it is ~150k rows and would be rewritten in full on every refresh,
+    so it stays in `data/raw/` (git-ignored) with only the latest snapshot
+    published alongside — Deviation D7.
+    """
+    print("  fetching mspd_table_3_market ...", flush=True)
+    result = client.fetch("mspd_table_3_market")
+    print(f"    {result.n_rows} rows over {result.n_pages} page(s)")
+
+    if keep_raw:
+        raw = write_raw(result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+
+    typed, report = parse_endpoint(result)
+    report.raise_if_failed()
+
+    securities = normalize_securities_detail(typed, retrieval_date=result.retrieval_date)
+    print(f"    {len(securities)} security-months over "
+          f"{securities.observation_date.nunique()} months")
+
+    basis = _thresholds()["wam"]["tips_weighting_basis"]
+    series = wam_series(wam_input(securities, basis=basis))
+    series["amount_basis"] = basis
+    series["source"] = "fiscaldata/mspd_table_3_market"
+    series["retrieval_date"] = result.retrieval_date
+    series["country"] = "US"
+    print(f"    WAM {series.wam_years.iloc[-1]:.2f}y at "
+          f"{series.observation_date.iloc[-1]:%Y-%m} (weighted on {basis})")
+
+    # The latest CUSIP snapshot is small and useful on the page; the history is not.
+    latest = securities[securities.observation_date == securities.observation_date.max()]
+    snapshot = PROCESSED / "securities_detail_latest.parquet"
+    latest.to_parquet(snapshot, index=False)
+    print(f"    latest snapshot ({len(latest)} securities) → "
+          f"{snapshot.relative_to(REPO_ROOT)}")
+
+    return series
+
+
+def build_term_premium(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """NY Fed ACM term premium, with revision detection against the prior vintage.
+
+    ACM is model output and is re-estimated retroactively, so a value dated 2010
+    can change between pulls. Overwriting silently would make a backtest
+    irreproducible with no trace of why, so changed history is counted and flagged.
+    """
+    print("  fetching NY Fed ACM workbook ...", flush=True)
+    table, retrieved = fetch_acm()
+    print(f"    {len(table)} rows, {table.date.nunique()} dates, "
+          f"{table.date.min():%Y-%m-%d} → {table.date.max():%Y-%m-%d}")
+
+    existing = PROCESSED / "term_premium.parquet"
+    if existing.exists():
+        report = detect_revisions(pd.read_parquet(existing), table)
+        print(f"    revision check: {report.n_compared} overlapping observations, "
+              f"{len(report.changed)} changed")
+        if report.has_revisions:
+            table["revision_flag"] = table.set_index(["date", "maturity", "model"]).index.isin(
+                report.changed.set_index(["date", "maturity", "model"]).index
+            )
+            worst = report.changed["abs_change"].max()
+            print(f"    ACM re-estimated: largest historical change {worst:.4f}pp")
+    else:
+        print("    no prior vintage to compare against")
+
+    # Storage boundary (Deviation D7). The full daily series back to 1961 is 449KB
+    # and would be rewritten on every scheduled run, which is permanent git
+    # history for a file the app re-reads whole. The processed store keeps daily
+    # data from 1991: that is a ten-year lead-in before the 2001 backtest start,
+    # which is exactly the minimum history D1 requires before a point-in-time
+    # percentile may publish. Earlier history stays in data/raw, git-ignored, and
+    # is reproducible by re-running ingestion.
+    boundary = pd.Timestamp(_thresholds().get("storage", {}).get(
+        "term_premium_processed_start", "1991-01-01"
+    ))
+    full_rows = len(table)
+    table = table[table["date"] >= boundary].copy()
+    print(f"    processed store keeps {len(table)} of {full_rows} rows "
+          f"(daily from {boundary:%Y}; earlier history in data/raw)")
+
+    for column in ("country", "maturity", "model", "units", "source"):
+        if column in table.columns:
+            table[column] = table[column].astype("category")
+    table["value"] = table["value"].astype("float32")
+
+    return table
+
+
+def build_rates(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """FRED series. Requires FRED_API_KEY."""
+    print("  fetching FRED series ...", flush=True)
+    fred = FredClient()
+    configured = fred.configured_series()
+    table = fred.fetch_many(configured)
+    print(f"    {len(table)} observations across {table.series_id.nunique()} series")
+
+    gaps = table[table["value"].isna()].groupby("series_id").size()
+    if len(gaps):
+        print(f"    documented missing observations: {gaps.to_dict()}")
+    return table
+
+
+def build_auctions(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """auctions_query → per-auction stress score and the long-end rolling series."""
+    print("  fetching auctions_query ...", flush=True)
+    result = client.fetch("auctions_query")
+    print(f"    {result.n_rows} rows over {result.n_pages} page(s)")
+
+    if keep_raw:
+        raw = write_raw(result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+
+    typed, report = parse_endpoint(result)
+    report.raise_if_failed()
+
+    auctions = normalize_auctions(typed, retrieval_date=result.retrieval_date)
+    print(f"    {len(auctions)} held auctions, "
+          f"{auctions.auction_date.min():%Y-%m} → {auctions.auction_date.max():%Y-%m} "
+          f"({auctions.attrs['n_unheld_dropped']} scheduled-but-unheld dropped; "
+          f"{auctions.attrs['n_without_results']} held with results never published)")
+
+    cfg = _thresholds()["auctions"]
+    weights = yaml.safe_load(
+        (REPO_ROOT / "config" / "factor_weights.yaml").read_text(encoding="utf-8")
+    )["auction_stress_components"]
+    components = {
+        name: Component(spec.column, sign=spec.sign, weight=float(weights.get(name, 0.0)))
+        for name, spec in DEFAULT_COMPONENTS.items()
+    }
+    active = {n: c.weight for n, c in components.items() if c.weight > 0}
+    print(f"    components: {active}")
+
+    # Bidder detail only exists from 2008; earlier auctions are kept but excluded
+    # from the composite so a reduced factor set is never scored as a full one.
+    start = pd.Timestamp(cfg["composite_start_date"])
+    scored_input = (
+        auctions if cfg["include_pre_2008_in_composite"]
+        else auctions[auctions.auction_date >= start]
+    )
+    scored = auction_stress_score(
+        scored_input,
+        components=components,
+        trailing_auctions=cfg["trailing_auctions"],
+        min_trailing=cfg["min_trailing_auctions"],
+        min_components=cfg["min_components"],
+        scale_sigma=cfg["scale_sigma"],
+    )
+    n_scored = int(scored["stress_score"].notna().sum())
+    print(f"    scored {n_scored} of {len(scored)} auctions since "
+          f"{start:%Y-%m} (min {cfg['min_trailing_auctions']} trailing per tenor)")
+
+    rolling = long_end_stress(
+        scored,
+        terms=tuple(cfg["long_end_terms"]),
+        window_days=cfg["long_end_window_days"],
+        min_auctions=cfg["long_end_min_auctions"],
+    )
+    latest = rolling.dropna()
+    if len(latest):
+        print(f"    long-end stress {latest.iloc[-1]:+.1f} at {latest.index[-1]:%Y-%m-%d}")
+
+    # The processed table is the SCORED universe. Auctions before the composite
+    # start are normalized and archived in data/raw but not published here, so
+    # their absence is recorded rather than left to look like the source having
+    # no earlier history (Deviation D7, same boundary logic as term premium).
+    excluded = auctions[auctions.auction_date < start]
+    if len(excluded):
+        detail = (
+            f"{len(excluded)} auctions before {start:%Y-%m} are archived in "
+            f"data/raw but excluded from the processed store, of which "
+            f"{int((~excluded['has_results']).sum())} were held without published "
+            "results (bid-to-cover was not reported before about 2000)"
+        )
+        print(f"    note: {detail}")
+        QUALITY_NOTES.append(
+            {"source": "auctions", "endpoint": "auctions_query",
+             "event_type": "staleness", "severity": "info", "detail": detail}
+        )
+
+    rolling_frame = latest.reset_index()
+    rolling_frame.columns = ["date", "long_end_stress"]
+    rolling_frame["country"] = "US"
+    rolling_frame.to_parquet(PROCESSED / "long_end_stress.parquet", index=False)
+    print(f"    processed → data/processed/long_end_stress.parquet")
+
+    return scored
+
+
+BUILDERS = {
+    "debt_outstanding": build_debt_outstanding,
+    "auctions": build_auctions,
+    "wam": build_wam,
+    "term_premium": build_term_premium,
+    "rates": build_rates,
+}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--only", choices=sorted(BUILDERS), action="append")
+    ap.add_argument("--no-raw", action="store_true", help="skip the raw archive")
+    args = ap.parse_args()
+
+    wanted = args.only or sorted(BUILDERS)
+    PROCESSED.mkdir(parents=True, exist_ok=True)
+    client = FiscalDataClient()
+
+    failures: list[str] = []
+    quality = QualityLog()
+    staleness_cfg = _thresholds()["validation"]["staleness_days"]
+    built: dict[str, pd.DataFrame] = {}
+
+    for name in wanted:
+        print(f"\n{name}:")
+        try:
+            table = BUILDERS[name](client, keep_raw=not args.no_raw)
+        except MissingCredential as exc:  # noqa: PERF203
+            # A configuration gap, not a broken feed. Still a failure — a refresh
+            # that quietly skipped a source would leave a stale table looking current.
+            print(f"    SKIPPED: {exc}", file=sys.stderr)
+            failures.append(f"{name}: no credential")
+            quality.record(source=name, endpoint=name, event_type="fetch_failure",
+                           severity="error", detail=f"missing credential: {exc}")
+            continue
+        except Exception as exc:  # noqa: BLE001 - the point is to fail loudly
+            print(f"    FAILED: {type(exc).__name__}: {exc}", file=sys.stderr)
+            failures.append(f"{name}: {type(exc).__name__}")
+            kind = ("contract_break" if "Contract" in type(exc).__name__
+                    else "reconciliation_break" if "reconcil" in str(exc).lower()
+                    else "fetch_failure")
+            quality.record(source=name, endpoint=name, event_type=kind,
+                           severity="error", detail=f"{type(exc).__name__}: {exc}")
+            continue
+
+        # Written only after its checks have passed, so a half-finished refresh
+        # cannot leave a plausible-but-wrong file behind.
+        target = PROCESSED / f"{name}.parquet"
+        table.to_parquet(target, index=False)
+        built[name] = table
+        print(f"    processed → {target.relative_to(REPO_ROOT)}")
+
+    # Staleness is judged against the latest OBSERVATION, not the retrieval time:
+    # a feed fetched successfully every morning that has published nothing for a
+    # month is stale, and a check on retrieval would call it healthy.
+    date_columns = {"debt_outstanding": ("observation_date", "mspd"),
+                    "wam": ("observation_date", "mspd"),
+                    "term_premium": ("date", "nyfed_acm"),
+                    "auctions": ("auction_date", "auctions"),
+                    "rates": ("date", "fred_daily")}
+    for name, table in built.items():
+        column, threshold_key = date_columns.get(name, (None, None))
+        if column is None or column not in table.columns:
+            continue
+        event = check_staleness(
+            pd.to_datetime(table[column]).max(),
+            source=name, endpoint=name,
+            max_age_days=staleness_cfg[threshold_key],
+        )
+        if event:
+            print(f"  STALE {name}: {event['detail']}", file=sys.stderr)
+            quality.record(**event)
+            failures.append(f"{name}: stale")
+
+    for note in QUALITY_NOTES:
+        quality.record(**note)
+
+    events = quality.to_frame()
+    events.to_parquet(PROCESSED / "data_quality_events.parquet", index=False)
+    print(f"\n{len(events)} data quality event(s) → "
+          f"data/processed/data_quality_events.parquet")
+
+    if failures:
+        print(f"\n{len(failures)} source(s) failed:", file=sys.stderr)
+        for f in failures:
+            print(f"  - {f}", file=sys.stderr)
+        return 1
+
+    print("\nRefresh complete.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

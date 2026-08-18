@@ -24,6 +24,7 @@ import argparse
 import datetime as dt
 import json
 import pathlib
+import re
 import sys
 import traceback
 
@@ -39,23 +40,73 @@ TIMEOUT_DEFAULT = 45
 # helpers
 # --------------------------------------------------------------------------- #
 
+# Credentials must never reach the evidence files. The probe is designed to have
+# its output committed, and a failed request stringifies to the full URL —
+# api_key included. GitHub Actions masks secrets in job logs but not in files a
+# job commits, so masking has to happen here, before anything is written.
+#
+# The likeliest trigger is exactly what the probe exists to check: an unverified
+# series ID that 404s.
+
+_REDACT_TOKENS: set[str] = set()
+_API_KEY_RE = re.compile(r"(api_key=)[^&\s\"']+")
+
+
+def register_secret(value: str | None) -> None:
+    """Register a credential to be scrubbed from every recorded string."""
+    if value:
+        _REDACT_TOKENS.add(value)
+
+
+def _redact(text: str) -> str:
+    """Scrub registered secrets, then any api_key= query parameter."""
+    for token in _REDACT_TOKENS:
+        text = text.replace(token, "***REDACTED***")
+    return _API_KEY_RE.sub(r"\1***REDACTED***", text)
+
+
 def _get_json(url: str, params: dict, timeout: int) -> dict:
     resp = requests.get(url, params=params, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
 
 
-def _contract(observed: list[str], expected: list[str] | None) -> dict:
-    """Compare observed field names against the expected contract."""
+def _contract(
+    observed: list[str],
+    expected: list[str] | None,
+    baseline: list[str] | None = None,
+) -> dict:
+    """Compare observed field names against the contract and the last probe.
+
+    Two separate questions, deliberately not conflated:
+
+    `missing` is a contract break — ingestion depends on that field and it is gone.
+    That fails the run.
+
+    `added` / `dropped` are drift against `observed_fields_at_probe`, the full field
+    list recorded when this endpoint was last probed. An endpoint can return a
+    hundred fields we do not use; reporting all of them as "unexpected" on every run
+    buries the one that matters. Drift is reported and not fatal — unless a dropped
+    field is also in `expected_fields`, in which case it is already a break.
+    """
     expected = expected or []
     obs, exp = set(observed), set(expected)
-    return {
+    base = set(baseline) if baseline else None
+    out = {
         "n_fields": len(obs),
-        "missing": sorted(exp - obs),      # we expected it; the API does not have it
-        "unexpected": sorted(obs - exp),   # the API has it; we did not plan for it
+        "missing": sorted(exp - obs),      # we depend on it; the API does not have it
         "matched": sorted(obs & exp),
         "contract_ok": not (exp - obs),
     }
+    if base is None:
+        # No baseline recorded yet: everything outside the contract is new to us.
+        out["baseline_recorded"] = False
+        out["unexpected"] = sorted(obs - exp)
+    else:
+        out["baseline_recorded"] = True
+        out["added"] = sorted(obs - base)     # API grew a field since the last probe
+        out["dropped"] = sorted(base - obs)   # API lost a field since the last probe
+    return out
 
 
 def _null_audit(rows: list[dict]) -> dict:
@@ -114,7 +165,11 @@ def probe_fiscaldata(cfg: dict, timeout: int) -> dict:
                 "total_rows_available": meta.get("total-count"),
                 "latest_date": rows[0].get(date_field) if rows else None,
                 "earliest_date": oldest_rows[0].get(date_field) if oldest_rows else None,
-                "contract": _contract(observed, spec.get("expected_fields")),
+                "contract": _contract(
+                    observed,
+                    spec.get("expected_fields"),
+                    spec.get("observed_fields_at_probe"),
+                ),
                 "probe_extra_fields_present": extras_present,
                 "probe_extra_fields_absent": [
                     f for f in spec.get("probe_extra_fields", []) if f not in observed
@@ -126,7 +181,7 @@ def probe_fiscaldata(cfg: dict, timeout: int) -> dict:
         except Exception as exc:  # noqa: BLE001 - probe reports failures, never raises
             entry.update({
                 "status": "error",
-                "error": f"{type(exc).__name__}: {exc}",
+                "error": _redact(f"{type(exc).__name__}: {exc}"),
                 "critical_unknowns": spec.get("critical_unknowns", []),
             })
 
@@ -179,7 +234,7 @@ def probe_fred(cfg: dict, api_key: str | None, timeout: int) -> dict:
                 results["series"][sid] = {
                     "group": group,
                     "status": "error",
-                    "error": f"{type(exc).__name__}: {exc}",
+                    "error": _redact(f"{type(exc).__name__}: {exc}"),
                 }
 
     return results
@@ -228,13 +283,13 @@ def probe_nyfed(cfg: dict, timeout: int, outdir: pathlib.Path) -> dict:
                 })
                 break
             except Exception as exc:  # noqa: BLE001
-                last_error = f"{type(exc).__name__}: {exc}"
+                last_error = _redact(f"{type(exc).__name__}: {exc}")
         else:
             entry["parse_error"] = last_error
 
         return entry
     except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "url": url, "error": f"{type(exc).__name__}: {exc}"}
+        return {"status": "error", "url": url, "error": _redact(f"{type(exc).__name__}: {exc}")}
 
 
 # --------------------------------------------------------------------------- #
@@ -263,7 +318,12 @@ def write_markdown(report: dict, path: pathlib.Path) -> None:
                 L.append(f"| `{name}` | **ERROR** | – | – | {e.get('error', '')[:80]} |")
                 continue
             c = e["contract"]
-            verdict = "OK" if c["contract_ok"] else f"**{len(c['missing'])} MISSING**"
+            if not c["contract_ok"]:
+                verdict = f"**{len(c['missing'])} MISSING**"
+            elif c.get("added") or c.get("dropped"):
+                verdict = f"OK, drift +{len(c.get('added', []))}/-{len(c.get('dropped', []))}"
+            else:
+                verdict = "OK"
             cov = f"{e.get('earliest_date')} → {e.get('latest_date')}"
             L.append(
                 f"| `{name}` | ok | {e.get('total_rows_available')} | {cov} | {verdict} |"
@@ -284,11 +344,20 @@ def write_markdown(report: dict, path: pathlib.Path) -> None:
                   f"- Observed fields ({c['n_fields']}): "
                   + ", ".join(f"`{f}`" for f in e["observed_fields"]), ""]
             if c["missing"]:
-                L += ["- **MISSING (expected, not returned):** "
+                L += ["- **MISSING (contracted, not returned):** "
                       + ", ".join(f"`{f}`" for f in c["missing"]), ""]
-            if c["unexpected"]:
-                L += ["- Unexpected (returned, not in contract): "
+            if c.get("unexpected"):
+                L += ["- Returned, not in contract (no baseline recorded yet): "
                       + ", ".join(f"`{f}`" for f in c["unexpected"]), ""]
+            if c.get("added"):
+                L += ["- **ADDED since last probe:** "
+                      + ", ".join(f"`{f}`" for f in c["added"]), ""]
+            if c.get("dropped"):
+                L += ["- **DROPPED since last probe:** "
+                      + ", ".join(f"`{f}`" for f in c["dropped"]), ""]
+            if c["contract_ok"] and not c.get("added") and not c.get("dropped") \
+                    and c.get("baseline_recorded"):
+                L += ["- No field drift since the last probe.", ""]
             if e.get("probe_extra_fields_present"):
                 L += ["- **Opportunistic fields FOUND:** "
                       + ", ".join(f"`{f}`" for f in e["probe_extra_fields_present"]), ""]
@@ -355,6 +424,8 @@ def main() -> int:
 
     import os
 
+    register_secret(os.environ.get("FRED_API_KEY"))
+
     cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
     run_all = not args.only
     want = set(args.only or [])
@@ -363,7 +434,22 @@ def main() -> int:
     outdir = REPO_ROOT / "docs" / "source_probe" / stamp.strftime("%Y-%m-%d")
     outdir.mkdir(parents=True, exist_ok=True)
 
-    report: dict = {"probe_timestamp_utc": stamp.isoformat(), "config_version": cfg["meta"]["version"]}
+    # A partial run must not erase the rest of the day's evidence. `--only fred`
+    # writes a report containing only FRED, so replacing the file wholesale would
+    # silently drop the fiscaldata and NY Fed sections probed an hour earlier —
+    # leaving a file that looks like a complete run of one source.
+    existing_path = outdir / "probe.json"
+    report: dict = {}
+    if existing_path.exists():
+        try:
+            report = json.loads(existing_path.read_text(encoding="utf-8"))
+            if args.only:
+                print(f"merging into existing evidence for {stamp:%Y-%m-%d}", flush=True)
+        except json.JSONDecodeError:
+            report = {}
+
+    report["probe_timestamp_utc"] = stamp.isoformat()
+    report["config_version"] = cfg["meta"]["version"]
 
     if run_all or "fiscaldata" in want:
         print("probing fiscaldata ...", flush=True)
@@ -375,7 +461,11 @@ def main() -> int:
         print("probing NY Fed ACM ...", flush=True)
         report["nyfed_acm"] = probe_nyfed(cfg["nyfed_acm"], args.timeout, outdir)
 
-    (outdir / "probe.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    # Defence in depth: scrub the serialised report as a whole, so a secret
+    # reaching it by some path not anticipated above still cannot be written.
+    (outdir / "probe.json").write_text(
+        _redact(json.dumps(report, indent=2, default=str)), encoding="utf-8"
+    )
     write_markdown(report, outdir / "README.md")
 
     # ---- summarise to stdout and set exit status -------------------------- #
