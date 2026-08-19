@@ -610,6 +610,18 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
               f"funding ratio masked in {masked} of {len(funding)} quarters "
               f"(floor €{floor/1e6:,.0f}mn); a masked quarter has no score")
 
+        # A score that moves against its most legible input is the shape a sign
+        # error takes, and this project has shipped one. The latest quarter's raw
+        # factor value, its point-in-time rank and its weight are printed so a
+        # reading can be checked against its parts rather than trusted.
+        if len(live):
+            at = live.index[-1]
+            for name in ranks.columns:
+                print(f"      {name:<26} raw {factors.loc[at, name]:>9.4f}  "
+                      f"rank {ranks.loc[at, name]:>5.2f}  "
+                      f"weight {weights.loc[at, name]:>5.2f}  "
+                      f"contributes {scored.loc[at, f'contrib_{name}']:>5.1f}")
+
     combined = pd.concat(frames, ignore_index=True)
     combined["retrieval_date"] = pd.Timestamp.now("UTC")
 
