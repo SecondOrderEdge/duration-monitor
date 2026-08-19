@@ -19,7 +19,7 @@ are reachable from there.
 
 | publisher | machine-readable | covers |
 |---|---|---|
-| **ECB** (`data-api.ecb.europa.eu`) | SDMX-JSON | DE, FR, IT and 30 others |
+| **ECB** (`data-api.ecb.europa.eu`) | SDMX-JSON | DE, FR, IT — **but discontinued 2022-03** |
 | **Eurostat** (`ec.europa.eu/eurostat`) | JSON-stat | all EU member states |
 | **BIS** (`stats.bis.org`) | SDMX-XML | cross-country |
 | **OECD** (`sdmx.oecd.org`) | SDMX-XML | cross-country |
@@ -31,30 +31,61 @@ The four statistical agencies serve structured data. The five national debt
 offices served landing pages at the URLs probed — which does not mean they have
 no data endpoint, only that none was found without guessing at one.
 
-## The strong result: ECB securities issues statistics
+## Correction: the ECB series is discontinued
 
-The `SEC` dataflow carries the dimensions this project needs:
+An earlier version of this document called the ECB securities issues statistics
+the strong result. That was wrong, and the error is instructive.
 
-- `SEC_ISSUING_SECTOR` — **S131 Central government**, separable from state, local
-  and social security funds.
-- `SEC_ITEM` — **F33100 short-term** and **F33200 long-term** securities, with
-  long-term further split into **F33201 fixed rate** and **F33202 floating rate**.
-- `DATA_TYPE_SEC` — both **1 outstanding amounts (stocks)** and **4 net issues
-  (flows)**, plus gross issues and redemptions separately.
-- `FREQ` — **monthly**.
-- `REF_AREA` — 33 reference areas including the three euro-area sovereigns.
+The dimensions were real and were read from live responses: `SEC_ISSUING_SECTOR`
+does separate **S131 central government**, `SEC_ITEM` does split **F33100
+short-term** from **F33200 long-term**, and `DATA_TYPE_SEC` does carry both
+**outstanding stocks** and **net issues as published flows**, monthly, for 33
+reference areas. Deriving the real series keys from the API confirmed the series
+exist: 36 of the dataflow's 40,633 series match central government, monthly,
+short or long-term, stocks or flows, for Germany, France and Italy.
 
-Stocks *and* flows, monthly, by maturity class, for central government. That is
-the bill share and the incremental bill funding ratio — two of the six factors —
-from a single publisher on one basis, without deriving flows from stock deltas
-the way the US series has to. Net issues being published directly is better than
-what MSPD offers, where net issuance is inferred from month-over-month change and
-carries the TIPS accretion problem with it.
+Every one of those 36 runs **2012-12 to 2022-03**.
 
-Eurostat `gov_10q_ggdebt` covers the same ground quarterly (`F31` short-term,
-`F32` long-term, sector `S1311` central government) and adds `PC_TOT`, the share
-of total, computed by the publisher. It is a useful cross-check on the ECB
-figures rather than a replacement, being quarterly.
+A uniform end date across every country, every maturity and both data types is a
+discontinued dataflow, not a data gap. The dimension catalogue describes what the
+dataflow *can* express; it says nothing about whether anyone is still publishing
+into it. A monitor of current conditions cannot use a series that stopped four
+years ago, however good its structure.
+
+The lesson is the same one the Phase 1 probe kept teaching: a source has to be
+checked for what it actually contains, not just what it is shaped to contain.
+Reachable, well-structured and current are three separate questions.
+
+## The actual euro-area source: Eurostat
+
+`gov_10q_ggdebt` carries the same split and is current:
+
+- `na_item` — **F31 short-term debt securities**, **F32 long-term debt
+  securities**, alongside F3 (all debt securities), F4 loans, F2 currency and
+  deposits.
+- `sector` — **S1311 central government**, separable from state, local and
+  social security funds.
+- `unit` — MIO_EUR, MIO_NAC, PC_GDP and **PC_TOT**, the share of total computed
+  by the publisher.
+- Coverage, verified per country: **1994-Q1 to 2026-Q1, 129 quarters**, identical
+  for Germany, France and Italy.
+
+Thirty-two years of history, current to the most recent quarter, harmonised
+across member states. That is deeper history than the US series, which starts in
+2001.
+
+Two costs relative to what the ECB dataflow would have given:
+
+**Quarterly, not monthly.** The US factors are monthly. A quarterly euro-area
+score is a coarser instrument, and the point-in-time percentile window would need
+restating in quarters. 129 quarters comfortably exceeds the equivalent of the
+60-month minimum history, so this constrains resolution rather than feasibility.
+
+**Net issuance must be derived from stock deltas**, exactly as the US series does
+from MSPD, rather than read from a published flow. The earlier claim that the
+euro-area data was *cleaner* than the US arrangement is withdrawn — it is the
+same arrangement, with the same caveat that deltas net issuance against
+redemptions within the period.
 
 ## What is not available, and what that costs
 
@@ -80,9 +111,9 @@ Per-country factor availability, on what has been found so far:
 
 | factor | US | DE / FR / IT | UK / JP |
 |---|---|---|---|
-| Bill share trend | yes | **yes** (ECB stocks) | not yet found |
-| Incremental bill funding | yes | **yes** (ECB net issues) | not yet found |
-| Coupon restraint | yes | **yes** (ECB flows) | not yet found |
+| Bill share trend | yes, monthly | **yes, quarterly** (Eurostat F31/F32) | not yet found |
+| Incremental bill funding | yes, monthly | **yes, quarterly** (Eurostat stock deltas) | not yet found |
+| Coupon restraint | yes, monthly | **yes, quarterly** (Eurostat stock deltas) | not yet found |
 | WAM trend | yes | **no** | not yet found |
 | 10y term premium trend | yes | **no** | **no** |
 | Long-end auction stress | yes | **no** (needs DMO data) | not yet found |
@@ -112,12 +143,20 @@ scoring Japan on three factors and the US on six and putting both under one
 heading — the brief's own instruction is that country is a first-class dimension,
 and that has to include which inputs each country's number is built from.
 
+## Unresolved in the probe itself
+
+The ECB dataflow listing was requested with `format=sdmx-json` and returned
+something that would not parse as JSON — that resource appears to serve XML
+regardless. It was being used to look for a successor to the discontinued SEC
+dataflow. Not pursued further because Eurostat answers the question Phase 3
+actually needed answering; worth revisiting only if monthly frequency turns out
+to matter more than it currently appears to.
+
 ## Open questions before any Phase 3 ingestion
 
-1. **Does the ECB series carry enough history?** The probe requested one
-   observation to read the dimensions. Coverage start per country is unknown and
-   matters: the point-in-time percentiles need 60 months of history before the
-   score publishes at all.
+1. **RESOLVED — history is not the constraint.** Eurostat runs 1994-Q1 to
+   2026-Q1 for all three countries, 129 quarters. The constraint is frequency
+   (quarterly) and breadth (three factors), not depth.
 2. **What is the euro-area equivalent of the debt-ceiling problem?** The US cash
    adjustment exists because a ceiling resolution mechanically inflates bill
    issuance. The euro area has no debt ceiling but does have its own distortions.
