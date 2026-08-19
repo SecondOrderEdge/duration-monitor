@@ -173,6 +173,33 @@ def comparable(variant_a: str, variant_b: str, config: dict) -> bool:
     return variant_b in allowed
 
 
+def band_contradicts_direction(band: object, direction: object) -> bool:
+    """Whether a band's wording claims a direction the raw data contradicts.
+
+    The score is a composite of point-in-time percentile RANKS, so it says how a
+    reading compares to that sovereign's own recent behaviour. The band names say
+    "shortening" and "extension", which are absolute claims. For the six-factor US
+    score two market-price factors anchor the composite; for `quantity_only` every
+    factor is relative and nothing anchors it, so a country extending more slowly
+    than usual ranks high and lands in a band named for the opposite direction.
+
+    Confirmed on live data: France, 2026-Q1, score 63.4, band "meaningful
+    shortening", bill share DOWN 0.21pp over four quarters against a trailing
+    median of -0.57pp.
+
+    Kept here rather than inline in the page so the contradiction is testable and
+    so any surface showing these scores asks the same question the same way.
+    """
+    if not isinstance(band, str) or not isinstance(direction, str):
+        return False
+    claims_shortening = "shortening" in band.lower()
+    claims_extension = "extension" in band.lower() or "extending" in band.lower()
+    return (
+        (claims_shortening and direction == "extending")
+        or (claims_extension and direction == "shortening")
+    )
+
+
 def duration_shift_score(
     ranks: pd.DataFrame,
     weights: pd.DataFrame | pd.Series,
