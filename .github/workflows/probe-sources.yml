@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Restrict to one source (fiscaldata, fred, nyfed, phase3, tbac). Blank probes all."
+        description: "Restrict to one source (fiscaldata, fred, nyfed, phase3, tbac, wam). Blank probes all."
         required: false
         default: ""
         type: string
@@ -28,6 +28,7 @@ on:
       - scripts/probe_sources.py
       - scripts/probe_phase3.py
       - scripts/probe_tbac.py
+      - scripts/probe_wam_reference.py
       - .github/workflows/probe-sources.yml
   schedule:
     # Weekly contract check: a field that disappears should surface on its own,
@@ -73,7 +74,7 @@ jobs:
           ARGS=""
           case "${{ inputs.only }}" in
             "")        ARGS="" ;;
-            phase3|tbac) echo "skipping the Phase 1 contract probe" | tee probe_stdout.txt; exit 0 ;;
+            phase3|tbac|wam) echo "skipping the Phase 1 contract probe" | tee probe_stdout.txt; exit 0 ;;
             *)         ARGS="--only ${{ inputs.only }}" ;;
           esac
           python scripts/probe_sources.py $ARGS | tee probe_stdout.txt
@@ -120,6 +121,20 @@ jobs:
           fi
           pip install -r requirements-probe.txt
           python -u scripts/probe_tbac.py | tee -a probe_stdout.txt
+
+      - name: Probe Treasury's published average maturity
+        # The last unvalidated number in the US score. Fiscal Data does not
+        # publish an average maturity — probed across mspd_table_2..5 and
+        # avg_interest_rates — so the figure comes from ODM's quarterly deck,
+        # which lives on the host only reachable from here.
+        #
+        # Dispatch-only for now. It is a reconciliation run against a specific
+        # question, not a contract check, and it crawls someone else's server.
+        if: inputs.only == 'wam'
+        timeout-minutes: 20
+        run: |
+          pip install -r requirements-probe.txt
+          python -u scripts/probe_wam_reference.py | tee -a probe_stdout.txt
 
       - name: Summarise
         run: |
