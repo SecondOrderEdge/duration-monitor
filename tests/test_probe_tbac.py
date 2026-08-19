@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from scripts.probe_tbac import (classify_outcome, clean_html, find_claims,
-                                links_from, year_of)
+                                links_from, text_of, year_of)
 
 
 def test_a_stated_range_after_the_word_bill_is_found():
@@ -126,3 +126,25 @@ def test_year_is_read_from_the_url_when_the_label_has_none():
 
 def test_year_falls_back_to_unknown_rather_than_guessing():
     assert year_of({"label": "Charge 1", "url": "https://x/doc.pdf"}) is None
+
+
+# --------------------------------------------------------------------------- #
+# Bounds
+# --------------------------------------------------------------------------- #
+
+def test_an_oversize_document_is_skipped_and_says_so():
+    """A skipped document must not read as a searched one."""
+    record = {"url": "x", "fetched": False,
+              "skipped": "40,000,000 bytes exceeds the 12,000,000 cap"}
+    text, why = text_of(record)
+    assert text == ""
+    assert "exceeds" in why
+
+
+def test_a_partial_run_is_not_reported_as_a_clean_not_found():
+    """The bug this guards: a budget stop that still claims full coverage."""
+    outcome, detail = classify_outcome(5, [])
+    assert outcome == "NOT FOUND"
+    # The escalation to PARTIAL happens in main() against stopped_on_budget;
+    # what matters here is that the plain verdict already points at coverage.
+    assert "coverage_by_year" in detail

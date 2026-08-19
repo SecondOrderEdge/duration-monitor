@@ -88,6 +88,7 @@ jobs:
         run: python scripts/probe_phase3.py | tee -a probe_stdout.txt
 
       - name: Probe the TBAC bill-share band
+        timeout-minutes: 25
         # The one dashboard number sourced to memory rather than to a fetched
         # artefact. home.treasury.gov is refused by the development
         # environment while api.fiscaldata.treasury.gov is allowed, so this is
@@ -98,7 +99,7 @@ jobs:
         if: inputs.only == '' || inputs.only == 'tbac'
         run: |
           pip install -r requirements-probe.txt
-          python scripts/probe_tbac.py | tee -a probe_stdout.txt
+          python -u scripts/probe_tbac.py | tee -a probe_stdout.txt
 
       - name: Summarise
         run: |

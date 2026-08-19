@@ -125,18 +125,48 @@ def extract_pdf(payload: bytes) -> tuple[str, str | None]:
     return text, None
 
 
-def fetch(url: str, timeout: int) -> dict:
+def fetch(url: str, timeout: int, *, max_bytes: int = 0) -> dict:
+    """Fetch one URL, refusing anything over `max_bytes`.
+
+    The size cap exists because the combined-charges archives run to tens of
+    megabytes and pypdf spends minutes on them. A skipped oversize document is
+    recorded as skipped — it still counts against coverage, and pretending
+    otherwise would be the same error as counting an unsearched document as
+    searched.
+    """
     record: dict = {"url": url, "fetched": False}
     try:
         response = requests.get(
-            url, timeout=timeout, headers={"User-Agent": UA}, allow_redirects=True
+            url, timeout=timeout, headers={"User-Agent": UA},
+            allow_redirects=True, stream=bool(max_bytes),
         )
         record["status"] = response.status_code
         record["final_url"] = response.url
         record["content_type"] = response.headers.get("content-type", "")
         response.raise_for_status()
+
+        if max_bytes:
+            declared = int(response.headers.get("content-length") or 0)
+            if declared > max_bytes:
+                record["skipped"] = f"{declared:,} bytes exceeds the {max_bytes:,} cap"
+                response.close()
+                return record
+            chunks, total = [], 0
+            for chunk in response.iter_content(65536):
+                chunks.append(chunk)
+                total += len(chunk)
+                if total > max_bytes:
+                    # Servers do not always declare a length, so the stream is
+                    # capped as well as the header.
+                    record["skipped"] = f"exceeded the {max_bytes:,} byte cap while reading"
+                    response.close()
+                    return record
+            payload = b"".join(chunks)
+        else:
+            payload = response.content
+
         record["fetched"] = True
-        record["_payload"] = response.content
+        record["_payload"] = payload
     except Exception as exc:  # noqa: BLE001
         record["error"] = f"{type(exc).__name__}: {exc}"
     return record
@@ -145,7 +175,7 @@ def fetch(url: str, timeout: int) -> dict:
 def text_of(record: dict) -> tuple[str, str | None]:
     payload = record.get("_payload")
     if payload is None:
-        return "", record.get("error", "not fetched")
+        return "", record.get("skipped") or record.get("error", "not fetched")
     kind = (record.get("content_type") or "").lower()
     if "pdf" in kind or record["url"].lower().endswith(".pdf"):
         return extract_pdf(payload)
@@ -255,12 +285,23 @@ def main() -> int:
     parser.add_argument("--max-documents", type=int, default=400)
     parser.add_argument("--max-indexes", type=int, default=60,
                         help="archive pages to expand for links")
+    parser.add_argument("--budget-seconds", type=float, default=900,
+                        help="wall-clock ceiling; the probe stops and REPORTS "
+                             "what it got rather than running unbounded")
+    parser.add_argument("--max-bytes", type=int, default=12_000_000,
+                        help="skip documents larger than this")
     parser.add_argument("--delay", type=float, default=1.0,
                         help="seconds between requests; this is someone else's server")
     args = parser.parse_args()
 
+    started = time.monotonic()
+
+    def remaining() -> float:
+        return args.budget_seconds - (time.monotonic() - started)
+
     report: dict = {
         "probe": "tbac_bill_share_band",
+        "budget_seconds": args.budget_seconds,
         "claim_under_test": "reference_levels.bill_share_recommended_band == [0.15, 0.20]",
         "entry_points": [],
         "documents": [],
@@ -270,7 +311,7 @@ def main() -> int:
     candidates: list[dict] = []
     indexes: list[dict] = []
     for url in ENTRY_POINTS:
-        record = fetch(url, args.timeout)
+        record = fetch(url, args.timeout, max_bytes=args.max_bytes)
         payload = record.pop("_payload", None)
         found, found_indexes = ([], [])
         if payload is not None:
@@ -295,8 +336,15 @@ def main() -> int:
     for index in queue:
         if index["url"] in seen_indexes:
             continue
+        if remaining() <= args.budget_seconds * 0.5:
+            # Half the budget is reserved for actually READING documents.
+            # A probe that spends all its time discovering links and none
+            # searching them has answered nothing.
+            report["index_expansion_truncated"] = True
+            print("  budget half spent on discovery; stopping expansion", flush=True)
+            break
         seen_indexes.add(index["url"])
-        record = fetch(index["url"], args.timeout)
+        record = fetch(index["url"], args.timeout, max_bytes=args.max_bytes)
         payload = record.pop("_payload", None)
         found = []
         if payload is not None:
@@ -343,8 +391,19 @@ def main() -> int:
         report["documents_skipped_by_cap"] = len(seen) - len(ordered)
 
     extracted = 0
-    for link in ordered:
-        record = fetch(link["url"], args.timeout)
+    for position, link in enumerate(ordered):
+        if remaining() <= 0:
+            # Stopping early is fine; stopping early and calling it full coverage
+            # is not. The count of what went unread is recorded and reported.
+            report["stopped_on_budget"] = {
+                "after_documents": position,
+                "documents_unread": len(ordered) - position,
+                "budget_seconds": args.budget_seconds,
+            }
+            print(f"\n  BUDGET REACHED after {position} document(s); "
+                  f"{len(ordered) - position} left unread", flush=True)
+            break
+        record = fetch(link["url"], args.timeout, max_bytes=args.max_bytes)
         text, why_empty = text_of(record)
         record.pop("_payload", None)
         record["label"] = link["label"]
@@ -375,6 +434,13 @@ def main() -> int:
     print("\ncoverage of documents that yielded text, by year:")
     print("  " + "  ".join(f"{y}:{n}" for y, n in report["coverage_by_year"].items()))
     report["outcome"], report["detail"] = classify_outcome(extracted, report["evidence"])
+    if report.get("stopped_on_budget") and report["outcome"] == "NOT FOUND":
+        report["outcome"] = "NOT FOUND (PARTIAL)"
+        report["detail"] += (
+            f" The run stopped on its time budget with "
+            f"{report['stopped_on_budget']['documents_unread']} document(s) unread, "
+            "so this is a partial search."
+        )
 
     _write(report)
     print(f"\n{report['outcome']}: {report['detail']}")
