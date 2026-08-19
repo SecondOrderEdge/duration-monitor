@@ -249,8 +249,43 @@ to the score. A relative reading presented as an absolute one is precisely the
 failure the variant mechanism exists to prevent, and the variant label alone does
 not prevent it.
 
-Open: whether `duration_shift_score_bands` should carry variant-specific names,
-so a quantity-only reading reads as "shortening relative to its own norm" rather
-than "shortening". That is a naming decision with a real cost either way — one
-set of names is comparable across variants and misleading, the other is honest
-and makes the two scores harder to read side by side.
+### RESOLVED: not renamed — withdrawn
+
+The question was whether to give the bands variant-specific names. Measuring
+first turned up a bigger problem than the wording.
+
+Band cut-points are fixed at 0/20/40/60/80/100, so what they mean depends
+entirely on how wide the score's distribution is. Measured 2026-08-19 on live
+data, 234 US months against 179 euro-area quarters:
+
+| | sd | in the two most severe bands |
+|---|---|---|
+| US, `full` | 19.2 | 10.3% |
+| euro area, `quantity_only` | 23.4 | **24.0%** |
+| — Germany alone | 25.4 | **29.5%** |
+
+The same cut-points fire "strong duration extension" or "aggressive shortening"
+2.3 times as often on the quantity-only variant. Not because those sovereigns
+are twice as erratic, but because three correlated quantity factors with no
+market-price anchor diversify less than six with two orthogonal ones, so the
+composite is wider and the fixed cuts reach much further into the tail than the
+backtest ever tested.
+
+So the bands are **miscalibrated for this variant, not merely misnamed**, and
+renaming would have given more careful-sounding words to thresholds that still
+had no evidence behind them. `validated_for_variants: [full]` now gates them and
+`bands_for_variant` returns None for anything else: a quantity-only score ships
+with no band at all. Same standard that already denies these scores a regime.
+
+Recalibrating the cuts per variant was considered and rejected. Matching the band
+FREQUENCIES across variants assumes each should have the same share of severe
+readings, which is assuming the answer; and calibrating cuts on the full sample
+is the look-ahead contamination D1 exists to prevent.
+
+What a reader gets instead of a band: the score, each factor's point-in-time rank
+and weight, the absolute 4q bill-share change, and the bill-share level. That is
+strictly more than the band conveyed, and none of it asserts something unproven.
+
+To bring bands back, backtest them against named euro-area episodes — the
+2011-12 sovereign crisis, 2020, the 2022 energy shock — the way the US bands were
+validated against 2008, 2011, 2020 and 2021.

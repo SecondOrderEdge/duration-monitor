@@ -45,6 +45,7 @@ from src.calculations.issuance import (  # noqa: E402
     net_issuance,
 )
 from src.signals.duration_shift_score import (  # noqa: E402
+    bands_for_variant,
     build_factors,
     resolve_variant,
     classify_regime,
@@ -580,8 +581,17 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
             min_factors=int(variant["min_factors"]),
             variant=variant_name,
         )
-        scored["band"] = score_band(
-            scored["score"], thresholds["duration_shift_score_bands"]["bands"]
+        # The US bands are NOT applied here. Their cut-points are fixed numbers on
+        # a 0-100 scale, so what they mean depends on the width of the score's
+        # distribution — and quantity_only measurably runs wider (sd 23.4 against
+        # the US 19.2; the two most severe labels catch 24% of these readings
+        # against 10% of US ones). A variant with no backtest of its own gets no
+        # band, the same standard that already denies these scores a regime.
+        bands = bands_for_variant(
+            variant_name, thresholds["duration_shift_score_bands"]
+        )
+        scored["band"] = (
+            score_band(scored["score"], bands) if bands is not None else pd.NA
         )
         for name in ranks.columns:
             scored[f"rank_{name}"] = ranks[name]
@@ -627,8 +637,10 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
             change = share.diff(4).get(at_last, float("nan"))
             direction = ("shortening" if change > 0 else
                          "extending" if change < 0 else "flat")
+            band_text = (str(scored.loc[at_last, "band"]) if bands is not None
+                         else "no band: not backtested for this variant")
             print(f"    {country} [{variant_name}]: score {live.iloc[-1]:.1f} at "
-                  f"{at_last} ({scored.loc[at_last, 'band']}), "
+                  f"{at_last} ({band_text}), "
                   f"{len(live)} scored quarters from {live.index[0]}")
             print(f"      ABSOLUTE direction: bill share is {direction} "
                   f"({change:+.2%} over 4q). The score is RELATIVE to this "

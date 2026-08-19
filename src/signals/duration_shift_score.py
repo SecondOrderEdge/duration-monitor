@@ -173,6 +173,27 @@ def comparable(variant_a: str, variant_b: str, config: dict) -> bool:
     return variant_b in allowed
 
 
+def bands_for_variant(variant: str | None, band_config: dict) -> list[dict] | None:
+    """The interpretation bands a variant may use, or None if it has none.
+
+    Band cut-points are fixed numbers on a 0-100 scale, so their meaning depends
+    on the width of the score's distribution — which differs by variant. The US
+    bands were validated by backtest against named episodes on the six-factor
+    score; that validation does not transfer to a composite built from three
+    correlated factors with no market-price anchor, which measurably runs wider.
+
+    Returning None is the point. A variant with no validated bands gets no band,
+    the same way these scores get no regime, rather than a renamed set of
+    thresholds that would look more careful without being better evidenced.
+    """
+    if variant is None:
+        return band_config.get("bands")
+    allowed = band_config.get("validated_for_variants")
+    if allowed is not None and variant not in allowed:
+        return None
+    return band_config.get("bands")
+
+
 def band_contradicts_direction(band: object, direction: object) -> bool:
     """Whether a band's wording claims a direction the raw data contradicts.
 

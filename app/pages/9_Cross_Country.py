@@ -7,12 +7,16 @@ quantity-only 63 was reached without any market-price evidence; a full 63
 required it. The variant is carried on every row and `comparable()` decides what
 may share an axis — the check is executed here, not left to a comment.
 
-**Reading the band as a direction.** Every factor in this variant is a
+**Reading the score as an absolute claim.** Every factor here is a
 point-in-time percentile rank, so the composite measures a country against its
 own recent behaviour and never against zero. France's bill share has fallen in
-70% of the last 40 quarters; a smaller-than-usual fall ranks high and the band
-reads "meaningful shortening" while the bill share is going DOWN. The absolute
-direction is therefore shown next to every score, not buried in a footnote.
+70% of the last 40 quarters; a smaller-than-usual fall ranks high while the stock
+is still going DOWN. The absolute direction is therefore shown next to every
+score, not buried in a footnote.
+
+No interpretation band is shown. The band cut-points were backtested on the
+six-factor US score, and this composite measurably runs wider — so the same
+numbers would not mean the same thing. See `bands_for_variant`.
 """
 
 from __future__ import annotations
@@ -95,10 +99,9 @@ for col, (country, row) in zip(cols, latest.iterrows()):
     arrow = {"shortening": "↑ shortening", "extending": "↓ extending"}.get(
         direction, "→ flat"
     )
-    kpi(
-        col, f"{country}", f"{row['score']:.1f}",
-        note=f"{row['band']} · {row['period']}",
-    )
+    band = row.get("band")
+    note = f"{band} · {row['period']}" if isinstance(band, str) else str(row["period"])
+    kpi(col, f"{country}", f"{row['score']:.1f}", note=note)
     with col:
         colour = BAD if direction == "shortening" else GOOD if direction == "extending" else MUTED
         st.markdown(
@@ -108,10 +111,14 @@ for col, (country, row) in zip(cols, latest.iterrows()):
             unsafe_allow_html=True,
         )
 
+# Only meaningful where a band is published at all. It is kept rather than
+# deleted because withdrawing the band is a decision that can be revisited, and
+# the contradiction it guards against would come straight back with it.
 disagree = latest[[
     band_contradicts_direction(b, d)
-    for b, d in zip(latest["band"], latest["direction_absolute"])
-]]
+    for b, d in zip(latest.get("band", pd.Series(dtype=object)),
+                    latest["direction_absolute"])
+]] if "band" in latest.columns else latest.iloc[:0]
 if len(disagree):
     st.warning(
         "**The band name and the absolute direction disagree for "
@@ -136,6 +143,12 @@ for country, group in scores.dropna(subset=["score"]).groupby("country", observe
     ))
 fig.add_hline(y=50, line=dict(color=GRID, width=1, dash="dot"))
 st.plotly_chart(style(fig, ytitle=f"score ({variant})"), width="stretch")
+st.caption(
+    "The 50 line is the midpoint of each country's own history, not a threshold. "
+    "No band shading: the US band cut-points are not validated for this variant, "
+    "which runs wider (sd 23.4 against 19.2), so they would reach further into "
+    "the tail here than the backtest ever tested."
+)
 st.caption(
     "Gaps are quarters with no score, not zero readings. `min_factors` is 3 of 3, "
     "so a quarter whose funding ratio is masked by the small-denominator floor "

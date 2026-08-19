@@ -14,6 +14,7 @@ import pytest
 from src.calculations.issuance import cash_adjusted_bill_funding, net_issuance
 from src.signals.duration_shift_score import (
     band_contradicts_direction,
+    bands_for_variant,
     FACTOR_DIRECTION,
     build_factors,
     classify_regime,
@@ -516,3 +517,44 @@ def test_missing_band_or_direction_is_not_a_contradiction():
     assert not band_contradicts_direction(None, "extending")
     assert not band_contradicts_direction("meaningful shortening", None)
     assert not band_contradicts_direction(float("nan"), float("nan"))
+
+
+# --------------------------------------------------------------------------- #
+# Bands are per variant
+# --------------------------------------------------------------------------- #
+
+BAND_CFG = {
+    "validated_for_variants": ["full"],
+    "bands": [
+        {"name": "neutral", "from": 40, "to": 60},
+        {"name": "meaningful shortening", "from": 60, "to": 80},
+    ],
+}
+
+
+def test_a_variant_without_a_backtest_gets_no_bands():
+    """The whole point: no band beats a renamed one with no evidence behind it."""
+    assert bands_for_variant("quantity_only", BAND_CFG) is None
+
+
+def test_the_validated_variant_keeps_its_bands():
+    assert bands_for_variant("full", BAND_CFG) == BAND_CFG["bands"]
+
+
+def test_an_unlabelled_call_still_gets_bands():
+    """Callers predating variants (the US score path) must not silently lose bands."""
+    assert bands_for_variant(None, BAND_CFG) == BAND_CFG["bands"]
+
+
+def test_a_config_that_names_no_variants_gates_nothing():
+    """Absent `validated_for_variants` means the old behaviour, not zero bands."""
+    assert bands_for_variant("anything", {"bands": BAND_CFG["bands"]}) == BAND_CFG["bands"]
+
+
+def test_the_shipped_config_withholds_bands_from_quantity_only():
+    """Guards the actual decision, not just the helper that implements it."""
+    from src import config
+
+    cfg = config.load("thresholds")["duration_shift_score_bands"]
+    assert bands_for_variant("quantity_only", cfg) is None
+    assert bands_for_variant("full", cfg) == cfg["bands"]
