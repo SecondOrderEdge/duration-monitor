@@ -66,14 +66,55 @@ OUT_DIR = REPO_ROOT / "docs" / "source_probe" / "wam_reference"
 
 # "average maturity of 71 months", "weighted average maturity was 5.9 years",
 # "average length of the marketable debt ... 71 months".
+_TERM = r"(?:weighted[- ]average[- ]maturity|average[- ]maturity|average[- ]length)"
+_NUM = r"\b(\d{1,3}(?:\.\d{1,2})?)\s*(months?|years?|yrs?)\b"
+
+# ADJACENCY, not proximity. A 160-character window let projection language pair
+# with the term — "over the next 10 years", "shocked higher after 10 years" —
+# and most of the twenty values the first successful run returned were that.
+# 60 characters is about the length of the linking clause in "average maturity
+# of total debt outstanding rose to 69 months".
 VALUE_NEAR_WAM = re.compile(
-    r"(?:weighted[- ]average[- ]maturity|average[- ]maturity|average[- ]length)"
-    r"[^.]{0,160}?"
-    r"\b(\d{1,3}(?:\.\d{1,2})?)\s*(months?|years?|yrs?)\b"
-    r"|\b(\d{1,3}(?:\.\d{1,2})?)\s*(months?|years?|yrs?)\b[^.]{0,160}?"
-    r"(?:weighted[- ]average[- ]maturity|average[- ]maturity|average[- ]length)",
-    re.I | re.S,
+    rf"{_TERM}[^.]{{0,60}}?{_NUM}|{_NUM}[^.]{{0,60}}?{_TERM}", re.I | re.S
 )
+
+# Phrases that make a nearby number a horizon or a shock, never a level. These
+# appear BETWEEN the term and the number in exactly the false positives seen.
+NOT_A_LEVEL = re.compile(
+    r"\b(?:next|over the|after|within|shocked|scenario|projection|forecast|"
+    r"assum\w*|hypothetical)\b", re.I
+)
+
+# Publication dates as ODM writes them on a cover slide or in a caption.
+DATE_PATTERNS = [
+    re.compile(r"\b(January|February|March|April|May|June|July|August|September|"
+               r"October|November|December)\s+(\d{1,2}),\s*((?:19|20)\d{2})\b", re.I),
+    re.compile(r"\b(January|February|March|April|May|June|July|August|September|"
+               r"October|November|December)\s+((?:19|20)\d{2})\b", re.I),
+]
+MONTH_NUMBER = {m: i for i, m in enumerate(
+    ["january", "february", "march", "april", "may", "june", "july", "august",
+     "september", "october", "november", "december"], start=1)}
+
+
+def document_date(text: str, *, head: int = 4000) -> str | None:
+    """Publication month, read from inside the document.
+
+    ODM decks and TBAC minutes publish under labels like "2nd Quarter" with no
+    year in the URL or the link text, which left every citation from the TBAC
+    probe undated. The date IS in the document — on the cover slide, in "as of
+    April 17, 2009" — so it is read from the content rather than guessed from
+    the address. Returns YYYY-MM, or None rather than a guess.
+    """
+    window = text[:head]
+    for pattern in DATE_PATTERNS:
+        match = pattern.search(window)
+        if match:
+            groups = match.groups()
+            month = MONTH_NUMBER[groups[0].lower()]
+            year = groups[-1]
+            return f"{year}-{month:02d}"
+    return None
 
 # Which population the sentence is about. Left unresolved rather than guessed:
 # the distinction decides whether a match is a check or a different measurement.
@@ -91,9 +132,17 @@ def find_values(text: str, *, window: int = 300) -> list[dict]:
         start = max(match.start() - window, 0)
         context = text[start:match.end() + window].strip()
 
+        # The match text, PLUS the run-up to it. When the number comes first —
+        # "over the next 10 years: average maturity of issuance settles" — the
+        # disqualifying phrase sits before the number, outside the match, and
+        # checking only the match let that straight through.
+        lead_in = text[max(match.start() - 40, 0):match.start()]
+        between = lead_in + match.group(0)
         rejected = None
         if looks_like_chart_axis(context):
             rejected = "surroundings read as chart axis labels, not prose"
+        elif NOT_A_LEVEL.search(between):
+            rejected = "the number is a horizon or a scenario, not a level"
 
         hits.append({
             "value": float(value),
@@ -109,6 +158,50 @@ def find_values(text: str, *, window: int = 300) -> list[dict]:
         if len(hits) >= 40:
             break
     return hits
+
+
+def reconcile(stated: list[dict], wam: "pd.DataFrame") -> list[dict]:
+    """Compare each dated stated value against our WAM for the same month.
+
+    Units are converted HERE and only here, at the point of comparison, with both
+    the original and the converted figure carried on the result. Converting at
+    extraction would have made 71 months and 5.92 years indistinguishable in the
+    evidence, which is the whole reason units are recorded verbatim upstream.
+
+    A stated value with no date is not compared. There is nothing to compare it
+    to, and pairing it with our latest month would manufacture a reconciliation
+    out of a coincidence of position.
+    """
+    import pandas as pd
+
+    series = wam.copy()
+    series["period"] = pd.PeriodIndex(
+        pd.to_datetime(series["observation_date"]), freq="M"
+    ).astype(str)
+    ours = dict(zip(series["period"], series["wam_years"]))
+
+    out = []
+    for hit in stated:
+        period = hit.get("document_date")
+        if not period or period not in ours:
+            out.append({**{k: hit[k] for k in ("value", "unit", "population")},
+                        "document_date": period,
+                        "comparable": False,
+                        "why": ("no date read from the document" if not period
+                                else f"our series has no {period}")})
+            continue
+        stated_months = hit["value"] * (12 if hit["unit"] == "year" else 1)
+        our_months = ours[period] * 12
+        out.append({
+            "document_date": period,
+            "stated": hit["value"], "stated_unit": hit["unit"],
+            "stated_months": round(stated_months, 1),
+            "our_months": round(our_months, 1),
+            "difference_months": round(stated_months - our_months, 1),
+            "population": hit["population"],
+            "comparable": True,
+        })
+    return out
 
 
 def main() -> int:
@@ -194,6 +287,10 @@ def main() -> int:
             record["text_unavailable"] = why_empty
         if text:
             kept = [h for h in find_values(text) if not h["rejected"]]
+            published = document_date(text)
+            record["document_date"] = published
+            for hit in kept:
+                hit["document_date"] = published
             mentions = term_mentions(text)
             record["term_mentions"] = len(mentions)
             if kept:
@@ -236,6 +333,24 @@ def main() -> int:
     if report.get("our_value_years"):
         print(f"ours: {report['our_value_years']}y "
               f"({report['our_value_months']} months) at {report['our_observation']}")
+    if values and wam_path.exists():
+        import pandas as pd
+
+        comparisons = reconcile(values, pd.read_parquet(wam_path))
+        report["reconciliation"] = comparisons
+        usable = [c for c in comparisons if c["comparable"]]
+        report["comparable_values"] = len(usable)
+        print(f"\n{len(usable)} of {len(comparisons)} stated value(s) could be "
+              f"dated and matched to our series")
+        for c in usable[:15]:
+            print(f"  {c['document_date']}: Treasury {c['stated']} "
+                  f"{c['stated_unit']}(s) = {c['stated_months']}mo | "
+                  f"ours {c['our_months']}mo | diff {c['difference_months']:+.1f}mo "
+                  f"| {c['population']}")
+        if usable:
+            worst = max(usable, key=lambda c: abs(c["difference_months"]))
+            print(f"  largest gap: {worst['difference_months']:+.1f} months "
+                  f"at {worst['document_date']}")
     for hit in values[:12]:
         print(f"  {hit['value']} {hit['unit']}(s) — {hit['population']}")
     for item in (report.get("term_without_value") or [])[:6]:

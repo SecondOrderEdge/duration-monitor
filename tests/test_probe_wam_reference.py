@@ -15,7 +15,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
-from scripts.probe_wam_reference import find_values, term_mentions
+from scripts.probe_wam_reference import (document_date, find_values,
+                                         reconcile, term_mentions)
 
 
 def test_a_value_in_months_is_recorded_as_months():
@@ -78,3 +79,71 @@ def test_the_term_is_recorded_even_when_no_value_is_matched():
 def test_mentions_are_capped_so_one_deck_cannot_flood_the_report():
     text = "average maturity " * 50
     assert len(term_mentions(text)) <= 6
+
+
+# --------------------------------------------------------------------------- #
+# Adjacency, dating, and the comparison itself
+# --------------------------------------------------------------------------- #
+
+def test_a_projection_horizon_is_not_a_level():
+    """'over the next 10 years' produced a 10.0-year 'value' in a live run."""
+    hits = find_values(
+        "Using the above assumptions, over the next 10 years: average maturity "
+        "of issuance settles."
+    )
+    assert all(h["rejected"] for h in hits)
+
+
+def test_a_rate_shock_horizon_is_not_a_level():
+    hits = find_values(
+        "rates are shocked higher after 10 years relative to the base case; "
+        "average maturity rises"
+    )
+    assert all(h["rejected"] for h in hits)
+
+
+def test_a_stated_level_still_survives():
+    for text in (
+        "Average maturity of total debt outstanding rose to 69 months.",
+        "the weighted average maturity of marketable debt was 71 months at quarter end",
+    ):
+        hits = find_values(text)
+        assert hits and not hits[0]["rejected"], text
+
+
+def test_the_publication_date_is_read_from_the_document_not_the_url():
+    """ODM decks publish as '2nd Quarter' with no year in the address."""
+    assert document_date("Office of Debt Management Presented to the TBAC "
+                         "February 2, 2004 Slide 1") == "2004-02"
+    assert document_date("Fiscal Year 2016 Mid-Session Review, August 2015") == "2015-08"
+
+
+def test_an_undated_document_returns_none_rather_than_a_guess():
+    assert document_date("Portfolio Metrics. Weighted Average Maturity.") is None
+
+
+def test_units_are_converted_only_at_the_comparison():
+    import pandas as pd
+
+    wam = pd.DataFrame({"observation_date": [pd.Timestamp("2009-03-31")],
+                        "wam_years": [4.0]})
+    result = reconcile(
+        [{"value": 60.0, "unit": "month", "population": "x", "document_date": "2009-03"}],
+        wam,
+    )
+    assert result[0]["comparable"]
+    assert result[0]["stated_months"] == 60.0 and result[0]["our_months"] == 48.0
+    assert result[0]["difference_months"] == 12.0
+
+
+def test_an_undated_value_is_never_paired_with_our_latest_month():
+    """Pairing by position would manufacture a reconciliation from a coincidence."""
+    import pandas as pd
+
+    wam = pd.DataFrame({"observation_date": [pd.Timestamp("2026-07-31")],
+                        "wam_years": [5.816]})
+    result = reconcile(
+        [{"value": 71.0, "unit": "month", "population": "x", "document_date": None}], wam
+    )
+    assert not result[0]["comparable"]
+    assert "no date" in result[0]["why"]
