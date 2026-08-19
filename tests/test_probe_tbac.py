@@ -14,8 +14,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from scripts.probe_tbac import (classify_outcome, clean_html, find_claims,
-                                links_from, looks_like_chart_axis, text_of,
-                                year_of)
+                                classify_document, links_from,
+                                looks_like_chart_axis, read_order, text_of, year_of)
 
 
 def test_a_stated_range_after_the_word_bill_is_found():
@@ -228,3 +228,38 @@ def test_a_real_recommendation_still_survives_both_filters():
     )
     assert hits and hits[0]["rejected"] is None
     assert hits[0]["matches_configured_band"]
+
+
+# --------------------------------------------------------------------------- #
+# Read order — a large search that looked in the wrong place
+# --------------------------------------------------------------------------- #
+
+def test_minutes_and_reports_are_read_before_chart_decks():
+    """The live miss: 50 of 73 documents read were chart decks, 0 were minutes.
+
+    The claim under test is a sentence, so it lives in prose. Sorting by class
+    means a run truncated by its budget loses the chart decks, not the minutes.
+    """
+    documents = [
+        {"url": "/system/files/276/2009-q4-chart.pdf", "label": "Q4 charts"},
+        {"url": "/news/press-releases/sb0592", "label": "TBAC Minutes: 2009"},
+        {"url": "/system/files/221/TBACCharge1.pdf", "label": "Charge 1"},
+        {"url": "/news/press-releases/sb0591", "label": "TBAC Report to Secretary"},
+    ]
+    documents.sort(key=read_order)
+    assert [classify_document(d) for d in documents][:2] == ["minutes", "report"]
+    assert classify_document(documents[-1]) == "chart deck"
+
+
+def test_a_chart_deck_is_recognised_from_either_label_or_url():
+    assert classify_document({"url": "/x/2005-q3-charts.pdf", "label": "Q3"}) == "chart deck"
+    assert classify_document(
+        {"url": "/x/doc.pdf", "label": "Treasury Presentation to TBAC"}
+    ) == "chart deck"
+
+
+def test_an_unrecognised_document_is_not_sorted_ahead_of_prose():
+    """Unknown documents must not displace the minutes from the front of the queue."""
+    unknown = {"url": "/x/misc.pdf", "label": "misc"}
+    minutes = {"url": "/news/press-releases/x", "label": "TBAC Minutes"}
+    assert read_order(minutes) < read_order(unknown)

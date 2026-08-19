@@ -105,6 +105,36 @@ BILL_SHARE_PHRASE = re.compile(
 )
 
 
+# Document classes, in the order they are worth reading. The claim under test is
+# a sentence — "the Committee recommends..." — so it lives in the minutes or the
+# report to the Secretary, not in a chart deck. The first full run spent its
+# entire budget with 50 of 73 documents being chart decks and read no minutes at
+# all, which is how a search can be large and still miss the only place the
+# answer could be.
+DOCUMENT_CLASSES = [
+    ("minutes", re.compile(r"minutes", re.I)),
+    ("report", re.compile(r"report[- ]to[- ]the[- ]secretary|report", re.I)),
+    ("press release", re.compile(r"/news/press-releases/", re.I)),
+    ("charge", re.compile(r"charge", re.I)),
+    ("chart deck", re.compile(r"chart|template|presentation", re.I)),
+]
+
+
+def classify_document(entry: dict) -> str:
+    haystack = f"{entry['url']} {entry.get('label') or ''}"
+    for name, pattern in DOCUMENT_CLASSES:
+        if pattern.search(haystack):
+            return name
+    return "other"
+
+
+def read_order(entry: dict) -> int:
+    """Sort key: prose before charts, so a truncated run truncates the right end."""
+    name = classify_document(entry)
+    order = {n: i for i, (n, _) in enumerate(DOCUMENT_CLASSES)}
+    return order.get(name, len(DOCUMENT_CLASSES) - 1)
+
+
 def clean_html(raw: str) -> str:
     raw = re.sub(r"(?is)<(script|style).*?</\1>", " ", raw)
     text = re.sub(r"(?s)<[^>]+>", " ", raw)
@@ -421,6 +451,8 @@ def main() -> int:
         if link["url"] not in seen:
             seen.add(link["url"])
             ordered.append(link)
+    # Stable sort: prose classes first, discovery order preserved within a class.
+    ordered.sort(key=read_order)
     ordered = ordered[: args.max_documents]
     print(f"\n{len(ordered)} candidate document(s) after de-duplication "
           f"(cap {args.max_documents})")
@@ -480,6 +512,17 @@ def main() -> int:
     report["coverage_by_year"] = dict(sorted(years.items()))
     print("\ncoverage of documents that yielded text, by year:")
     print("  " + "  ".join(f"{y}:{n}" for y, n in report["coverage_by_year"].items()))
+
+    # By class as well as by year. A run can cover twenty years and still not
+    # have opened a single document of the kind that could carry the claim.
+    classes: dict[str, int] = {}
+    for entry, doc in zip(ordered, report["documents"][-len(ordered):]):
+        if doc.get("characters_extracted"):
+            name = classify_document(entry)
+            classes[name] = classes.get(name, 0) + 1
+    report["coverage_by_class"] = dict(sorted(classes.items()))
+    print("by document class:")
+    print("  " + "  ".join(f"{k}:{v}" for k, v in report["coverage_by_class"].items()))
     report["outcome"], report["detail"] = classify_outcome(extracted, report["evidence"])
     # Both NOT FOUND and OTHER RANGES FOUND assert the configured band is absent.
     # A run that stopped early cannot assert that, and the first bounded run made
@@ -526,6 +569,14 @@ def _write(report: dict) -> None:
         lines += [f"| {year} | {count} |"
                   for year, count in report["coverage_by_year"].items()]
         lines.append("")
+        if report.get("coverage_by_class"):
+            lines += ["By document class. The claim is a sentence, so the classes "
+                      "that matter are minutes and reports; a run heavy in chart "
+                      "decks has searched a lot and looked in the wrong place.", "",
+                      "| class | documents searched |", "|---|---|"]
+            lines += [f"| {name} | {count} |"
+                      for name, count in report["coverage_by_class"].items()]
+            lines.append("")
     lines += [
         "## Entry points", "",
         "| url | fetched | status | documents | indexes |", "|---|---|---|---|---|",
