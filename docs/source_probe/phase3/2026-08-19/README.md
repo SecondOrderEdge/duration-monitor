@@ -1,6 +1,6 @@
 # Phase 3 source discovery
 
-- Probe run (UTC): `2026-08-19T01:42:19.797037+00:00`
+- Probe run (UTC): `2026-08-19T01:45:17.889898+00:00`
 
 What each candidate publisher actually returns. This is DISCOVERY — no field names are declared yet, so nothing here is verified. It exists so the Phase 3 schema is designed against observed responses rather than assumptions, which is what the Phase 1 probe was for.
 
@@ -20,17 +20,20 @@ What each candidate publisher actually returns. This is DISCOVERY — no field n
 
 How far back each candidate series reaches. The point-in-time percentiles need 60 months before the score publishes at all, so this decides feasibility before any design question does.
 
-| series | first | last | series matched |
+| series | first | last | key |
 |---|---|---|---|
-| `DE_shortterm_stock` | HTTP 400 | HTTP 400 | - |
-| `DE_longterm_stock` | HTTP 400 | HTTP 400 | - |
-| `DE_shortterm_netissues` | HTTP 400 | HTTP 400 | - |
-| `FR_shortterm_stock` | HTTP 400 | HTTP 400 | - |
-| `FR_longterm_stock` | HTTP 400 | HTTP 400 | - |
-| `FR_shortterm_netissues` | HTTP 400 | HTTP 400 | - |
-| `IT_shortterm_stock` | HTTP 400 | HTTP 400 | - |
-| `IT_longterm_stock` | HTTP 400 | HTTP 400 | - |
-| `IT_shortterm_netissues` | HTTP 400 | HTTP 400 | - |
+40,633 series in the dataflow; 36 match central government, monthly, short or long-term, stocks or net issues.
+
+| `DE_F33100_1` | 2012-12 | 2022-03 | `M.DE.S131.F33100.N.1.EUR.E.Z` |
+| `DE_F33200_1` | 2012-12 | 2022-03 | `M.DE.S131.F33200.N.1.Z01.E.Z` |
+| `FR_F33200_4` | 2012-12 | 2022-03 | `M.FR.S131.F33200.N.4.EUR.E.Z` |
+| `IT_F33100_1` | 2012-12 | 2022-03 | `M.IT.S131.F33100.N.1.EUR.E.Z` |
+| `IT_F33100_4` | 2012-12 | 2022-03 | `M.IT.S131.F33100.N.4.EUR.E.Z` |
+| `IT_F33200_4` | 2012-12 | 2022-03 | `M.IT.S131.F33200.N.4.Z06.E.Z` |
+| `DE_F33100_4` | 2012-12 | 2022-03 | `M.DE.S131.F33100.N.4.Z01.E.Z` |
+| `DE_F33200_4` | 2012-12 | 2022-03 | `M.DE.S131.F33200.N.4.Z01.E.Z` |
+| `FR_F33100_4` | 2012-12 | 2022-03 | `M.FR.S131.F33100.N.4.Z01.E.Z` |
+| `FR_F33200_1` | 2012-12 | 2022-03 | `M.FR.S131.F33200.N.1.Z01.E.Z` |
 
 ## `bis` — Bank for International Settlements
 
@@ -109,7 +112,7 @@ Securities issues statistics and government finance statistics cover Germany, Fr
 - HTTP 200, `application/vnd.sdmx.structure+xml;version=2.1`, 30,851 bytes
 
 ```
-<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IREF037456</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-19T01:42:28Z</mes:Prepared><mes:Sender id="Unknown"/><mes:Receiver id="not_supplied"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn="urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)" isExternalReference="false" agencyID="ECB" id="ECB_SEC1" isFinal="false" uri="https://www.ecb.europa.eu/vocabulary/stats/sec/1" version="1.0"><com:Name xml:lang="en">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn="urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor" id="DimensionDescriptor"><str:Dimension urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ" id="FREQ" position="1"><str:ConceptIdentity><Ref m
+<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IREF039284</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-19T01:45:22Z</mes:Prepared><mes:Sender id="Unknown"/><mes:Receiver id="not_supplied"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn="urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)" isExternalReference="false" agencyID="ECB" id="ECB_SEC1" isFinal="false" uri="https://www.ecb.europa.eu/vocabulary/stats/sec/1" version="1.0"><com:Name xml:lang="en">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn="urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor" id="DimensionDescriptor"><str:Dimension urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ" id="FREQ" position="1"><str:ConceptIdentity><Ref m
 ```
 
 ## `eurostat` — Eurostat
@@ -285,7 +288,7 @@ JGB issuance and outstanding by maturity. Japan is the largest test of the thesi
 
 ### `https://www.mof.go.jp/english/policy/jgbs/index.html`
 
-- HTTP 200, `text/html`, 21,912 bytes
+- HTTP 200, `text/html`, 21,911 bytes
 
 ```
 <!DOCTYPE html>
@@ -366,9 +369,9 @@ Central government debt statistics, including maturity structure on a harmonised
 <!--NSI Web Service v8.19.8.0-->
 <message:Structure xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:structure="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:common="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common">
   <message:Header>
-    <message:ID>IDREF14928</message:ID>
+    <message:ID>IDREF15202</message:ID>
     <message:Test>false</message:Test>
-    <message:Prepared>2026-08-19T03:42:42.1928351+02:00</message:Prepared>
+    <message:Prepared>2026-08-19T03:45:34.8992519+02:00</message:Prepared>
     <message:Sender id="Unknown" />
     <message:Receiver id="Unknown" />
   </message:Header>
@@ -423,14 +426,14 @@ Gilt and Treasury bill issuance, per-security detail. The UK is the closest anal
 ### `https://www.dmo.gov.uk/data/`
 
 - HTTP 200, `text/html; charset=UTF-8`, 15,238 bytes
-- redirected to `https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=36bffb7a-ff41-4c07-8461-26c851d2ddaa&ssb=34092290427&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=f90bb68e-bhbz-4bd8-8df7-6da6c8bcf619&ssk=support@shieldsquare.com&ssm=09326992058325928106234465881719&ssn=1abf061563128a8022ec2f51ff009d64f18684ff5d47-1135-4992-b6cc87&sso=561a5fd1-f44fbe0984c89230a275d10221ed0c17fbe8f1574a23d588&ssp=34921242191787110481178713897773061&ssq=80059650376520605368703765770713167798159&ssr=NTIuMjUwLjIxMC42NA==&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJfX3V6bWYiOiI3ZjkwMDA4NGZmNWQ0Ny0xMTM1LTQ5OTItYmZkMS1mNDRmYmUwOTg0YzgxLTE3ODcxMDM3NjU0NjAwLTAwNDBhOWFjM2JmYmJmMjJiZDkxMCIsInJkIjoiZG1vLmdvdi51ayIsInV6bXgiOiI3ZmMwMDAyMDYzNjIyZi1jMTEzLTRkMzUtODYzMi0zYTUwZjk0Nzg1YWIxLTE3ODcxMDM3NjU0NjAwLTAwMWU0NmFmMzJmOGM4MjNlOWUxMCJ9`
+- redirected to `https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=b8dda2e9-8c13-4580-88fa-b66ac0c62cad&ssb=83236270058&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=f5cb98a8-bhbz-4f68-8633-61fd62365cea&ssk=support@shieldsquare.com&ssm=55777279601296682106171261724395&ssn=1793941cde012fe931a7419f8e895527a4082005e71e-7ac9-4e0f-946c73&sso=da7eea62-6955a96b0005b27ae7155ec6b60e8b86ca17140eaba020a1&ssp=53499650171787189558178717310919347&ssq=81929340393968273989903939122192028738800&ssr=MjAuODEuMTU5LjM4&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJyZCI6ImRtby5nb3YudWsiLCJ1em14IjoiN2ZjMDAwN2M5NTJmNTAtNDI1Yy00ZjEzLTkzNTMtMzMxZWI5ZTE1ZDFhMS0xNzg3MTAzOTM5Mjc0MC0wMDFjZjIyY2U2MDZiOWZiY2U4MTAiLCJfX3V6bWYiOiI3ZjkwMDAyMDA1ZTcxZS03YWM5LTRlMGYtOWE2Mi02OTU1YTk2YjAwMDUxLTE3ODcxMDM5MzkyNzQwLTAwNDRiNGFhNWM3ZTAwMTU2YzgxMCJ9`
 
 ```
 <head><title>ShieldSquare Captcha</title><script type="text/javascript">
 	window.SSJSInternal = 18155;
 
-	var __uzdbm_1 = "84ff5d47-1135-4992-bfd1-f44fbe0984c8";
-	var __uzdbm_2 = "ZjkwYmI2OGUtYmhiei00YmQ4LThkZjctNmRhNmM4YmNmNjE5JDUyLjI1MC4yMTAuNjQ=";
+	var __uzdbm_1 = "2005e71e-7ac9-4e0f-9a62-6955a96b0005";
+	var __uzdbm_2 = "ZjVjYjk4YTgtYmhiei00ZjY4LTg2MzMtNjFmZDYyMzY1Y2VhJDIwLjgxLjE1OS4zOA==";
 	
 	(function(w, d, e, u, c, g, a, b){
 		w["SSJSConnectorObj"] = w["SSJSConnectorObj"] || {ss_cid : c, domain_info: g};
