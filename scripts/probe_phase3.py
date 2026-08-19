@@ -133,22 +133,28 @@ CANDIDATES: dict[str, dict] = {
 # the score publishes at all, so how far back each country's series reaches
 # decides feasibility before any design question matters.
 #
-# The key order is the dimension order the structure probe returned:
-#   FREQ.REF_AREA.SEC_ISSUING_SECTOR.SEC_ITEM.SEC_VALUATION
-#   .DATA_TYPE_SEC.CURRENCY_TRANS.SERIES_DENOM.SEC_SUFFIX
-# Trailing positions are left empty, which SDMX reads as a wildcard — a
-# constructed full key returned 400 on the previous run, and guessing the tail is
-# how that happened.
-ECB_COVERAGE = {
-    f"{country}_{label}": f"M.{country}.S131.{item}.N.{data_type}...."
-    for country in ("DE", "FR", "IT")
-    for label, item, data_type in (
-        ("shortterm_stock", "F33100", "1"),
-        ("longterm_stock", "F33200", "1"),
-        ("shortterm_netissues", "F33100", "4"),
-    )
-}
+# Keys are NOT constructed. Two attempts at building one by hand returned 400 and
+# 400 again — a nine-dimension SDMX key has an order defined by the data
+# structure, not by the order a JSON response happens to list its dimensions in,
+# and guessing the tail is how both failed. Instead the API is asked which series
+# exist (`detail=serieskeysonly`), its index-encoded keys are decoded against the
+# dimension values it returned alongside them, and the resulting real keys are
+# used verbatim. That also answers a question guessing cannot: whether a series
+# for a given country and maturity exists at all.
+ECB_SERIES_KEYS_URL = (
+    "https://data-api.ecb.europa.eu/service/data/SEC"
+    "?lastNObservations=1&format=jsondata&detail=serieskeysonly"
+)
 ECB_DATA_URL = "https://data-api.ecb.europa.eu/service/data/SEC/{key}"
+
+# What a series has to be to be useful here.
+ECB_WANTED = {
+    "REF_AREA": {"DE", "FR", "IT"},
+    "SEC_ISSUING_SECTOR": {"S131"},            # central government only
+    "SEC_ITEM": {"F33100", "F33200"},          # short-term, long-term
+    "DATA_TYPE_SEC": {"1", "4"},               # outstanding stocks, net issues
+    "FREQ": {"M"},
+}
 
 
 def observation_period(parsed: dict) -> str | None:
@@ -162,32 +168,85 @@ def observation_period(parsed: dict) -> str | None:
     return None
 
 
-def probe_ecb_coverage(timeout: int) -> dict:
-    """First and last observation of each candidate ECB series.
+def decode_series_keys(parsed: dict) -> list[dict]:
+    """Turn index-encoded SDMX-JSON series keys into real dimension values.
 
-    Two one-observation requests rather than a full history: the coverage bounds
-    are all that is being asked, and pulling twenty years of monthly data to read
-    two dates would be rude to a public API.
+    SDMX-JSON keys look like `0:0:3:1:0:5:0:0:0` — a position per dimension,
+    each an index into that dimension's value list. Decoding them against
+    `structure.dimensions.series` yields the actual key the data endpoint wants,
+    in the order the endpoint wants it.
     """
-    results: dict = {}
-    for name, key in ECB_COVERAGE.items():
-        entry: dict = {"key": key}
+    dimensions = ((parsed.get("structure") or {}).get("dimensions") or {}).get("series") or []
+    series = (parsed.get("dataSets") or [{}])[0].get("series") or {}
+
+    decoded = []
+    for encoded in series:
+        positions = encoded.split(":")
+        if len(positions) != len(dimensions):
+            continue
+        entry = {}
+        parts = []
+        for index, dimension in zip(positions, dimensions):
+            values = dimension.get("values") or []
+            try:
+                value_id = values[int(index)].get("id")
+            except (ValueError, IndexError):
+                value_id = None
+            entry[dimension.get("id")] = value_id
+            parts.append(value_id or "")
+        entry["_key"] = ".".join(parts)
+        decoded.append(entry)
+    return decoded
+
+
+def probe_ecb_coverage(timeout: int, max_series: int = 12) -> dict:
+    """First and last observation of the ECB series this project would use."""
+    out: dict = {"source_url": ECB_SERIES_KEYS_URL}
+    try:
+        response = requests.get(ECB_SERIES_KEYS_URL, timeout=timeout)
+        response.raise_for_status()
+        catalogue = decode_series_keys(response.json())
+    except Exception as exc:  # noqa: BLE001
+        out["error"] = f"{type(exc).__name__}: {exc}"
+        return out
+
+    out["n_series_in_dataflow"] = len(catalogue)
+    matches = [
+        entry for entry in catalogue
+        if all(entry.get(dim) in allowed for dim, allowed in ECB_WANTED.items())
+    ]
+    out["n_matching_wanted"] = len(matches)
+    if not matches:
+        out["note"] = (
+            "No series matched central government, monthly, short or long-term, "
+            "stocks or net issues. Either the combination is not published or the "
+            "dimension values differ from those assumed."
+        )
+        # Record what IS available for these countries, so the gap is legible.
+        out["available_for_wanted_countries"] = sorted({
+            f"{e.get('FREQ')}|{e.get('REF_AREA')}|{e.get('SEC_ISSUING_SECTOR')}"
+            f"|{e.get('SEC_ITEM')}|{e.get('DATA_TYPE_SEC')}"
+            for e in catalogue if e.get("REF_AREA") in ECB_WANTED["REF_AREA"]
+        })[:40]
+        return out
+
+    results = {}
+    for entry in matches[:max_series]:
+        key = entry["_key"]
+        label = (f"{entry.get('REF_AREA')}_{entry.get('SEC_ITEM')}"
+                 f"_{entry.get('DATA_TYPE_SEC')}")
+        record = {"key": key}
         for end, param in (("first", "firstNObservations"), ("last", "lastNObservations")):
             url = ECB_DATA_URL.format(key=key) + f"?{param}=1&format=jsondata"
             try:
-                response = requests.get(url, timeout=timeout)
-                if not response.ok:
-                    entry[end] = f"HTTP {response.status_code}"
-                    continue
-                parsed = response.json()
-                entry[end] = observation_period(parsed) or "no observation returned"
-                if end == "first":
-                    series = (parsed.get("dataSets") or [{}])[0].get("series") or {}
-                    entry["n_series_matched"] = len(series)
+                r = requests.get(url, timeout=timeout)
+                record[end] = (observation_period(r.json()) if r.ok
+                               else f"HTTP {r.status_code}")
             except Exception as exc:  # noqa: BLE001
-                entry[end] = f"{type(exc).__name__}: {exc}"
-        results[name] = entry
-    return results
+                record[end] = f"{type(exc).__name__}: {exc}"
+        results[label] = record
+    out["series"] = results
+    return out
 
 
 def describe_dimensions(parsed: dict) -> dict | None:
@@ -349,14 +408,29 @@ def write_markdown(report: dict, path: pathlib.Path) -> None:
             "percentiles need 60 months before the score publishes at all, so "
             "this decides feasibility before any design question does.",
             "",
-            "| series | first | last | series matched |",
+            "| series | first | last | key |",
             "|---|---|---|---|",
         ]
-        for name, entry in coverage.items():
-            lines.append(
-                f"| `{name}` | {entry.get('first')} | {entry.get('last')} | "
-                f"{entry.get('n_series_matched', '-')} |"
-            )
+        if coverage.get("error"):
+            lines += [f"Catalogue fetch failed: `{coverage['error']}`", ""]
+        else:
+            lines += [
+                f"{coverage.get('n_series_in_dataflow', 0):,} series in the "
+                f"dataflow; {coverage.get('n_matching_wanted', 0)} match central "
+                "government, monthly, short or long-term, stocks or net issues.",
+                "",
+            ]
+            if coverage.get("note"):
+                lines += [f"**{coverage['note']}**", ""]
+            for combo in coverage.get("available_for_wanted_countries", [])[:20]:
+                lines.append(f"- available: `{combo}`")
+            if coverage.get("available_for_wanted_countries"):
+                lines.append("")
+            for name, entry in (coverage.get("series") or {}).items():
+                lines.append(
+                    f"| `{name}` | {entry.get('first')} | {entry.get('last')} | "
+                    f"`{entry.get('key', '')[:48]}` |"
+                )
         lines.append("")
 
     for name, source in report["sources"].items():
