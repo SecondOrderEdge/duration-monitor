@@ -616,11 +616,25 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
         # reading can be checked against its parts rather than trusted.
         if len(live):
             at = live.index[-1]
+            window = int(pct_cfg["window_quarters"])
             for name in ranks.columns:
                 print(f"      {name:<26} raw {factors.loc[at, name]:>9.4f}  "
                       f"rank {ranks.loc[at, name]:>5.2f}  "
                       f"weight {weights.loc[at, name]:>5.2f}  "
                       f"contributes {scored.loc[at, f'contrib_{name}']:>5.1f}")
+                # A percentile rank measures a reading against the country's OWN
+                # recent behaviour, so a rank above 50 on a falling bill share is
+                # not necessarily wrong — it can mean "falling less than usual".
+                # The trailing distribution the rank was taken against is printed
+                # so that reading can be checked instead of argued about.
+                trailing = factors[name].loc[:at].tail(window).dropna()
+                if len(trailing) > 1:
+                    d = trailing.quantile([0, 0.25, 0.5, 0.75, 1.0])
+                    negative = float((trailing < 0).mean())
+                    print(f"        trailing {len(trailing)}q: "
+                          f"min {d.iloc[0]:+.4f}  p25 {d.iloc[1]:+.4f}  "
+                          f"med {d.iloc[2]:+.4f}  p75 {d.iloc[3]:+.4f}  "
+                          f"max {d.iloc[4]:+.4f}  ({negative:.0%} negative)")
 
     combined = pd.concat(frames, ignore_index=True)
     combined["retrieval_date"] = pd.Timestamp.now("UTC")
