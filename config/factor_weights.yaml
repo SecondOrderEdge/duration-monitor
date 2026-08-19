@@ -141,6 +141,9 @@ weighting:
   # Weights are recomputed from history available at each date, for the same
   # reason percentiles are point-in-time: fitting them on the full sample leaks
   # the future into the backtest through the weighting (Deviation D1).
+  # Quarterly equivalent, for the euro-area variant: 12 quarters is the same
+  # three years of history the monthly minimum requires.
+  min_quarters_for_weights: 12
   min_months_for_weights: 36
   min_factors: 4
 

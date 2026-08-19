@@ -67,12 +67,37 @@ Reachable, well-structured and current are three separate questions.
   social security funds.
 - `unit` — MIO_EUR, MIO_NAC, PC_GDP and **PC_TOT**, the share of total computed
   by the publisher.
-- Coverage, verified per country: **1994-Q1 to 2026-Q1, 129 quarters**, identical
-  for Germany, France and Italy.
+- Coverage, from the first live pull (2026-08-19): **2000-Q1 to 2026-Q1, 105
+  quarters**, identical for Germany, France and Italy, fully dense — 630 values
+  for 3 countries x 2 instruments x 105 quarters, with nothing missing.
 
-Thirty-two years of history, current to the most recent quarter, harmonised
-across member states. That is deeper history than the US series, which starts in
-2001.
+### Correction: 105 quarters, not 129
+
+The discovery probe reported 1994-Q1 to 2026-Q1 and this document called it
+thirty-two years of history "deeper than the US series". The first live pull of
+the actual slice the score uses returns **2000-Q1**. The probe was counting the
+`time` categories the *dataflow* carries, across every sector and instrument;
+central government (S1311) short- and long-term debt securities in MIO_EUR — the
+combination the factors are built from — starts six years later.
+
+Same mistake as the ECB one, in a smaller size: the dimension catalogue describes
+what the dataset can express, not what any particular cell of it contains. Read
+per slice, not per dataflow.
+
+So the euro-area history is one year deeper than the US series (2001), not
+thirty-two. 105 quarters is still comfortably past the 20-quarter minimum, and
+after the four-quarter horizon and the 20-quarter percentile warm-up the first
+scored quarter is 2006-Q1. Nothing about the design changes; the claim was just
+wrong.
+
+### The response carries a `freq` dimension
+
+Live dimensions are `['freq', 'na_item', 'sector', 'unit', 'geo', 'time']` — six,
+not the five this document implied, and in an order no fixture guessed. It
+decoded correctly because `decode_jsonstat` derives its stride arithmetic from the
+response's own `id` and `size` lists rather than assuming a layout. Had it
+assumed one, every value would have been attributed to the wrong country and the
+table would have looked entirely well-formed.
 
 Two costs relative to what the ECB dataflow would have given:
 
@@ -159,13 +184,23 @@ to matter more than it currently appears to.
 
 ## Open questions before any Phase 3 ingestion
 
-1. **RESOLVED — history is not the constraint.** Eurostat runs 1994-Q1 to
-   2026-Q1 for all three countries, 129 quarters. The constraint is frequency
-   (quarterly) and breadth (three factors), not depth.
+1. **RESOLVED — history is not the constraint.** Eurostat runs 2000-Q1 to
+   2026-Q1 for all three countries, 105 quarters (corrected from 129 above). The
+   constraint is frequency (quarterly) and breadth (three factors), not depth.
 2. **What is the euro-area equivalent of the debt-ceiling problem?** The US cash
    adjustment exists because a ceiling resolution mechanically inflates bill
    issuance. The euro area has no debt ceiling but does have its own distortions.
-3. **Is `S131` central government the right sector**, or does the comparison need
-   general government to be consistent with how each DMO reports?
-4. **Do the UK and Japan have structured endpoints at all?** Until that is
+3. **Is `S1311` central government the right sector**, or does the comparison
+   need general government to be consistent with how each DMO reports? Central
+   government is what is implemented, because the US series is Treasury debt
+   rather than general government — but the euro-area DMOs report against their
+   own perimeters and this has not been checked against any of them.
+4. **The ratio floor is now calibrated, and it is per country.** Live medians for
+   |net borrowing| per quarter are DE 9,647mn, FR 21,533mn, IT 25,664mn. Germany
+   borrows less than half what the other two do, so a single shared floor would
+   mask about half of German quarters against a quarter of French and Italian
+   ones — three countries on one axis, scored on different amounts of their own
+   history. Each floor is 38% of that country's own median, the fraction the US
+   floor already implies. Recorded in `config/thresholds.yaml`.
+5. **Do the UK and Japan have structured endpoints at all?** Until that is
    answered, they are not Phase 3 candidates so much as Phase 3 aspirations.

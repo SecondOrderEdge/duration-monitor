@@ -437,3 +437,52 @@ def test_every_variant_factor_has_a_known_direction():
     for name, spec in weights["score_variants"].items():
         unknown = [f for f in spec["factors"] if f not in FACTOR_DIRECTION]
         assert not unknown, f"variant {name} has undirected factors: {unknown}"
+
+
+# --------------------------------------------------------------------------- #
+# Absent market factors (Phase 3, quantity_only)
+# --------------------------------------------------------------------------- #
+
+def _quarterly_net(periods: int = 12) -> pd.DataFrame:
+    idx = pd.period_range("2020Q1", periods=periods, freq="Q")
+    rows = []
+    for i, p in enumerate(idx):
+        rows.append({"period": p, "security_class": "BILLS", "net_issuance": 10e9 + i * 1e9})
+        rows.append({"period": p, "security_class": "COUPONS", "net_issuance": 40e9})
+    return pd.DataFrame(rows).set_index("period")
+
+
+def test_absent_market_inputs_give_nan_columns_not_missing_ones():
+    """The frame keeps all six factors so a variant is a column choice, not a shape."""
+    net = _quarterly_net()
+    idx = net.index.unique()
+    share = pd.Series(0.2, index=idx)
+    factors = build_factors(
+        bill_share_series=share,
+        net=net.reset_index(),
+        incremental_funding=pd.Series(0.5, index=idx),
+        coupon_classes=("COUPONS",),
+        min_abs_denominator=1e9,
+        horizon=4,
+    )
+    assert list(factors.columns) == list(FACTOR_DIRECTION)
+    for absent in ("wam_trend", "term_premium_10y_trend", "long_end_auction_stress"):
+        assert factors[absent].isna().all()
+    assert factors["bill_share_trend"].notna().any()
+
+
+def test_a_quantity_only_score_never_reaches_min_factors_of_the_full_variant():
+    """Three factors cannot satisfy the full variant's floor of four.
+
+    The guard that matters: selecting three columns and forgetting to lower
+    min_factors would produce an all-NaN series rather than a wrong number — but
+    it would produce it silently, so it is asserted rather than assumed.
+    """
+    idx = pd.period_range("2020Q1", periods=8, freq="Q")
+    ranks = pd.DataFrame(
+        {"bill_share_trend": 0.6, "incremental_bill_funding": 0.7,
+         "coupon_restraint": 0.5}, index=idx
+    )
+    weights = pd.Series({c: 1 / 3 for c in ranks.columns})
+    assert duration_shift_score(ranks, weights, min_factors=4)["score"].isna().all()
+    assert duration_shift_score(ranks, weights, min_factors=3)["score"].notna().all()

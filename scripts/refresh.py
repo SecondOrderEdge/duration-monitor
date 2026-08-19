@@ -45,6 +45,7 @@ from src.calculations.issuance import (  # noqa: E402
 )
 from src.signals.duration_shift_score import (  # noqa: E402
     build_factors,
+    resolve_variant,
     classify_regime,
     duration_shift_score,
     expanding_weights,
@@ -59,6 +60,7 @@ from src.signals.auction_stress import (  # noqa: E402
 )
 from src.transformation.normalize import (  # noqa: E402
     EUROSTAT_CENTRAL_GOVERNMENT,
+    MILLIONS,
     extract_subtotals,
     normalize_eurostat_debt,
     month_end_cash_balance,
@@ -492,6 +494,135 @@ def build_euro_debt(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame
     return debt
 
 
+def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """Quantity-only Duration Shift Score for Germany, France and Italy.
+
+    Three of the six factors, quarterly, one score per country. No WAM, no term
+    premium, no auction stress — not because they were dropped but because no free
+    source publishes them for these sovereigns. The variant travels on every row so
+    a quantity-only 70 can never be read as though it were a full-score 70.
+
+    NO REGIME is assigned. The regime classifier caps a high score using
+    market-price corroboration, and there is none here; a regime derived from the
+    band alone would be the score wearing a second name and would imply the market
+    evidence had been checked and agreed. The band is published, the regime is not.
+
+    NO CASH ADJUSTMENT either. Deviation D5 removes the debt-ceiling cash rebuild
+    from the US funding ratio. These sovereigns have no debt ceiling, but they do
+    have their own cash-management distortions, and whether an equivalent
+    correction is needed is an open question rather than a settled no
+    (docs/phase3_source_assessment.md).
+    """
+    source = PROCESSED / "euro_debt.parquet"
+    if not source.exists():
+        raise FileNotFoundError(
+            "the euro score needs euro_debt.parquet; run "
+            "`python scripts/refresh.py --only euro_debt` first"
+        )
+
+    debt = pd.read_parquet(source)
+    thresholds = _thresholds()
+    weights_cfg = yaml.safe_load(
+        (REPO_ROOT / "config" / "factor_weights.yaml").read_text(encoding="utf-8")
+    )
+    weighting = weights_cfg["weighting"]
+    pct_cfg = thresholds["percentiles"]
+    floors = thresholds["issuance"]["min_abs_denominator_quarterly_meur"]
+
+    # Coupons here are the single F32 long-term class, not the US list of NOTES /
+    # BONDS / FRN. Passing the US names would silently aggregate nothing and make
+    # coupon restraint NaN for every quarter while the score still published on the
+    # two remaining factors.
+    coupon_classes = ("COUPONS",)
+
+    frames = []
+    for country in sorted(debt["country"].unique()):
+        variant_name, variant = resolve_variant(country, weights_cfg)
+        one = debt[debt["country"] == country].copy()
+
+        if country not in floors:
+            raise KeyError(
+                f"no quarterly ratio floor calibrated for {country!r}; add it to "
+                "issuance.min_abs_denominator_quarterly_meur with the observed "
+                "distribution recorded next to it"
+            )
+        floor = float(floors[country]) * MILLIONS
+
+        share = bill_share(one, freq="Q")
+        net = net_issuance(one, freq="Q")
+        funding = incremental_bill_funding(
+            net, coupon_classes=coupon_classes, min_abs_denominator=floor
+        )["incremental_bill_funding"]
+
+        # horizon=4: four quarters is the year that horizon=12 means monthly.
+        factors = build_factors(
+            bill_share_series=share,
+            net=net,
+            incremental_funding=funding,
+            coupon_classes=coupon_classes,
+            min_abs_denominator=floor,
+            horizon=4,
+        )[variant["factors"]]
+
+        ranks = percentile_ranks(
+            factors,
+            window=pct_cfg["window_quarters"],
+            min_periods=pct_cfg["min_history_quarters"],
+        )
+        weights = expanding_weights(
+            ranks,
+            ridge=float(weighting["ridge"]),
+            min_months=int(weighting["min_quarters_for_weights"]),
+        )
+        scored = duration_shift_score(
+            ranks, weights,
+            min_factors=int(variant["min_factors"]),
+            variant=variant_name,
+        )
+        scored["band"] = score_band(
+            scored["score"], thresholds["duration_shift_score_bands"]["bands"]
+        )
+        for name in ranks.columns:
+            scored[f"rank_{name}"] = ranks[name]
+            scored[f"weight_{name}"] = weights[name]
+
+        out = scored.reset_index().rename(columns={"index": "period"})
+        out["period"] = out["period"].astype(str)
+        out["country"] = country
+        out["frequency"] = "Q"
+        out["total_is_derived"] = True
+        frames.append(out)
+
+        live = scored["score"].dropna()
+        masked = int(funding.isna().sum())
+        if len(live):
+            print(f"    {country} [{variant_name}]: score {live.iloc[-1]:.1f} at "
+                  f"{live.index[-1]} ({scored.loc[live.index[-1], 'band']}), "
+                  f"{len(live)} scored quarters from {live.index[0]}")
+        else:
+            print(f"    {country} [{variant_name}]: no scored quarters")
+        print(f"      bill share {share.iloc[-1]:.1%}, "
+              f"12m change {share.diff(4).iloc[-1]:+.2%}, "
+              f"funding ratio masked in {masked} of {len(funding)} quarters "
+              f"(floor €{floor/1e6:,.0f}mn)")
+
+    combined = pd.concat(frames, ignore_index=True)
+    combined["retrieval_date"] = pd.Timestamp.now("UTC")
+
+    # The variant is what stops these numbers being read against the US score, so
+    # its absence is a data-integrity failure rather than a cosmetic one.
+    if combined["variant"].isna().any():
+        raise ValueError("scored rows are missing the variant label")
+
+    QUALITY_NOTES.append(
+        {"source": "euro_score", "endpoint": "duration_shift_score",
+         "event_type": "coverage", "severity": "info",
+         "detail": "DE/FR/IT scored on the quantity_only variant: three of six "
+                   "factors, quarterly, no regime. Not comparable to the US score."}
+    )
+    return combined
+
+
 def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     """Fiscal Duration Shift Score, from tables the other builders produced.
 
@@ -640,6 +771,8 @@ BUILDERS = {
     "term_premium": build_term_premium,
     "rates": build_rates,
     "euro_debt": build_euro_debt,
+    # After euro_debt: it reads what that builder wrote.
+    "euro_score": build_euro_score,
     # Last: it reads what the others wrote.
     "score": build_score,
 }

@@ -30,6 +30,12 @@ percentiles:
   window_months: 120            # 10-year trailing window
   min_history_months: 60        # no score published below 5 years of history
   method: weak                  # 'weak' (fraction at or below) | 'mid' (ties split)
+  # Quarterly equivalents, for the euro-area series. Stated rather than derived
+  # by dividing the monthly numbers by three at the call site: 40 quarters IS
+  # ten years and 20 quarters IS five years, but a reader should be able to see
+  # that decision instead of reconstructing it from an arithmetic expression.
+  window_quarters: 40           # 10-year trailing window
+  min_history_quarters: 20      # no score published below 5 years of history
 
 # --------------------------------------------------------------------------- #
 # Issuance ratio guards (Deviation D5)
@@ -52,6 +58,25 @@ issuance:
   # accretion, which is not issuance (Deviation D2). Revisit once the probe
   # confirms whether TIPS outstanding is reported at par.
   coupon_classes: [NOTES, BONDS, FRN]
+
+  # Euro-area floors. Same purpose as the US one and set the same way, from the
+  # observed distribution rather than by scaling the US number.
+  #
+  # A SINGLE shared floor was rejected. Measured on the first live Eurostat pull
+  # (2026-08-19, 2000-Q1 to 2026-Q1), median |net borrowing| per quarter is
+  # DE 9,647mn, FR 21,533mn and IT 25,664mn — Germany borrows less than half
+  # what the other two do. One floor would mask roughly half of Germany's
+  # quarters and a quarter of France's and Italy's, so the countries would be
+  # scored on different amounts of their own history while sharing an axis.
+  #
+  # Each floor is instead 38% of that country's own median, which is the
+  # fraction the US floor already implies (25,000 of a 65,167 monthly median).
+  # The rule is carried over; only the scale changes.
+  min_abs_denominator_quarterly_meur:
+    DE: 3700
+    FR: 8200
+    IT: 9800
+  euro_calibrated: 2026-08-19
 
 # --------------------------------------------------------------------------- #
 # Debt ceiling episodes (Deviation D5)
