@@ -249,6 +249,65 @@ def probe_ecb_coverage(timeout: int, max_series: int = 12) -> dict:
     return out
 
 
+EUROSTAT_COVERAGE_URL = (
+    "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
+    "gov_10q_ggdebt?format=JSON&lang=EN&geo={geo}&na_item=F31&sector=S1311&unit=MIO_EUR"
+)
+ECB_DATAFLOW_URL = "https://data-api.ecb.europa.eu/service/dataflow/ECB?format=sdmx-json"
+
+
+def probe_eurostat_coverage(timeout: int) -> dict:
+    """Time coverage of the Eurostat quarterly government debt series.
+
+    Asked because the ECB securities issues series stops in 2022-03 for every
+    country and every maturity — a uniform end date across 36 series is a
+    discontinued dataflow, not a data gap. If Eurostat is current it becomes the
+    euro-area source rather than the cross-check.
+    """
+    out = {}
+    for geo in ("DE", "FR", "IT"):
+        try:
+            response = requests.get(EUROSTAT_COVERAGE_URL.format(geo=geo), timeout=timeout)
+            if not response.ok:
+                out[geo] = {"error": f"HTTP {response.status_code}"}
+                continue
+            periods = (
+                ((response.json().get("dimension") or {}).get("time") or {})
+                .get("category", {}).get("index", {})
+            )
+            keys = sorted(periods)
+            out[geo] = {
+                "n_periods": len(keys),
+                "first": keys[0] if keys else None,
+                "last": keys[-1] if keys else None,
+            }
+        except Exception as exc:  # noqa: BLE001
+            out[geo] = {"error": f"{type(exc).__name__}: {exc}"}
+    return out
+
+
+def probe_ecb_dataflows(timeout: int) -> dict:
+    """Which ECB dataflows mention securities, so a discontinued one has a successor.
+
+    Recorded rather than guessed: the last two key guesses cost two probe runs.
+    """
+    try:
+        response = requests.get(ECB_DATAFLOW_URL, timeout=timeout)
+        response.raise_for_status()
+        payload = response.json()
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+    flows = (payload.get("data") or {}).get("dataflows") or []
+    matches = [
+        {"id": f.get("id"), "name": f.get("name"), "version": f.get("version")}
+        for f in flows
+        if any(word in f"{f.get('id')} {f.get('name')}".lower()
+               for word in ("securit", "debt", "government", "issue"))
+    ]
+    return {"n_dataflows": len(flows), "candidates": matches[:40]}
+
+
 def describe_dimensions(parsed: dict) -> dict | None:
     """Name the axes of an SDMX-JSON or JSON-stat response and their categories.
 
@@ -359,6 +418,11 @@ def main() -> int:
     if "ecb" in wanted:
         print("probing ECB coverage depth ...", flush=True)
         report["ecb_coverage"] = probe_ecb_coverage(args.timeout)
+        print("listing ECB dataflows ...", flush=True)
+        report["ecb_dataflows"] = probe_ecb_dataflows(args.timeout)
+    if "eurostat" in wanted:
+        print("probing Eurostat coverage depth ...", flush=True)
+        report["eurostat_coverage"] = probe_eurostat_coverage(args.timeout)
 
     (outdir / "probe.json").write_text(json.dumps(report, indent=2, default=str),
                                        encoding="utf-8")
@@ -431,6 +495,30 @@ def write_markdown(report: dict, path: pathlib.Path) -> None:
                     f"| `{name}` | {entry.get('first')} | {entry.get('last')} | "
                     f"`{entry.get('key', '')[:48]}` |"
                 )
+        lines.append("")
+
+    euro = report.get("eurostat_coverage")
+    if euro:
+        lines += ["## Eurostat coverage depth", "",
+                  "| geo | periods | first | last |", "|---|---|---|---|"]
+        for geo, entry in euro.items():
+            if entry.get("error"):
+                lines.append(f"| {geo} | — | — | {entry['error']} |")
+            else:
+                lines.append(f"| {geo} | {entry.get('n_periods')} | "
+                             f"{entry.get('first')} | {entry.get('last')} |")
+        lines.append("")
+
+    flows = report.get("ecb_dataflows")
+    if flows and not flows.get("error"):
+        lines += [
+            "## ECB dataflows mentioning securities, debt or government", "",
+            f"{flows.get('n_dataflows', 0)} dataflows total. Listed so a "
+            "discontinued series can be replaced from evidence rather than "
+            "guessed at.", "",
+        ]
+        for f in flows.get("candidates", []):
+            lines.append(f"- `{f['id']}` (v{f.get('version')}) — {f.get('name')}")
         lines.append("")
 
     for name, source in report["sources"].items():
