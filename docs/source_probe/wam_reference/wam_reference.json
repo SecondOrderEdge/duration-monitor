@@ -10,6 +10,7 @@
       "content_type": "application/pdf",
       "label": "Treasury Presentation to TBAC (Final): 2026 - 3rd Quarter",
       "characters_extracted": 55807,
+      "document_date": "2026-07",
       "term_mentions": 1
     },
     {
@@ -20,6 +21,7 @@
       "content_type": "application/pdf",
       "label": "TBAC Presentation to Treasury: (Charge 1",
       "characters_extracted": 26928,
+      "document_date": "2026-08",
       "term_mentions": 0
     },
     {
@@ -30,6 +32,7 @@
       "content_type": "application/pdf",
       "label": "4th Quarter",
       "characters_extracted": 63781,
+      "document_date": "2015-05",
       "term_mentions": 6
     },
     {
@@ -40,6 +43,7 @@
       "content_type": "application/pdf",
       "label": "3rd Quarter",
       "characters_extracted": 72360,
+      "document_date": "2015-09",
       "term_mentions": 6
     },
     {
@@ -50,6 +54,7 @@
       "content_type": "application/pdf",
       "label": "2nd Quarter",
       "characters_extracted": 61427,
+      "document_date": "2015-04",
       "term_mentions": 6
     },
     {
@@ -60,6 +65,7 @@
       "content_type": "application/pdf",
       "label": "2nd Quarter",
       "characters_extracted": 71681,
+      "document_date": null,
       "term_mentions": 6
     },
     {
@@ -70,6 +76,7 @@
       "content_type": "application/pdf",
       "label": "1st Quarter",
       "characters_extracted": 73261,
+      "document_date": null,
       "term_mentions": 5
     },
     {
@@ -80,6 +87,7 @@
       "content_type": "text/html; charset=UTF-8",
       "label": "Financing Estimates: 2026 - 3rd Quarter",
       "characters_extracted": 12833,
+      "document_date": null,
       "term_mentions": 0
     },
     {
@@ -90,6 +98,7 @@
       "content_type": "text/html; charset=UTF-8",
       "label": "Economic Policy Statements to TBAC: 2026 - 3rd Quarter\u200b",
       "characters_extracted": 31486,
+      "document_date": null,
       "term_mentions": 0
     },
     {
@@ -100,6 +109,7 @@
       "content_type": "text/html; charset=UTF-8",
       "label": "Policy Statement: 2026 - 3rd Quarter",
       "characters_extracted": 14801,
+      "document_date": null,
       "term_mentions": 0
     },
     {
@@ -110,6 +120,7 @@
       "content_type": "text/html; charset=UTF-8",
       "label": "TBAC Report to Secretary: 2026 - 3rd Quarter",
       "characters_extracted": 20980,
+      "document_date": null,
       "term_mentions": 0
     },
     {
@@ -120,6 +131,7 @@
       "content_type": "text/html; charset=UTF-8",
       "label": "TBAC Minutes: 2026 - 3rd Quarter",
       "characters_extracted": 22111,
+      "document_date": "2026-08",
       "term_mentions": 0
     },
     {
@@ -130,6 +142,7 @@
       "content_type": "application/pdf",
       "label": "TBAC Recommended Financing Table by Refunding Quarter",
       "characters_extracted": 999,
+      "document_date": "2026-08",
       "term_mentions": 0
     },
     {
@@ -140,6 +153,7 @@
       "content_type": "application/pdf",
       "label": "Charge 2",
       "characters_extracted": 28274,
+      "document_date": "2026-08",
       "term_mentions": 0
     },
     {
@@ -150,6 +164,7 @@
       "content_type": "application/pdf",
       "label": "Archives",
       "characters_extracted": 111011,
+      "document_date": "2026-07",
       "term_mentions": 1
     },
     {
@@ -160,6 +175,7 @@
       "content_type": "application/xml",
       "label": "Auction Schedule: XML Format",
       "characters_extracted": 10916,
+      "document_date": null,
       "term_mentions": 0
     },
     {
@@ -170,6 +186,7 @@
       "content_type": "application/pdf",
       "label": "Auction Schedule: PDF Format",
       "characters_extracted": 21096,
+      "document_date": "2026-08",
       "term_mentions": 0
     },
     {
@@ -180,6 +197,7 @@
       "content_type": "application/xml",
       "label": "Buyback Schedule: XML Format",
       "characters_extracted": 2528,
+      "document_date": "2026-08",
       "term_mentions": 0
     },
     {
@@ -190,6 +208,7 @@
       "content_type": "application/pdf",
       "label": "Buyback Schedule: PDF Format",
       "characters_extracted": 3120,
+      "document_date": "2026-08",
       "term_mentions": 0
     },
     {
@@ -200,6 +219,7 @@
       "content_type": "application/pdf",
       "label": "Primary Dealer Meeting Agenda: 2026 - 3rd Quarter",
       "characters_extracted": 7122,
+      "document_date": "2026-07",
       "term_mentions": 0
     },
     {
@@ -210,6 +230,7 @@
       "content_type": "application/vnd.ms-excel",
       "label": "Quarterly Release Data: 2026 - 3rd Quarter",
       "characters_extracted": 126910,
+      "document_date": null,
       "term_mentions": 2
     },
     {
@@ -220,6 +241,7 @@
       "content_type": "application/pdf",
       "label": "Letter dated May 9, 2023 from Former TBAC Chairs and Vice Chairs on Raising the Debt Limit",
       "characters_extracted": 5617,
+      "document_date": "2023-05",
       "term_mentions": 0
     },
     {
@@ -230,6 +252,7 @@
       "content_type": "application/pdf",
       "label": "Letter dated September 21, 2021 from TBAC Chair Beth Hammack and Vice Chair Brian Sack on Raising the Debt Limit",
       "characters_extracted": 4332,
+      "document_date": "2021-09",
       "term_mentions": 0
     },
     {
@@ -260,6 +283,7 @@
       "content_type": "application/pdf",
       "label": "Q1",
       "characters_extracted": 13526,
+      "document_date": "2010-02",
       "term_mentions": 5
     },
     {
@@ -270,6 +294,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 43107,
+      "document_date": "2009-10",
       "term_mentions": 3
     },
     {
@@ -280,6 +305,7 @@
       "content_type": "application/pdf",
       "label": "Q1",
       "characters_extracted": 14853,
+      "document_date": "2009-02",
       "term_mentions": 5
     },
     {
@@ -290,6 +316,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 25989,
+      "document_date": "2008-10",
       "term_mentions": 3
     },
     {
@@ -300,6 +327,7 @@
       "content_type": "application/pdf",
       "label": "Q2",
       "characters_extracted": 15074,
+      "document_date": "2009-04",
       "term_mentions": 5
     },
     {
@@ -310,6 +338,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 27491,
+      "document_date": "2008-10",
       "term_mentions": 3
     },
     {
@@ -320,6 +349,7 @@
       "content_type": "application/pdf",
       "label": "Q3",
       "characters_extracted": 14539,
+      "document_date": "2009-08",
       "term_mentions": 6
     },
     {
@@ -330,6 +360,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 15662,
+      "document_date": "2008-10",
       "term_mentions": 3
     },
     {
@@ -340,6 +371,7 @@
       "content_type": "application/pdf",
       "label": "Q4",
       "characters_extracted": 14594,
+      "document_date": "2009-11",
       "term_mentions": 5
     },
     {
@@ -350,6 +382,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 15893,
+      "document_date": "2008-10",
       "term_mentions": 3
     },
     {
@@ -360,6 +393,7 @@
       "content_type": "application/pdf",
       "label": "Q1",
       "characters_extracted": 11397,
+      "document_date": "2008-01",
       "term_mentions": 5
     },
     {
@@ -370,6 +404,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 27284,
+      "document_date": "2008-02",
       "term_mentions": 3
     },
     {
@@ -380,6 +415,7 @@
       "content_type": "application/pdf",
       "label": "Q2",
       "characters_extracted": 13417,
+      "document_date": "2008-04",
       "term_mentions": 5
     },
     {
@@ -390,6 +426,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 17400,
+      "document_date": "2008-05",
       "term_mentions": 3
     },
     {
@@ -400,6 +437,7 @@
       "content_type": "application/pdf",
       "label": "Data",
       "characters_extracted": 27261,
+      "document_date": "2007-10",
       "term_mentions": 3
     },
     {
@@ -410,6 +448,7 @@
       "content_type": "application/pdf",
       "label": "Q4",
       "characters_extracted": 12874,
+      "document_date": "2008-11",
       "term_mentions": 6
     }
   ],
@@ -423,21 +462,8 @@
           "unit": "year",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "ugh time, but rates are shocked higher after 10 years by 300bp relative to the base case outlined above. o Scenario 5: %issuance is uniform, but rates are shocked higher after 10 years by 300bp relative to the base case outlined above. \uf07d Output: Projected \u201cWeighted average cost of funds (WAC)\u201d and \u201cWeighted average maturity of outstanding debt stock (WAM)\u201d over time Uniform issuance extends WAM by 2 years without significantly increasing cost 11 Average maturity (WAM; years) Cost of funds (WAC) Takeaways: \u2022 Uniform issuance results in roughly a 2Y maturity extension \u2022 Much of the extension happens during the first 10 years Takeaways: \u2022 Uniform issuance increases the cost of debt very marginally (rel"
-        },
-        {
-          "value": 10.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "are shocked higher after 10 years by 300bp relative to the base case outlined above. \uf07d Output: Projected \u201cWeighted average cost of funds (WAC)\u201d and \u201cWeighted average maturity of outstanding debt stock (WAM)\u201d over time Uniform issuance extends WAM by 2 years without significantly increasing cost 11 Average maturity (WAM; years) Cost of funds (WAC) Takeaways: \u2022 Uniform issuance results in roughly a 2Y maturity extension \u2022 Much of the extension happens during the first 10 years Takeaways: \u2022 Uniform issuance increases the cost of debt very marginally (relative to current issuance) \u2022 When rates are shocked, about 80% of the shock gets incorporated into the cost of funds within 5 years \u2022 Cost of issuing longer maturity debt is currently low but insurance benefits appear to b"
-        },
-        {
-          "value": 75.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "e term premia but longer maturities have comparable relative term premia. \uf07d More work should be done on an asset liability framework for managing government debt and the durability of liquidity premium in the front end going forward. Appendix 21 Simulation parameters 22 \uf07d Simulate cost of funds and weighted average maturity over the next 75 years (we only show progression over the next 30 years) \uf07d Methodology / assumptions: o Interest rates increase by 100bp/year in 1Y, and 25bp/year in 30Y sector (other maturities are linearly interpolated) o Interest rates peak at 3%, 3.75% and 4% in bills, 10Y and 30Y sectors, respectively o Gross issuan"
+          "context": "ve. o Scenario 5: %issuance is uniform, but rates are shocked higher after 10 years by 300bp relative to the base case outlined above. \uf07d Output: Projected \u201cWeighted average cost of funds (WAC)\u201d and \u201cWeighted average maturity of outstanding debt stock (WAM)\u201d over time Uniform issuance extends WAM by 2 years without significantly increasing cost 11 Average maturity (WAM; years) Cost of funds (WAC) Takeaways: \u2022 Uniform issuance results in roughly a 2Y maturity extension \u2022 Much of the extension happens during the first 10 years Takeaways: \u2022 Uniform issuance increases the cost of debt very marginally (relative to current issuance) \u2022 When rates are shocked, about",
+          "document_date": "2015-09"
         }
       ]
     },
@@ -446,25 +472,12 @@
       "label": "Q1",
       "hits": [
         {
-          "value": 10.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "20 TIPS ifor 30-year TIPS is based on the average announced amount for 20-year TIPS in 2009. \u2022 Projections exclude cash management bills. \u2022 Projections assume no change to future issuance patterns\u2022 Projections assume no change to future issuance patterns. Using the above assumptions, over the next 10 years: A t it f t t l t t di d t it f i ttl t\u2022 Average maturity of total outstanding and average maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent of debt with 3 years or less to maturity is projected to decline to 53%. Office of Debt Management 7 \u2022 Average maturity of total debt outstanding rose by 6 hb h 80 90 80 90 mo"
-        },
-        {
           "value": 79.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": ". \u2022 Projections exclude cash management bills. \u2022 Projections assume no change to future issuance patterns\u2022 Projections assume no change to future issuance patterns. Using the above assumptions, over the next 10 years: A t it f t t l t t di d t it f i ttl t\u2022 Average maturity of total outstanding and average maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent of debt with 3 years or less to maturity is projected to decline to 53%. Office of Debt Management 7 \u2022 Average maturity of total debt outstanding rose by 6 hb h 80 90 80 90 monthsmonths Debt Maturity Measures Average Maturity of Issuance 1/ Hypothetical FY* months betwe"
-        },
-        {
-          "value": 49.0,
-          "unit": "month",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent of debt with 3 years or less to maturity is projected to decline to 53%. Office of Debt Management 7 \u2022 Average maturity of total debt outstanding rose by 6 hb h 80 90 80 90 monthsmonths Debt Maturity Measures Average Maturity of Issuance 1/ Hypothetical FY* months between March 2009 and December 2009, from 49 months to 55 months. 50 60 70 50 60 70 20 30 40 20 30 40 Average Maturity of Marketable Debt Outstanding 2/ 1/ Quarterly data are actuals through December 31, 2009. Actuals and fiscal year projections use a 4-quarter average. 2/ Quarterly data are actuals through December 31, 2009. Fiscal year projections"
+          "context": ". \u2022 Projections exclude cash management bills. \u2022 Projections assume no change to future issuance patterns\u2022 Projections assume no change to future issuance patterns. Using the above assumptions, over the next 10 years: A t it f t t l t t di d t it f i ttl t\u2022 Average maturity of total outstanding and average maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent of debt with 3 years or less to maturity is projected to decline to 53%. Office of Debt Management 7 \u2022 Average maturity of total debt outstanding rose by 6 hb h 80 90 80 90 monthsmonths Debt Maturity Measures Average Maturity of Issuance 1/ Hypothetical FY* months betwe",
+          "document_date": "2010-02"
         }
       ]
     },
@@ -473,18 +486,12 @@
       "label": "Q1",
       "hits": [
         {
-          "value": 5.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "curities and are derived from hypothetical initial coupon auction sizes. \u008c These sizes are based on announced coupon amounts as of January 15, 2009 and assume the outstanding level of bills on December 31, 2008. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 52 and 51 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 60 percent. 9 Office of Debt Management \u008c Average maturity of issuance peaked in FY 2008. \u008c If future financing needs are spread"
-        },
-        {
           "value": 51.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "upon auction sizes. \u008c These sizes are based on announced coupon amounts as of January 15, 2009 and assume the outstanding level of bills on December 31, 2008. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 52 and 51 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 60 percent. 9 Office of Debt Management \u008c Average maturity of issuance peaked in FY 2008. \u008c If future financing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of"
+          "context": "upon auction sizes. \u008c These sizes are based on announced coupon amounts as of January 15, 2009 and assume the outstanding level of bills on December 31, 2008. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 52 and 51 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 60 percent. 9 Office of Debt Management \u008c Average maturity of issuance peaked in FY 2008. \u008c If future financing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of",
+          "document_date": "2009-02"
         }
       ]
     },
@@ -493,18 +500,12 @@
       "label": "Q2",
       "hits": [
         {
-          "value": 10.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "ned securities and are derived from hypothetical initial coupon auction sizes, which are based on announced coupon amounts as of April 17, 2009 and assume the outstanding level of weekly bills on March 31, 2009. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 10 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 67 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 9 Office of Debt Management \u008c Average maturity of marketable debt outstanding is projected to rise from recent lows."
-        },
-        {
           "value": 67.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "al coupon auction sizes, which are based on announced coupon amounts as of April 17, 2009 and assume the outstanding level of weekly bills on March 31, 2009. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 10 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 67 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 9 Office of Debt Management \u008c Average maturity of marketable debt outstanding is projected to rise from recent lows. \u008c If future financing needs are spread proportionally, current issuance patterns would"
+          "context": "al coupon auction sizes, which are based on announced coupon amounts as of April 17, 2009 and assume the outstanding level of weekly bills on March 31, 2009. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 10 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 67 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 9 Office of Debt Management \u008c Average maturity of marketable debt outstanding is projected to rise from recent lows. \u008c If future financing needs are spread proportionally, current issuance patterns would",
+          "document_date": "2009-04"
         }
       ]
     },
@@ -513,18 +514,12 @@
       "label": "Q3",
       "hits": [
         {
-          "value": 10.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "l initial coupon auction sizes, which are based on announced coupon amounts as of July 23, 2009 and assume the outstanding level of weekly bills on June 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 80 90 80 90 months"
-        },
-        {
           "value": 78.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "ounced coupon amounts as of July 23, 2009 and assume the outstanding level of weekly bills on June 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 80 90 80 90 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 As expected, average maturity of marketable debt outstanding is projected to r"
+          "context": "el of weekly bills on June 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 80 90 80 90 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 As expected, average maturity of marketable debt outstanding is projected to r",
+          "document_date": "2009-08"
         }
       ]
     },
@@ -533,18 +528,12 @@
       "label": "Q4",
       "hits": [
         {
-          "value": 10.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "hetical auction sizes, which are based on announced coupon amounts as of October 23, 2009, and assume the outstanding level of weekly bills on September 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance settle to about 66 and 77 months respectivelysettle to about 66 and 77 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 9090 monthsmonths DEBT MATURITY MEASURES Aver"
-        },
-        {
           "value": 77.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "upon amounts as of October 23, 2009, and assume the outstanding level of weekly bills on September 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance settle to about 66 and 77 months respectivelysettle to about 66 and 77 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 9090 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 Average maturity of marketable issuance"
+          "context": "upon amounts as of October 23, 2009, and assume the outstanding level of weekly bills on September 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance settle to about 66 and 77 months respectivelysettle to about 66 and 77 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 9090 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 Average maturity of marketable issuance",
+          "document_date": "2009-11"
         }
       ]
     },
@@ -553,18 +542,12 @@
       "label": "Q1",
       "hits": [
         {
-          "value": 5.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "ecently announced amounts and assume the outstanding level of bills on September 30, 2007. \u008c OMB 2008 MSR Budget deficit estimates used for FY2008-2012. The FY 2008 financing need is an update based on market expectations and Treasury\u2019s internal forecasts. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 60 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 54 percent. 7 Office of Debt Management \u008c Based on current assumptions, average maturity of issuance peaks in FY 2008."
-        },
-        {
           "value": 60.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "level of bills on September 30, 2007. \u008c OMB 2008 MSR Budget deficit estimates used for FY2008-2012. The FY 2008 financing need is an update based on market expectations and Treasury\u2019s internal forecasts. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 60 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 54 percent. 7 Office of Debt Management \u008c Based on current assumptions, average maturity of issuance peaks in FY 2008. \u008c If future financing needs are spread proportionally, current issuance patterns would"
+          "context": "level of bills on September 30, 2007. \u008c OMB 2008 MSR Budget deficit estimates used for FY2008-2012. The FY 2008 financing need is an update based on market expectations and Treasury\u2019s internal forecasts. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 60 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 54 percent. 7 Office of Debt Management \u008c Based on current assumptions, average maturity of issuance peaks in FY 2008. \u008c If future financing needs are spread proportionally, current issuance patterns would",
+          "document_date": "2008-01"
         }
       ]
     },
@@ -573,18 +556,12 @@
       "label": "Q2",
       "hits": [
         {
-          "value": 6.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "securities and are derived from hypothetical initial coupon auction sizes. \u008c These sizes are based on the most recently announced amounts and assume the outstanding level of bills on March 31, 2008. \u008c OMB 2009 Budget deficit estimates used for FY2008-2013. Using the above assumptions, over the next 6 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 55 and 58 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Under current assumptions, average maturity of issuance peaks in FY 2008 and"
-        },
-        {
           "value": 58.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "coupon auction sizes. \u008c These sizes are based on the most recently announced amounts and assume the outstanding level of bills on March 31, 2008. \u008c OMB 2009 Budget deficit estimates used for FY2008-2013. Using the above assumptions, over the next 6 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 55 and 58 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Under current assumptions, average maturity of issuance peaks in FY 2008 and then declines thereafter. \u008c If future financing needs are spread proportionally, curren"
+          "context": "coupon auction sizes. \u008c These sizes are based on the most recently announced amounts and assume the outstanding level of bills on March 31, 2008. \u008c OMB 2009 Budget deficit estimates used for FY2008-2013. Using the above assumptions, over the next 6 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 55 and 58 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Under current assumptions, average maturity of issuance peaks in FY 2008 and then declines thereafter. \u008c If future financing needs are spread proportionally, curren",
+          "document_date": "2008-04"
         }
       ]
     },
@@ -593,18 +570,12 @@
       "label": "Q4",
       "hits": [
         {
-          "value": 5.0,
-          "unit": "year",
-          "population": "unstated \u2014 assume all marketable, but check",
-          "rejected": null,
-          "context": "auction sizes. \u008c These sizes are based on announced coupon amounts as of September 30, 2008 and assume the outstanding level of bills on September 30, 2008. \u008c OMB 2009 MSR Budget estimates used for FY2009-2013. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 53 and 55 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Average maturity of issuance recently peaked in FY 2008. \u008c The average maturity of mar"
-        },
-        {
           "value": 55.0,
           "unit": "month",
           "population": "unstated \u2014 assume all marketable, but check",
           "rejected": null,
-          "context": "coupon amounts as of September 30, 2008 and assume the outstanding level of bills on September 30, 2008. \u008c OMB 2009 MSR Budget estimates used for FY2009-2013. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 53 and 55 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Average maturity of issuance recently peaked in FY 2008. \u008c The average maturity of marketable debt outstanding fell by three months reflecting increased bill issuance in the"
+          "context": "coupon amounts as of September 30, 2008 and assume the outstanding level of bills on September 30, 2008. \u008c OMB 2009 MSR Budget estimates used for FY2009-2013. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 53 and 55 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Average maturity of issuance recently peaked in FY 2008. \u008c The average maturity of marketable debt outstanding fell by three months reflecting increased bill issuance in the",
+          "document_date": "2008-11"
         }
       ]
     }
