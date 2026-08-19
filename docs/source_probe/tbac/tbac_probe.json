@@ -1,0 +1,217 @@
+{
+  "probe": "tbac_bill_share_band",
+  "claim_under_test": "reference_levels.bill_share_recommended_band == [0.15, 0.20]",
+  "entry_points": [
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding",
+      "content_type": "text/html; charset=UTF-8",
+      "links_found": 3
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives",
+      "content_type": "text/html; charset=UTF-8",
+      "links_found": 7
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/treasury-borrowing-advisory-committee",
+      "fetched": false,
+      "status": 404,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/treasury-borrowing-advisory-committee",
+      "content_type": "text/html; charset=UTF-8",
+      "error": "HTTPError: 404 Client Error: Not Found for url: https://home.treasury.gov/policy-issues/financing-the-government/treasury-borrowing-advisory-committee",
+      "links_found": 0
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
+      "content_type": "text/html; charset=UTF-8",
+      "links_found": 11
+    }
+  ],
+  "documents": [
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Most Recent Documents",
+      "characters_extracted": 11526,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/treasury-borrowing-advisory-committee-tbac",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/treasury-borrowing-advisory-committee-tbac",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Treasury Borrowing Advisory Committee (TBAC)",
+      "characters_extracted": 11603,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://www.treasury.gov/resource-center/data-chart-center/quarterly-refunding/Pages/Latest.aspx",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Most Recent Quarterly Refunding Documents",
+      "characters_extracted": 11526,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-report-to-the-secretary-by-calendar-year",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-report-to-the-secretary-by-calendar-year",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Treasury Borrowing Advisory Committee Report to the Secretary by Calendar Year",
+      "characters_extracted": 13443,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/tbac-recommended-financing-tables-by-calendar-year",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/tbac-recommended-financing-tables-by-calendar-year",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "TBAC Recommended Financing Tables by Calendar Year",
+      "characters_extracted": 12652,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-meeting-minutes-by-calendar-year",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-meeting-minutes-by-calendar-year",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Treasury Borrowing Advisory Committee Meeting Minutes by Calendar Year",
+      "characters_extracted": 13200,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/office-of-economic-policy-statements-to-tbac",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/office-of-economic-policy-statements-to-tbac",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Office of Economic Policy Statements to TBAC",
+      "characters_extracted": 12430,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-discussion-charts-by-calendar-year",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-discussion-charts-by-calendar-year",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Treasury Borrowing Advisory Committee Discussion Charts by Calendar Year",
+      "characters_extracted": 12559,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents#main-content",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents#main-content",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Skip to main content",
+      "characters_extracted": 11526,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0585",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0585",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Economic Policy Statements to TBAC: 2026 - 3rd Quarter\u200b",
+      "characters_extracted": 31486,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0591",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0591",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "TBAC Report to Secretary: 2026 - 3rd Quarter",
+      "characters_extracted": 20980,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0592",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0592",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "TBAC Minutes: 2026 - 3rd Quarter",
+      "characters_extracted": 22111,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TBACRecommendedFinancingTableByRefundingQuarter-08052026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TBACRecommendedFinancingTableByRefundingQuarter-08052026.pdf",
+      "content_type": "application/pdf",
+      "label": "TBAC Recommended Financing Table by Refunding Quarter",
+      "characters_extracted": 999,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TreasuryPresentationToTBACQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TreasuryPresentationToTBACQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Treasury Presentation to TBAC (Final): 2026 - 3rd Quarter",
+      "characters_extracted": 55807,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TBACCharge1Q32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TBACCharge1Q32026.pdf",
+      "content_type": "application/pdf",
+      "label": "TBAC Presentation to Treasury: (Charge 1",
+      "characters_extracted": 26928,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TBACCharge2Q32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TBACCharge2Q32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Charge 2",
+      "characters_extracted": 28274,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/CombinedChargesforArchivesQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/CombinedChargesforArchivesQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Archives",
+      "characters_extracted": 111011,
+      "mentions_bill_share": true
+    }
+  ],
+  "evidence": [],
+  "documents_skipped_by_cap": 0,
+  "documents_with_text": 17,
+  "documents_examined": 17,
+  "outcome": "NOT FOUND",
+  "detail": "Searched 17 document(s) with extractable text and found no stated percentage range near a mention of bills."
+}
