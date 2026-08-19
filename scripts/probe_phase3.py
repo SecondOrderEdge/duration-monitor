@@ -129,6 +129,67 @@ CANDIDATES: dict[str, dict] = {
 }
 
 
+# Coverage probes. The point-in-time percentiles need 60 months of history before
+# the score publishes at all, so how far back each country's series reaches
+# decides feasibility before any design question matters.
+#
+# The key order is the dimension order the structure probe returned:
+#   FREQ.REF_AREA.SEC_ISSUING_SECTOR.SEC_ITEM.SEC_VALUATION
+#   .DATA_TYPE_SEC.CURRENCY_TRANS.SERIES_DENOM.SEC_SUFFIX
+# Trailing positions are left empty, which SDMX reads as a wildcard — a
+# constructed full key returned 400 on the previous run, and guessing the tail is
+# how that happened.
+ECB_COVERAGE = {
+    f"{country}_{label}": f"M.{country}.S131.{item}.N.{data_type}...."
+    for country in ("DE", "FR", "IT")
+    for label, item, data_type in (
+        ("shortterm_stock", "F33100", "1"),
+        ("longterm_stock", "F33200", "1"),
+        ("shortterm_netissues", "F33100", "4"),
+    )
+}
+ECB_DATA_URL = "https://data-api.ecb.europa.eu/service/data/SEC/{key}"
+
+
+def observation_period(parsed: dict) -> str | None:
+    """The TIME_PERIOD carried on an SDMX-JSON response's observation axis."""
+    dims = ((parsed.get("structure") or {}).get("dimensions") or {}).get("observation")
+    for dim in dims or []:
+        if dim.get("id") == "TIME_PERIOD":
+            values = dim.get("values") or []
+            if values:
+                return values[0].get("id")
+    return None
+
+
+def probe_ecb_coverage(timeout: int) -> dict:
+    """First and last observation of each candidate ECB series.
+
+    Two one-observation requests rather than a full history: the coverage bounds
+    are all that is being asked, and pulling twenty years of monthly data to read
+    two dates would be rude to a public API.
+    """
+    results: dict = {}
+    for name, key in ECB_COVERAGE.items():
+        entry: dict = {"key": key}
+        for end, param in (("first", "firstNObservations"), ("last", "lastNObservations")):
+            url = ECB_DATA_URL.format(key=key) + f"?{param}=1&format=jsondata"
+            try:
+                response = requests.get(url, timeout=timeout)
+                if not response.ok:
+                    entry[end] = f"HTTP {response.status_code}"
+                    continue
+                parsed = response.json()
+                entry[end] = observation_period(parsed) or "no observation returned"
+                if end == "first":
+                    series = (parsed.get("dataSets") or [{}])[0].get("series") or {}
+                    entry["n_series_matched"] = len(series)
+            except Exception as exc:  # noqa: BLE001
+                entry[end] = f"{type(exc).__name__}: {exc}"
+        results[name] = entry
+    return results
+
+
 def describe_dimensions(parsed: dict) -> dict | None:
     """Name the axes of an SDMX-JSON or JSON-stat response and their categories.
 
@@ -236,6 +297,10 @@ def main() -> int:
             "any_reachable": any(r.get("status") == "ok" for r in results),
         }
 
+    if "ecb" in wanted:
+        print("probing ECB coverage depth ...", flush=True)
+        report["ecb_coverage"] = probe_ecb_coverage(args.timeout)
+
     (outdir / "probe.json").write_text(json.dumps(report, indent=2, default=str),
                                        encoding="utf-8")
     write_markdown(report, outdir / "README.md")
@@ -274,6 +339,25 @@ def write_markdown(report: dict, path: pathlib.Path) -> None:
             f"| `{name}` | {source['publisher']} | {mark} | {source['would_feed']} |"
         )
     lines.append("")
+
+    coverage = report.get("ecb_coverage")
+    if coverage:
+        lines += [
+            "## ECB coverage depth",
+            "",
+            "How far back each candidate series reaches. The point-in-time "
+            "percentiles need 60 months before the score publishes at all, so "
+            "this decides feasibility before any design question does.",
+            "",
+            "| series | first | last | series matched |",
+            "|---|---|---|---|",
+        ]
+        for name, entry in coverage.items():
+            lines.append(
+                f"| `{name}` | {entry.get('first')} | {entry.get('last')} | "
+                f"{entry.get('n_series_matched', '-')} |"
+            )
+        lines.append("")
 
     for name, source in report["sources"].items():
         lines += [f"## `{name}` — {source['publisher']}", "", source["why"], ""]
