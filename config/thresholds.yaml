@@ -176,18 +176,53 @@ reference_levels:
   # the bill share chart so the reader sees not just that the share rose, but that
   # it sits outside the range Treasury's own advisory committee recommends.
   bill_share_recommended_band: [0.15, 0.20]
-  verified: false
-  # STILL UNVERIFIED, and not verifiable from here. This is a claim about what a
-  # TBAC report says, so only that report can confirm it — no amount of Treasury
-  # data can. home.treasury.gov is outside this environment's egress allowlist
-  # (the API host api.fiscaldata.treasury.gov is inside it), so the document
-  # cannot be fetched. It is displayed as a shaded band on the bill share chart
-  # and stated as a reference, never used in any calculation, so the exposure is
-  # presentational — but it is the one number on the dashboard sourced to memory.
-  source_to_confirm: >
-    TBAC recommended bill share range. Cite the specific report and quarter;
-    the committee's language has shifted over time and "15-20%" may be a
-    paraphrase of guidance rather than a stated target.
+  verified: 2026-08-19
+  # VERIFIED against TBAC's own minutes, fetched by scripts/probe_tbac.py in
+  # Actions (home.treasury.gov is refused by the development environment, which
+  # is why this sat unverified for so long). Evidence: docs/source_probe/tbac/.
+  #
+  # Twelve separate sets of minutes state it in the committee's own words —
+  # "TBAC's recommended range of 15 to 20%", "the recommended 15% to 20% range",
+  # "the Committee's recommended range of 15-20% of outstanding debt". The
+  # originating language reads: "the Committee recommended allowing the share of
+  # T-Bills to decline gradually to a range of 15% to 20% of outstanding debt."
+  verified_method: >
+    Searched TBAC minutes and reports to the Secretary at home.treasury.gov.
+    Twenty passages state the range next to a mention of bills; twelve distinct
+    documents state it as the committee's recommendation. Cited below.
+  cited_documents:
+    - https://home.treasury.gov/news/press-releases/sm1175
+    - https://home.treasury.gov/news/press-releases/jy0018
+    - https://home.treasury.gov/news/press-releases/jy0909
+    - https://home.treasury.gov/news/press-releases/jy1239
+    - https://home.treasury.gov/news/press-releases/jy2316
+
+  # THE DENOMINATOR MATCHES, which was not guaranteed. TBAC's band is the T-bill
+  # share of DEBT OUTSTANDING — "leave the T-bill share of outstanding debt
+  # within the recommended 15% to 20% range" — which is what the dashboard plots
+  # it against. Had it been a share of issuance the band would have been drawn on
+  # the wrong chart entirely.
+  #
+  # A SECOND, DIFFERENT TBAC RANGE EXISTS and must never be confused with this
+  # one: 25-33% of NEW ISSUANCE ("TBAC's prior recommendation of 25-33% of new
+  # issuance"). Different metric, different numbers, same committee. A third
+  # figure, 30-35%, appears as a tolerance for what bills may reach "for short
+  # periods", not as a target.
+  second_band_do_not_conflate:
+    share_of_new_issuance: [0.25, 0.33]
+    source: https://home.treasury.gov/news/press-releases/sm678
+
+  # The committee's language HAS shifted, exactly as the earlier note suspected.
+  # The minutes contain "TBAC's PRIOR recommended range of 15-20%" and "the
+  # Committee supported meaningful deviation from the historical recommendation
+  # for 15-20% T-Bill share". So the band is real and correctly stated, but it is
+  # a reference the committee has itself argued about — which is why it stays a
+  # shaded reference on a chart and enters no calculation.
+  caveat: >
+    Treat as a reference the committee has debated, not a standing target. The
+    probe could not date the citations: TBAC minutes are published as press
+    releases labelled only "2nd Quarter", with no year in the URL or link text,
+    so which quarters these span is still unresolved.
 
 # --------------------------------------------------------------------------- #
 # Score interpretation (Phase 2 - must be validated by backtest)
