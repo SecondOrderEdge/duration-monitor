@@ -1,6 +1,6 @@
 # Source probe results
 
-- Probe run (UTC): `2026-08-19T01:47:39.763188+00:00`
+- Probe run (UTC): `2026-08-19T12:34:46.640781+00:00`
 
 Field names below are **observed from live responses**. Anything marked MISSING means `config/sources.yaml` expected a field the API does not return — the contract is wrong and must be corrected before ingestion is written against it.
 
@@ -107,9 +107,9 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 | `DGS30` | ok | D | % | 1977-02-15 → 2026-08-17 | 2026-08-18 15:16:23-05 |
 | `WALCL` | ok | W | Mil. of U.S. $ | 2002-12-18 → 2026-08-12 | 2026-08-13 15:32:11-05 |
 | `WRESBAL` | ok | W | Mil. of U.S. $ | 2002-12-18 → 2026-08-12 | 2026-08-13 15:31:43-05 |
-| `RRPONTSYD` | ok | D | Bil. of US $ | 2003-02-07 → 2026-08-18 | 2026-08-18 13:02:26-05 |
+| `RRPONTSYD` | **ERROR** | – | – | – | HTTPError: 502 Server Error: Bad Gateway |
 | `WTREGEN` | ok | W | Mil. of U.S. $ | 2002-12-18 → 2026-08-12 | 2026-08-13 15:31:31-05 |
-| `SOFR` | ok | D | % | 2018-04-03 → 2026-08-17 | 2026-08-18 07:02:21-05 |
+| `SOFR` | ok | D | % | 2018-04-03 → 2026-08-18 | 2026-08-19 07:02:16-05 |
 | `EFFR` | ok | D | % | 2000-07-03 → 2026-08-17 | 2026-08-18 08:02:19-05 |
 | `MMMFFAQ027S` | ok | Q | Mil. of U.S. $ | 1945-10-01 → 2026-01-01 | 2026-06-11 21:15:44-05 |
 | `GFDEBTN` | ok | Q | Mil. of $ | 1966-01-01 → 2026-01-01 | 2026-06-18 14:30:20-05 |
