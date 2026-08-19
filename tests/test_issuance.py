@@ -354,3 +354,18 @@ class TestBillToCouponRatio:
         result = bill_to_coupon_ratio(net_issuance(df), min_abs_denominator=10.0)
         assert np.isnan(result["bill_to_coupon_ratio"].iloc[1])
         assert result["denominator_masked"].iloc[1]
+
+
+def test_bill_share_reads_a_quarterly_series_as_quarterly():
+    """`freq` is explicit: inferring it would read a quarterly gap as monthly gaps."""
+    dates = pd.PeriodIndex(["2024Q1", "2024Q2", "2024Q3"], freq="Q").to_timestamp(how="end")
+    rows = []
+    for d in dates:
+        rows.append({"observation_date": d, "security_class": "BILLS",
+                     "amount_outstanding": 100.0})
+        rows.append({"observation_date": d, "security_class": "TOTAL_MARKETABLE",
+                     "amount_outstanding": 1000.0})
+    share = bill_share(pd.DataFrame(rows), freq="Q")
+    assert share.index.freqstr.startswith("Q")
+    assert len(share) == 3
+    assert (share == 0.1).all()

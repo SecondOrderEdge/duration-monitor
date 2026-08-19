@@ -90,7 +90,16 @@ jobs:
         # Runs even when a source failed: the sources that did succeed have
         # already been validated and written, and committing them is better than
         # discarding good data because an unrelated feed was down.
-        if: always()
+        #
+        # Default branch only. The data files are the deployed app's input, so
+        # they have exactly one owner. When every branch committed them, main and
+        # each feature branch regenerated the same ten parquet files
+        # independently and every one collided on merge — the Phase 2 branch hit
+        # conflicts in all of them at once, and resolving a binary conflict means
+        # picking a side rather than combining. Feature branches still RUN the
+        # refresh, which is the part that catches a broken pipeline; they just do
+        # not write the result.
+        if: always() && github.ref_name == github.event.repository.default_branch
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

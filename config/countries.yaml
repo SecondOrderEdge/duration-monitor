@@ -23,6 +23,17 @@ countries:
   # ------------------------------------------------------------------------- #
   # Phase 3. Listed so the schema and config shape are settled; no ingestion is
   # written for these and none should be until Phase 1 is validated.
+  #
+  # Source discovery is done — see docs/phase3_source_assessment.md and the
+  # evidence in docs/source_probe/phase3/. The headline finding constrains the
+  # design: the ECB securities issues statistics carry central-government
+  # short-term and long-term stocks AND net issues, monthly, for Germany, France
+  # and Italy, which supports three of the six factors. WAM, term premium and
+  # auction stress have no equivalent free source for any non-US sovereign.
+  #
+  # So a global score cannot be the same measurement as the US score. Whatever is
+  # built here must state per country which factors its number rests on, rather
+  # than putting a three-factor and a six-factor reading under one heading.
   # ------------------------------------------------------------------------- #
   JP:
     name: Japan

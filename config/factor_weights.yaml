@@ -77,6 +77,49 @@ interaction_flag:
 # --------------------------------------------------------------------------- #
 # How the six factors are combined (Deviation D6)
 # --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# Score variants (Phase 3)
+# --------------------------------------------------------------------------- #
+# A country is scored on the factors its sources actually support, and the
+# variant is carried on every row. The euro-area sovereigns have no free source
+# for WAM, term premium or auction stress — see docs/phase3_source_assessment.md
+# — so their score rests on three quantity factors where the US score rests on
+# six including both market-price factors.
+#
+# Those are DIFFERENT MEASUREMENTS. A quantity-only 70 and a full 70 do not mean
+# the same thing: the second required the market to agree and the first could not
+# ask. They are never averaged, never ranked against each other, and never shown
+# under one heading without the variant attached.
+score_variants:
+  full:
+    description: All six factors. Requires market-price evidence.
+    factors:
+      - bill_share_trend
+      - incremental_bill_funding
+      - wam_trend
+      - coupon_restraint
+      - term_premium_10y_trend
+      - long_end_auction_stress
+    min_factors: 4
+    comparable_with: [full]
+  quantity_only:
+    description: >
+      Issuance behaviour alone. No WAM, no term premium, no auction stress,
+      because no free source publishes them for these sovereigns. Comparable
+      across countries carrying this variant; NOT comparable to the full score.
+    factors:
+      - bill_share_trend
+      - incremental_bill_funding
+      - coupon_restraint
+    min_factors: 3
+    comparable_with: [quantity_only]
+
+country_variants:
+  US: full
+  DE: quantity_only
+  FR: quantity_only
+  IT: quantity_only
+
 weighting:
   method: correlation_adjusted        # w proportional to C^-1 1, shrunk
   # Measured on the percentile ranks the score actually uses, bill share trend,
@@ -98,6 +141,9 @@ weighting:
   # Weights are recomputed from history available at each date, for the same
   # reason percentiles are point-in-time: fitting them on the full sample leaks
   # the future into the backtest through the weighting (Deviation D1).
+  # Quarterly equivalent, for the euro-area variant: 12 quarters is the same
+  # three years of history the monthly minimum requires.
+  min_quarters_for_weights: 12
   min_months_for_weights: 36
   min_factors: 4
 

@@ -68,6 +68,7 @@ def bill_share(
     date_col: str = "observation_date",
     class_col: str = "security_class",
     value_col: str = "amount_outstanding",
+    freq: str = "M",
 ) -> pd.Series:
     """Bills as a fraction of total marketable debt, indexed by period.
 
@@ -76,9 +77,17 @@ def bill_share(
     the validation layer meaningful, since a mismatch between the published total
     and the sum of parts is a real data problem worth surfacing rather than
     something to define away.
+
+    Eurostat publishes no total, so `normalize_eurostat_debt` derives one and
+    marks it `total_is_derived`. For those countries the share is a tautology of
+    the two components and the reconciliation check has nothing to test — which is
+    why the flag travels on the data rather than being remembered here.
     """
     df = debt_outstanding.copy()
-    df[date_col] = pd.PeriodIndex(pd.to_datetime(df[date_col]), freq="M")
+    # `freq` is explicit rather than inferred. The euro-area series is quarterly
+    # and the US series monthly; inferring from the observation dates would read a
+    # quarterly series with a missing quarter as monthly data full of gaps.
+    df[date_col] = pd.PeriodIndex(pd.to_datetime(df[date_col]), freq=freq)
 
     wide = _pivot_strict(df, index=date_col, columns=class_col, values=value_col)
 

@@ -138,11 +138,47 @@ def expanding_weights(
     return pd.DataFrame(rows).T
 
 
+def resolve_variant(country: str, config: dict) -> tuple[str, dict]:
+    """Which score variant a country is scored under, and its definition.
+
+    A country with no variant configured raises rather than defaulting to the
+    full score. Defaulting would score a sovereign on whichever factors happened
+    to be present and label the result as though it were the six-factor
+    measurement — which is the one outcome the variant mechanism exists to stop.
+    """
+    variants = config["score_variants"]
+    mapping = config["country_variants"]
+    if country not in mapping:
+        raise ValueError(
+            f"no score variant configured for {country!r}; add it to "
+            f"country_variants (known: {sorted(mapping)}). Refusing to default: a "
+            "score built from whatever factors happen to exist is not a variant, "
+            "it is an unlabelled measurement."
+        )
+    name = mapping[country]
+    if name not in variants:
+        raise ValueError(f"country {country!r} maps to unknown variant {name!r}")
+    return name, variants[name]
+
+
+def comparable(variant_a: str, variant_b: str, config: dict) -> bool:
+    """Whether two variants' scores may be placed on the same axis.
+
+    Quantity-only and full are both 0-100 and both look like scores, which is
+    exactly why this has to be asked explicitly. A quantity-only 70 was reached
+    without any market-price evidence; a full 70 required it. Ranking them
+    together reads as a comparison and is not one.
+    """
+    allowed = config["score_variants"][variant_a].get("comparable_with", [variant_a])
+    return variant_b in allowed
+
+
 def duration_shift_score(
     ranks: pd.DataFrame,
     weights: pd.DataFrame | pd.Series,
     *,
     min_factors: int = DEFAULT_MIN_FACTORS,
+    variant: str | None = None,
 ) -> pd.DataFrame:
     """Combine ranked factors into the 0-100 score.
 
@@ -174,6 +210,10 @@ def duration_shift_score(
             "n_factors": n_available,
         }
     )
+    if variant is not None:
+        # Carried on every row, so a score can never be read without knowing what
+        # it was built from.
+        out["variant"] = variant
     # Contribution of each factor, so a reading can always be explained.
     for name in names:
         out[f"contrib_{name}"] = (
@@ -294,34 +334,45 @@ def build_factors(
     bill_share_series: pd.Series,
     net: pd.DataFrame,
     incremental_funding: pd.Series,
-    wam_years: pd.Series,
-    term_premium_10y: pd.Series,
-    auction_stress: pd.Series,
+    wam_years: pd.Series | None = None,
+    term_premium_10y: pd.Series | None = None,
+    auction_stress: pd.Series | None = None,
     coupon_classes: tuple[str, ...],
     min_abs_denominator: float,
     horizon: int = 12,
 ) -> pd.DataFrame:
-    """Assemble the six factors on a common monthly axis.
+    """Assemble the six factors on a common axis, at whatever frequency the inputs use.
 
     Signs are applied here so that HIGHER ALWAYS MEANS MORE SHORTENING, and the
     direction of each is fixed in `FACTOR_DIRECTION` rather than in config —
     a weights file should not be able to silently invert a factor's meaning.
+
+    The three market-price inputs default to None because no free source publishes
+    them for the euro-area sovereigns. An absent input produces an all-NaN COLUMN
+    rather than a missing one, so the frame's shape is the same six factors either
+    way and a variant is selected by choosing columns, not by whichever inputs the
+    caller happened to pass. `horizon` is in PERIODS, not months: 12 on a monthly
+    axis and 4 on a quarterly one both mean a year.
     """
     from src.calculations.issuance import _aggregate
 
     coupons = _aggregate(net, coupon_classes)
-    coupons_12m = coupons.rolling(horizon).sum()
-    bills_12m = _aggregate(net, ["BILLS"]).rolling(horizon).sum()
-    need_12m = bills_12m + coupons_12m
+    coupons_h = coupons.rolling(horizon).sum()
+    bills_h = _aggregate(net, ["BILLS"]).rolling(horizon).sum()
+    need_h = bills_h + coupons_h
+
+    absent = pd.Series(float("nan"), index=bill_share_series.index)
 
     factors = pd.DataFrame({
         "bill_share_trend": bill_share_series.diff(horizon),
         "incremental_bill_funding": incremental_funding,
-        "wam_trend": wam_years.diff(horizon),
-        "coupon_restraint": coupons_12m
-        / need_12m.where(need_12m.abs() > min_abs_denominator),
-        "term_premium_10y_trend": term_premium_10y.diff(horizon),
-        "long_end_auction_stress": auction_stress,
+        "wam_trend": absent if wam_years is None else wam_years.diff(horizon),
+        "coupon_restraint": coupons_h
+        / need_h.where(need_h.abs() > min_abs_denominator),
+        "term_premium_10y_trend": (
+            absent if term_premium_10y is None else term_premium_10y.diff(horizon)
+        ),
+        "long_end_auction_stress": absent if auction_stress is None else auction_stress,
     })
     for name, direction in FACTOR_DIRECTION.items():
         factors[name] = factors[name] * direction

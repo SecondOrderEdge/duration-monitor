@@ -113,6 +113,11 @@ st.caption(
     "Level of debt is context; direction of travel is the signal."
 )
 
+sys.path.insert(0, str(REPO_ROOT / "app"))
+from _shared import staleness_banner  # noqa: E402
+
+staleness_banner()
+
 if not processed_available("debt_outstanding"):
     st.error(
         "No processed data. Run `python scripts/refresh.py` to build "

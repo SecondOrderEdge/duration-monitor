@@ -22,6 +22,7 @@ import argparse
 import pathlib
 import sys
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -36,6 +37,7 @@ from src.ingestion.fiscaldata import (  # noqa: E402
 from src.calculations.wam import wam_series  # noqa: E402
 from src.ingestion.fred import FredClient, MissingCredential  # noqa: E402
 from src.ingestion.nyfed import detect_revisions, fetch_acm  # noqa: E402
+from src.ingestion.eurostat import EurostatClient  # noqa: E402
 from src.calculations.issuance import (  # noqa: E402
     bill_share,
     cash_adjusted_bill_funding,
@@ -44,6 +46,7 @@ from src.calculations.issuance import (  # noqa: E402
 )
 from src.signals.duration_shift_score import (  # noqa: E402
     build_factors,
+    resolve_variant,
     classify_regime,
     duration_shift_score,
     expanding_weights,
@@ -57,7 +60,10 @@ from src.signals.auction_stress import (  # noqa: E402
     long_end_stress,
 )
 from src.transformation.normalize import (  # noqa: E402
+    EUROSTAT_CENTRAL_GOVERNMENT,
+    MILLIONS,
     extract_subtotals,
+    normalize_eurostat_debt,
     month_end_cash_balance,
     normalize_cash_balance,
     normalize_auctions,
@@ -74,6 +80,11 @@ from src.validation.reconciliation import (  # noqa: E402
 
 PROCESSED = REPO_ROOT / "data" / "processed"
 THRESHOLDS = REPO_ROOT / "config" / "thresholds.yaml"
+
+EURO_DATASET = "gov_10q_ggdebt"
+# Phase 3 scope. Not the euro area as a whole: these are the three sovereigns
+# whose quantity factors Eurostat actually supports (docs/phase3_source_assessment.md).
+EURO_COUNTRIES = ["DE", "FR", "IT"]
 
 # Builders append informational notes here; main() folds them into the event log.
 QUALITY_NOTES: list[dict] = []
@@ -375,6 +386,307 @@ def build_cash_balance(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFr
     return cash
 
 
+def build_euro_debt(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """Eurostat central-government debt securities for Germany, France and Italy.
+
+    Phase 3's quantity inputs. Quarterly, because that is the only frequency any
+    current euro-area publisher serves at the short/long split — the ECB dataflow
+    that carried it monthly stopped in 2022-03 (docs/phase3_source_assessment.md).
+
+    Nothing here has ever been fetched live: the development environment refuses
+    Eurostat at CONNECT, so the decoder and the normalizer are tested against
+    fixtures. This builder therefore prints what the response actually contained —
+    dimensions, coverage, the instrument split, and the distribution of net
+    borrowing that any ratio floor has to be calibrated against — rather than
+    asserting the fixtures were right.
+    """
+    print("  fetching eurostat gov_10q_ggdebt ...", flush=True)
+    eurostat = EurostatClient()
+    result = eurostat.fetch(
+        EURO_DATASET,
+        geo=EURO_COUNTRIES,
+        sector=EUROSTAT_CENTRAL_GOVERNMENT,
+        unit="MIO_EUR",
+        na_item=["F31", "F32"],
+    )
+    frame = result.frame
+    print(f"    {result.n_values} values, {len(frame)} decoded rows")
+    print(f"    published {result.updated!r}; label {str(result.label)[:70]!r}")
+
+    # The decoder's whole risk is attributing a cell to the wrong series, and a
+    # transposed frame is still well-formed. Printing the dimensions the response
+    # actually carried is how a shape the fixtures never anticipated becomes
+    # visible instead of being silently reinterpreted.
+    dims = [c for c in frame.columns if c != "value"]
+    print(f"    dimensions returned: {dims}")
+    for dim in dims:
+        seen = sorted(frame[dim].astype(str).unique())
+        shown = seen if len(seen) <= 8 else seen[:4] + ["..."] + seen[-2:]
+        print(f"      {dim}: {len(seen)} — {shown}")
+
+    if keep_raw:
+        outdir = REPO_ROOT / "data" / "raw" / "eurostat" / EURO_DATASET / (
+            f"retrieved_date={result.retrieval_date:%Y-%m-%d}"
+        )
+        outdir.mkdir(parents=True, exist_ok=True)
+        frame.astype("object").to_parquet(outdir / "part.parquet", index=False)
+        print(f"    raw → {(outdir / 'part.parquet').relative_to(REPO_ROOT)}")
+
+    debt = normalize_eurostat_debt(frame, retrieval_date=result.retrieval_date)
+
+    # Coverage is asserted per country rather than in aggregate: three countries
+    # summing to the expected number of rows would hide one of them being short.
+    for country in EURO_COUNTRIES:
+        rows = debt[debt["country"] == country]
+        if rows.empty:
+            raise ValueError(
+                f"eurostat returned no usable rows for {country!r}; requested "
+                f"{EURO_COUNTRIES} and decoded {sorted(debt['country'].unique())}"
+            )
+        quarters = rows["observation_date"].nunique()
+        classes = sorted(rows["security_class"].astype(str).unique())
+        latest = rows["observation_date"].max()
+        bills = rows[(rows.security_class == "BILLS") & (rows.observation_date == latest)]
+        total = rows[(rows.security_class == "TOTAL_MARKETABLE")
+                     & (rows.observation_date == latest)]
+        share = (float(bills.amount_outstanding.iloc[0]) /
+                 float(total.amount_outstanding.iloc[0])) if len(bills) and len(total) else float("nan")
+        print(f"    {country}: {quarters} quarters, "
+              f"{rows.observation_date.min():%Y-Q}{rows.observation_date.min().quarter} → "
+              f"{latest:%Y-Q}{latest.quarter}, classes {classes}, "
+              f"bill share {share:.1%}, total €{float(total.amount_outstanding.iloc[0])/1e9:,.0f}bn")
+
+        if set(classes) != {"BILLS", "COUPONS", "TOTAL_MARKETABLE"}:
+            QUALITY_NOTES.append(
+                {"source": "euro_debt", "endpoint": EURO_DATASET,
+                 "event_type": "contract_break", "severity": "error",
+                 "detail": f"{country} carries {classes}; the quantity factors need "
+                           "both F31 short-term and F32 long-term"}
+            )
+
+    # A country that stopped publishing while the others continued would leave the
+    # cross-country comparison silently mismatched in time, so the latest quarter
+    # is compared across countries rather than taken as one number.
+    latest_by_country = debt.groupby("country", observed=True)["observation_date"].max()
+    if latest_by_country.nunique() > 1:
+        detail = ("euro-area countries end on different quarters: "
+                  + ", ".join(f"{c} {d:%Y-%m}" for c, d in latest_by_country.items()))
+        print(f"    WARNING: {detail}")
+        QUALITY_NOTES.append(
+            {"source": "euro_debt", "endpoint": EURO_DATASET,
+             "event_type": "staleness", "severity": "warning", "detail": detail}
+        )
+
+    # The ratio floor the US series uses is calibrated against the distribution of
+    # |net borrowing| (thresholds.yaml, issuance.calibrated). No euro equivalent
+    # has been calibrated yet, because until this run there was no live series to
+    # calibrate against. The distribution is printed so that number comes from
+    # data rather than from scaling the US one by a guess at relative size.
+    for country in EURO_COUNTRIES:
+        one = debt[(debt.country == country) & (debt.security_class != "TOTAL_MARKETABLE")]
+        wide = one.pivot(index="observation_date", columns="security_class",
+                         values="amount_outstanding")
+        net_total = wide.sum(axis=1, min_count=1).diff().abs().dropna() / 1e6
+        if len(net_total):
+            q = net_total.quantile([0.10, 0.25, 0.50]).round(0)
+            print(f"    {country} |net borrowing|/quarter (EUR mn): "
+                  f"p10 {q.loc[0.10]:,.0f}  p25 {q.loc[0.25]:,.0f}  median {q.loc[0.50]:,.0f}")
+
+    return debt
+
+
+def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """Quantity-only Duration Shift Score for Germany, France and Italy.
+
+    Three of the six factors, quarterly, one score per country. No WAM, no term
+    premium, no auction stress — not because they were dropped but because no free
+    source publishes them for these sovereigns. The variant travels on every row so
+    a quantity-only 70 can never be read as though it were a full-score 70.
+
+    NO REGIME is assigned. The regime classifier caps a high score using
+    market-price corroboration, and there is none here; a regime derived from the
+    band alone would be the score wearing a second name and would imply the market
+    evidence had been checked and agreed. The band is published, the regime is not.
+
+    NO CASH ADJUSTMENT either. Deviation D5 removes the debt-ceiling cash rebuild
+    from the US funding ratio. These sovereigns have no debt ceiling, but they do
+    have their own cash-management distortions, and whether an equivalent
+    correction is needed is an open question rather than a settled no
+    (docs/phase3_source_assessment.md).
+    """
+    source = PROCESSED / "euro_debt.parquet"
+    if not source.exists():
+        raise FileNotFoundError(
+            "the euro score needs euro_debt.parquet; run "
+            "`python scripts/refresh.py --only euro_debt` first"
+        )
+
+    debt = pd.read_parquet(source)
+    thresholds = _thresholds()
+    weights_cfg = yaml.safe_load(
+        (REPO_ROOT / "config" / "factor_weights.yaml").read_text(encoding="utf-8")
+    )
+    weighting = weights_cfg["weighting"]
+    pct_cfg = thresholds["percentiles"]
+    floors = thresholds["issuance"]["min_abs_denominator_quarterly_meur"]
+
+    # Coupons here are the single F32 long-term class, not the US list of NOTES /
+    # BONDS / FRN. Passing the US names would silently aggregate nothing and make
+    # coupon restraint NaN for every quarter while the score still published on the
+    # two remaining factors.
+    coupon_classes = ("COUPONS",)
+
+    frames = []
+    for country in sorted(debt["country"].unique()):
+        variant_name, variant = resolve_variant(country, weights_cfg)
+        one = debt[debt["country"] == country].copy()
+
+        if country not in floors:
+            raise KeyError(
+                f"no quarterly ratio floor calibrated for {country!r}; add it to "
+                "issuance.min_abs_denominator_quarterly_meur with the observed "
+                "distribution recorded next to it"
+            )
+        floor = float(floors[country]) * MILLIONS
+
+        share = bill_share(one, freq="Q")
+        net = net_issuance(one, freq="Q")
+        funding = incremental_bill_funding(
+            net, coupon_classes=coupon_classes, min_abs_denominator=floor
+        )["incremental_bill_funding"]
+
+        # horizon=4: four quarters is the year that horizon=12 means monthly.
+        factors = build_factors(
+            bill_share_series=share,
+            net=net,
+            incremental_funding=funding,
+            coupon_classes=coupon_classes,
+            min_abs_denominator=floor,
+            horizon=4,
+        )[variant["factors"]]
+
+        ranks = percentile_ranks(
+            factors,
+            window=pct_cfg["window_quarters"],
+            min_periods=pct_cfg["min_history_quarters"],
+        )
+        weights = expanding_weights(
+            ranks,
+            ridge=float(weighting["ridge"]),
+            min_months=int(weighting["min_quarters_for_weights"]),
+        )
+        scored = duration_shift_score(
+            ranks, weights,
+            min_factors=int(variant["min_factors"]),
+            variant=variant_name,
+        )
+        scored["band"] = score_band(
+            scored["score"], thresholds["duration_shift_score_bands"]["bands"]
+        )
+        for name in ranks.columns:
+            scored[f"rank_{name}"] = ranks[name]
+            scored[f"weight_{name}"] = weights[name]
+
+        out = scored.reset_index().rename(columns={"index": "period"})
+        out["period"] = out["period"].astype(str)
+        out["country"] = country
+        out["frequency"] = "Q"
+        out["total_is_derived"] = True
+
+        # The band names assert an absolute direction the score cannot support
+        # here. Every factor in this variant is a POINT-IN-TIME PERCENTILE RANK,
+        # so it measures a quarter against the country's own recent behaviour, not
+        # against zero. France's bill share fell in 70% of the last 40 quarters
+        # (median 4q change -0.57pp); at -0.21pp it is falling more slowly than
+        # usual, ranks at the 68th percentile, and the composite lands on
+        # "meaningful shortening" while the bill share is going DOWN.
+        #
+        # On the US score two market-price factors anchor this and the regime
+        # classifier demands corroboration. A three-factor quantity-only score has
+        # no anchor at all — all three factors are relative — so the raw,
+        # unranked change ships alongside the score and the app is expected to
+        # show it. A relative reading presented as an absolute one is the failure
+        # mode this whole variant exists to avoid.
+        raw_change = share.diff(4).reindex(scored.index)
+        out["bill_share"] = share.reindex(scored.index).to_numpy()
+        out["bill_share_4q_change"] = raw_change.to_numpy()
+        out["direction_absolute"] = pd.Series(
+            np.select(
+                [raw_change.to_numpy() > 0, raw_change.to_numpy() < 0],
+                ["shortening", "extending"],
+                default="flat",
+            )
+        ).where(raw_change.notna().to_numpy())
+        out["score_is_relative_to_own_history"] = True
+        frames.append(out)
+
+        live = scored["score"].dropna()
+        masked = int(funding.isna().sum())
+        if len(live):
+            at_last = live.index[-1]
+            change = share.diff(4).get(at_last, float("nan"))
+            direction = ("shortening" if change > 0 else
+                         "extending" if change < 0 else "flat")
+            print(f"    {country} [{variant_name}]: score {live.iloc[-1]:.1f} at "
+                  f"{at_last} ({scored.loc[at_last, 'band']}), "
+                  f"{len(live)} scored quarters from {live.index[0]}")
+            print(f"      ABSOLUTE direction: bill share is {direction} "
+                  f"({change:+.2%} over 4q). The score is RELATIVE to this "
+                  f"country's own history and can read high while the bill "
+                  f"share falls.")
+        else:
+            print(f"    {country} [{variant_name}]: no scored quarters")
+        # min_factors is 3 of 3, so a masked funding ratio does not degrade the
+        # score, it removes it. That is the intended behaviour — a two-factor
+        # reading is a third measurement, not a weaker version of this one — but
+        # it is also the main reason the series has holes, so it is reported.
+        print(f"      bill share {share.iloc[-1]:.1%}, "
+              f"4q change {share.diff(4).iloc[-1]:+.2%}, "
+              f"funding ratio masked in {masked} of {len(funding)} quarters "
+              f"(floor €{floor/1e6:,.0f}mn); a masked quarter has no score")
+
+        # A score that moves against its most legible input is the shape a sign
+        # error takes, and this project has shipped one. The latest quarter's raw
+        # factor value, its point-in-time rank and its weight are printed so a
+        # reading can be checked against its parts rather than trusted.
+        if len(live):
+            at = live.index[-1]
+            window = int(pct_cfg["window_quarters"])
+            for name in ranks.columns:
+                print(f"      {name:<26} raw {factors.loc[at, name]:>9.4f}  "
+                      f"rank {ranks.loc[at, name]:>5.2f}  "
+                      f"weight {weights.loc[at, name]:>5.2f}  "
+                      f"contributes {scored.loc[at, f'contrib_{name}']:>5.1f}")
+                # A percentile rank measures a reading against the country's OWN
+                # recent behaviour, so a rank above 50 on a falling bill share is
+                # not necessarily wrong — it can mean "falling less than usual".
+                # The trailing distribution the rank was taken against is printed
+                # so that reading can be checked instead of argued about.
+                trailing = factors[name].loc[:at].tail(window).dropna()
+                if len(trailing) > 1:
+                    d = trailing.quantile([0, 0.25, 0.5, 0.75, 1.0])
+                    negative = float((trailing < 0).mean())
+                    print(f"        trailing {len(trailing)}q: "
+                          f"min {d.iloc[0]:+.4f}  p25 {d.iloc[1]:+.4f}  "
+                          f"med {d.iloc[2]:+.4f}  p75 {d.iloc[3]:+.4f}  "
+                          f"max {d.iloc[4]:+.4f}  ({negative:.0%} negative)")
+
+    combined = pd.concat(frames, ignore_index=True)
+    combined["retrieval_date"] = pd.Timestamp.now("UTC")
+
+    # The variant is what stops these numbers being read against the US score, so
+    # its absence is a data-integrity failure rather than a cosmetic one.
+    if combined["variant"].isna().any():
+        raise ValueError("scored rows are missing the variant label")
+
+    # No quality event is recorded for the narrowness of this variant. The quality
+    # log's event types are a closed vocabulary of things that went WRONG with a
+    # feed, and a quantity-only score is not a defect — it is the measurement.
+    # What stops it being misread is the `variant` column on every row, which is a
+    # stronger guarantee than a log line anyone can fail to read.
+    return combined
+
+
 def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     """Fiscal Duration Shift Score, from tables the other builders produced.
 
@@ -522,6 +834,9 @@ BUILDERS = {
     "wam": build_wam,
     "term_premium": build_term_premium,
     "rates": build_rates,
+    "euro_debt": build_euro_debt,
+    # After euro_debt: it reads what that builder wrote.
+    "euro_score": build_euro_score,
     # Last: it reads what the others wrote.
     "score": build_score,
 }
@@ -578,7 +893,8 @@ def main() -> int:
                     "wam": ("observation_date", "mspd"),
                     "term_premium": ("date", "nyfed_acm"),
                     "auctions": ("auction_date", "auctions"),
-                    "rates": ("date", "fred_daily")}
+                    "rates": ("date", "fred_daily"),
+                    "euro_debt": ("observation_date", "eurostat_quarterly")}
     for name, table in built.items():
         column, threshold_key = date_columns.get(name, (None, None))
         if column is None or column not in table.columns:
