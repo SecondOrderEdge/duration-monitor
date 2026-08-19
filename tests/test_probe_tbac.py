@@ -263,3 +263,18 @@ def test_an_unrecognised_document_is_not_sorted_ahead_of_prose():
     unknown = {"url": "/x/misc.pdf", "label": "misc"}
     minutes = {"url": "/news/press-releases/x", "label": "TBAC Minutes"}
     assert read_order(minutes) < read_order(unknown)
+
+
+def test_stray_digits_in_a_url_are_not_reported_as_a_year():
+    """The live report claimed coverage of 1922 and 2063."""
+    assert year_of({"label": "2nd Quarter", "url": "https://x/files/1922-doc.pdf"}) is None
+    assert year_of({"label": "", "url": "https://x/2063xyz"}) is None
+
+
+def test_an_undated_press_release_is_honestly_unknown():
+    """TBAC minutes publish labelled only '2nd Quarter'. Unknown is the answer."""
+    assert year_of({"label": "2nd Quarter", "url": "https://x/news/press-releases/jy0909"}) is None
+
+
+def test_a_real_year_in_the_label_wins_over_url_digits():
+    assert year_of({"label": "2011 - 3rd Quarter", "url": "https://x/files/276/a.pdf"}) == "2011"

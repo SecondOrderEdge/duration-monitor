@@ -249,18 +249,26 @@ def links_from(base_url: str, raw: bytes) -> tuple[list[dict], list[dict]]:
     return documents, indexes
 
 
+# Nothing outside this range is a publication year. Without the bound, YEAR
+# matched stray digit runs in URLs and the live report claimed coverage of
+# "1922" and "2063" — a coverage table that is itself wrong is worse than none,
+# because the whole point of it is to let a reader weigh the verdict.
+PLAUSIBLE_YEARS = range(1990, 2031)
+
+
 def year_of(entry: dict) -> str | None:
     """Best guess at which year a document belongs to, for coverage reporting.
 
-    Guessed, not authoritative — it reads the label and URL. Coverage stated from
-    a guess is still far better than coverage left unstated, which is how the
-    first run reported seventeen documents without revealing they were all one
-    quarter.
+    Guessed, not authoritative. The label is preferred over the URL because a
+    label like "2011 - 3rd Quarter" is a real date while a URL may just contain
+    digits. Returns None rather than a guess when nothing plausible is present:
+    TBAC minutes publish as press releases labelled only "2nd Quarter", with no
+    year anywhere, and "unknown" is the honest answer for those.
     """
     for text in (entry.get("label") or "", entry["url"]):
-        years = YEAR.findall(text)
-        if years:
-            return max(years)
+        plausible = [y for y in YEAR.findall(text) if int(y) in PLAUSIBLE_YEARS]
+        if plausible:
+            return max(plausible)
     return None
 
 

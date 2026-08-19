@@ -98,6 +98,26 @@ jobs:
         # has no use for a PDF parser and should not carry one.
         if: inputs.only == '' || inputs.only == 'tbac'
         run: |
+          # NOT weekly. This crawls ~80 documents off Treasury's own web server
+          # over fifteen minutes, and the claim it checks is now verified and
+          # changes rarely — running that every Monday is disproportionate to
+          # what it can learn and impolite to someone else's infrastructure.
+          #
+          # Scheduled runs therefore fire only in the first week of a refunding
+          # month (Feb/May/Aug/Nov), which is TBAC's own publication cycle: the
+          # cadence is set by when new minutes can exist, not by the workflow
+          # this step happens to live in. An explicit dispatch always runs.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            MONTH=$(date -u +%m); DAY=$(date -u +%d)
+            case "$MONTH" in
+              02|05|08|11) ;;
+              *) echo "Not a refunding month; skipping the TBAC probe." | tee -a probe_stdout.txt; exit 0 ;;
+            esac
+            if [ "$DAY" -gt 07 ]; then
+              echo "Past the first week of the refunding month; skipping." | tee -a probe_stdout.txt
+              exit 0
+            fi
+          fi
           pip install -r requirements-probe.txt
           python -u scripts/probe_tbac.py | tee -a probe_stdout.txt
 
