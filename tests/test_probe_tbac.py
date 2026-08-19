@@ -14,7 +14,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from scripts.probe_tbac import (classify_outcome, clean_html, find_claims,
-                                links_from, text_of, year_of)
+                                links_from, looks_like_chart_axis, text_of,
+                                year_of)
 
 
 def test_a_stated_range_after_the_word_bill_is_found():
@@ -148,3 +149,82 @@ def test_a_partial_run_is_not_reported_as_a_clean_not_found():
     # The escalation to PARTIAL happens in main() against stopped_on_budget;
     # what matters here is that the plain verdict already points at coverage.
     assert "coverage_by_year" in detail
+
+
+# --------------------------------------------------------------------------- #
+# Chart-axis false positives — six of them survived into a published verdict
+# --------------------------------------------------------------------------- #
+
+# Verbatim from the live run that produced the false positive, so the fixture
+# cannot drift into something the regex happens not to match — which is how the
+# first version of this test passed while asserting nothing.
+AXIS = ("Percentage Breakdown of Quarterly Marketable Issuance Fiscal Year -25-25 "
+        "I 05 II III IV I 06 II III IV Treasury has reduced reliance on bill "
+        "financing over the past calendar year, moving from 84% in December 2008 "
+        "to 70% in 15% 20% 25% 4 -20 -15 -10 -5 25 -20 -15 -10 -5 30% 90% 100%")
+
+
+def test_the_axis_fixture_is_not_vacuous():
+    """Guards the guard: an AXIS that matches nothing would prove nothing."""
+    assert "2008 to 70%" in AXIS
+
+
+def test_a_year_fragment_is_not_paired_with_a_percentage():
+    """The live [8, 70]: `\\d{1,2}` matched '08' inside '2008'."""
+    assert not [h for h in find_claims(AXIS) if h["range"] == [8, 70]]
+
+
+# A tick-label run with no sentence in it. AXIS above deliberately mixes prose
+# with axis noise, because the live text did; density must NOT flag that one, and
+# the word-boundary fix is what handles it. This heuristic is the second line.
+PURE_AXIS = "-25 -20 -15 -10 -5 0 5 10 15 20 25 30% 40% 50% 60% 70% 80% 90% 100%"
+
+
+def test_a_tick_label_run_is_recognised_as_an_axis():
+    assert looks_like_chart_axis(PURE_AXIS)
+
+
+def test_prose_mixed_with_axis_noise_is_not_flagged_by_density():
+    """Density is deliberately conservative: AXIS carries a real sentence.
+
+    Flagging it would discard the surrounding prose along with the noise, and
+    the false positive it once produced is already handled by requiring word
+    boundaries around the numbers.
+    """
+    assert not looks_like_chart_axis(AXIS)
+
+
+def test_ordinary_prose_is_not_mistaken_for_an_axis():
+    assert not looks_like_chart_axis(
+        "The Committee recommends that bills be maintained in a range of 15 to "
+        "20 percent of marketable debt outstanding, consistent with prior guidance."
+    )
+
+
+def test_an_axis_run_does_not_produce_a_confirmed_band():
+    """The exact false positive: 15% and 20% adjacent in extracted tick labels."""
+    hits = find_claims(AXIS)
+    assert not any(h["matches_configured_band"] for h in hits)
+    assert all(h["rejected"] for h in hits)
+
+
+def test_a_descending_pair_is_rejected():
+    """`[20, 10]` was reported as a range by the first bounded run."""
+    hits = find_claims("bills 20 percent to 10 percent")
+    assert hits and hits[0]["rejected"] == "descending pair; a range runs upward"
+
+
+def test_rejected_matches_are_kept_and_labelled_not_dropped():
+    """An over-aggressive filter must be visible in the evidence, not invisible."""
+    hits = find_claims("bills 20 percent to 10 percent, and bills 30 to 25 percent")
+    assert hits, "rejected matches are still returned so the filter can be audited"
+    assert all(h["rejected"] for h in hits)
+
+
+def test_a_real_recommendation_still_survives_both_filters():
+    hits = find_claims(
+        "The Committee reiterated its view that Treasury bills should represent "
+        "between 15 and 20 percent of marketable debt outstanding over time."
+    )
+    assert hits and hits[0]["rejected"] is None
+    assert hits[0]["matches_configured_band"]

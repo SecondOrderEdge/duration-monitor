@@ -87,7 +87,12 @@ YEAR = re.compile(r"(?:19|20)\d{2}")
 # would have reported the claim absent when it was merely phrased differently —
 # a false NOT FOUND is the most damaging output this probe can produce.
 _SEP = r"(?:to|and|-|–|—)"
-_RANGE = rf"(\d{{1,2}})\s*(?:%|percent)?\s*{_SEP}\s*(\d{{1,2}})\s*(?:%|percent)"
+# \b matters more than it looks. Without it, `\d{1,2}` matches INSIDE a longer
+# number: "December 2008 to 70%" yielded the range [8, 70] in a live run, pairing
+# the tail of a year with a percentage and reporting it as a stated range.
+_RANGE = (
+    rf"\b(\d{{1,2}})\b\s*(?:%|percent)?\s*{_SEP}\s*\b(\d{{1,2}})\b\s*(?:%|percent)"
+)
 RANGE_NEAR_BILL = re.compile(
     rf"(?:bill|t-bill|treasury bill)[^.]{{0,250}}?{_RANGE}"
     rf"|{_RANGE}[^.]{{0,250}}?(?:bill|t-bill|treasury bill)",
@@ -229,20 +234,55 @@ def year_of(entry: dict) -> str | None:
     return None
 
 
+def looks_like_chart_axis(context: str) -> bool:
+    """Whether a match came out of a chart's tick labels rather than a sentence.
+
+    TBAC materials are largely chart decks, and PDF extraction turns an axis into
+    a run of bare numbers — "-25 -20 -15 -10 -5", "30 20 10 0". Adjacent numbers
+    in that soup look exactly like a stated range. The first bounded run returned
+    six "ranges" and every one was axis noise, which produced a confident verdict
+    about language nobody had written.
+
+    The test is density: prose about a range is mostly words.
+    """
+    if not context:
+        return False
+    digits = sum(character.isdigit() for character in context)
+    letters = sum(character.isalpha() for character in context)
+    return digits > 0.18 * len(context) or letters < 2 * digits
+
+
 def find_claims(text: str, *, window: int = 320) -> list[dict]:
-    """Every stated percentage range near the word 'bill', with context. Unjudged."""
+    """Stated percentage ranges near the word 'bill', with context. Unjudged.
+
+    Two filters, both learned from false positives rather than anticipated:
+    a range must ASCEND (a descending pair is a chart axis, not a range), and
+    its surroundings must read as prose rather than as extracted tick labels.
+    Rejected matches are still returned, flagged, so a filter that is too
+    aggressive is visible in the evidence instead of silently shrinking it.
+    """
     hits = []
     for match in RANGE_NEAR_BILL.finditer(text):
         groups = [g for g in match.groups() if g is not None]
+        if len(groups) < 2:
+            continue
+        low, high = int(groups[0]), int(groups[1])
         start = max(match.start() - window, 0)
+        context = text[start:match.end() + window].strip()
+
+        rejected = None
+        if high <= low:
+            rejected = "descending pair; a range runs upward"
+        elif looks_like_chart_axis(context):
+            rejected = "surroundings read as chart axis labels, not prose"
+
         hits.append({
-            "range": [int(groups[0]), int(groups[1])] if len(groups) >= 2 else None,
-            "matches_configured_band": (
-                len(groups) >= 2 and {int(groups[0]), int(groups[1])} == {15, 20}
-            ),
-            "context": text[start:match.end() + window].strip(),
+            "range": [low, high],
+            "matches_configured_band": {low, high} == {15, 20} and rejected is None,
+            "rejected": rejected,
+            "context": context,
         })
-        if len(hits) >= 25:
+        if len(hits) >= 40:
             break
     return hits
 
@@ -414,9 +454,16 @@ def main() -> int:
             extracted += 1
             record["mentions_bill_share"] = bool(BILL_SHARE_PHRASE.search(text))
             hits = find_claims(text)
-            if hits:
+            kept = [h for h in hits if not h["rejected"]]
+            if kept:
                 report["evidence"].append({"url": link["url"], "label": link["label"],
-                                           "hits": hits})
+                                           "hits": kept})
+            if len(hits) != len(kept):
+                report.setdefault("rejected_matches", []).append({
+                    "url": link["url"],
+                    "rejected": [{"range": h["range"], "why": h["rejected"]}
+                                 for h in hits if h["rejected"]],
+                })
         report["documents"].append(record)
         status = (f"{len(text):,} chars" if text else f"NO TEXT — {why_empty}")
         print(f"  {link['label'][:70] or link['url'][-60:]}: {status}", flush=True)
@@ -434,12 +481,19 @@ def main() -> int:
     print("\ncoverage of documents that yielded text, by year:")
     print("  " + "  ".join(f"{y}:{n}" for y, n in report["coverage_by_year"].items()))
     report["outcome"], report["detail"] = classify_outcome(extracted, report["evidence"])
-    if report.get("stopped_on_budget") and report["outcome"] == "NOT FOUND":
-        report["outcome"] = "NOT FOUND (PARTIAL)"
+    # Both NOT FOUND and OTHER RANGES FOUND assert the configured band is absent.
+    # A run that stopped early cannot assert that, and the first bounded run made
+    # exactly this mistake: it reported OTHER RANGES FOUND with 259 documents
+    # still unread, which reads as a conclusion and was a progress note.
+    if report.get("stopped_on_budget") and report["outcome"] in (
+        "NOT FOUND", "OTHER RANGES FOUND"
+    ):
+        report["outcome"] += " (PARTIAL)"
         report["detail"] += (
-            f" The run stopped on its time budget with "
-            f"{report['stopped_on_budget']['documents_unread']} document(s) unread, "
-            "so this is a partial search."
+            f" The run stopped on its time budget after "
+            f"{report['stopped_on_budget']['after_documents']} document(s) with "
+            f"{report['stopped_on_budget']['documents_unread']} unread, so it "
+            "cannot conclude the band is absent from the record."
         )
 
     _write(report)
