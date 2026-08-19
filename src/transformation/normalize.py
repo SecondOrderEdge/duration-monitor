@@ -447,3 +447,189 @@ def normalize_auctions(
     out.attrs["n_without_results"] = int((~out["has_results"]).sum())
 
     return out.sort_values("auction_date").reset_index(drop=True)
+
+
+# --------------------------------------------------------------------------- #
+# subtotal rows (validation inputs)
+# --------------------------------------------------------------------------- #
+
+# Treasury's own subtotal labels are not stable. Observed across 2001-2026:
+#   "Total Tresasury Floating Rate Notes"          (typo, 2016-07 to 2017-01)
+#   "Total Unmatured Treasury Floating Rate Notes." (trailing period, 2021)
+#   "Treasury Floating Rate Notes"                  (no prefix, 2016-04 to 06)
+#   "Matured Treasury Floating Rate Notes"          (no "Total", 2016-04)
+# and TIPS renamed twice: "Inflation-Indexed Notes/Bonds" → "Inflation-Protected
+# Securities" → "TIPS". Matching on exact strings silently loses whichever months
+# use a variant, so labels are normalised and then classified by pattern.
+_LABEL_TYPOS = {"Tresasury": "Treasury"}
+
+
+def parse_subtotal_label(label: str) -> tuple[str, str] | None:
+    """Classify a subtotal label as (kind, security_class), or None if it is neither.
+
+    `kind` is 'unmatured', 'matured' or 'total'.
+
+    Two ordering traps, both of which produce a confident wrong answer:
+    "Floating Rate Notes" contains "Notes", so FRN must be tested before NOTES;
+    and "Unmatured" contains "Matured", so the unmatured test must come first.
+    """
+    if not isinstance(label, str):
+        return None
+    text = label.strip().rstrip(".")
+    for wrong, right in _LABEL_TYPOS.items():
+        text = text.replace(wrong, right)
+    if not text or text.lower() in {"nan", "null", "none"}:
+        return None
+
+    # FRN before NOTES, TIPS before NOTES/BONDS.
+    if "Floating Rate" in text:
+        security_class = "FRN"
+    elif "Inflation" in text or "TIPS" in text:
+        security_class = "TIPS"
+    elif "Bills" in text:
+        security_class = "BILLS"
+    elif "Bonds" in text:
+        security_class = "BONDS"
+    elif "Notes" in text:
+        security_class = "NOTES"
+    else:
+        return None                      # not a class subtotal at all
+
+    if "Unmatured" in text:              # before the "Matured" test
+        kind = "unmatured"
+    elif "Matured" in text:
+        kind = "matured"
+    elif text.startswith("Total Treasury"):
+        kind = "total"
+    elif text.startswith("Treasury "):   # the 2016 bare variant
+        kind = "unmatured"
+    else:
+        return None
+
+    return kind, security_class
+
+
+def extract_subtotals(typed: pd.DataFrame) -> pd.DataFrame:
+    """Published per-class subtotals from mspd_table_3_market.
+
+    These are what the security-level detail is validated against: the detail must
+    reproduce the published UNMATURED subtotal exactly, since that is the same
+    universe by construction.
+    """
+    df = typed[typed["maturity_date"].isna()].copy()
+    parsed = df["security_class2_desc"].map(parse_subtotal_label)
+
+    df["kind"] = [p[0] if p else None for p in parsed]
+    df["security_class"] = [p[1] if p else None for p in parsed]
+
+    out = df.dropna(subset=["kind", "security_class"])[
+        ["record_date", "security_class", "kind", "outstanding_amt"]
+    ].copy()
+    out = out.rename(columns={"record_date": "observation_date"})
+    out["amount"] = out["outstanding_amt"] * MILLIONS
+    return out.drop(columns=["outstanding_amt"]).reset_index(drop=True)
+
+
+def unclassified_subtotal_rows(typed: pd.DataFrame) -> pd.DataFrame:
+    """Rows with no maturity date that are not recognisable subtotals.
+
+    Observed once: a bare CUSIP (`9127950`, 2003-11) sitting where a label belongs,
+    i.e. a security whose maturity date the source omitted. Excluding it from WAM
+    is right — there is no duration to compute without a maturity — but it is a
+    source defect and is surfaced rather than quietly dropped.
+    """
+    df = typed[typed["maturity_date"].isna()].copy()
+    parsed = df["security_class2_desc"].map(parse_subtotal_label)
+    return df[[p is None for p in parsed]].copy()
+
+
+# --------------------------------------------------------------------------- #
+# Treasury General Account
+# --------------------------------------------------------------------------- #
+
+# The same account under three successive names, and the endpoint restructured
+# under the third. Verified continuous: the 2021-09-30 closing balance (215,160)
+# is exactly the 2021-10-01 opening balance under the new name.
+TGA_LEGACY_ACCOUNTS = frozenset({
+    "Federal Reserve Account",              # 2005-10 → 2021-09
+    "Treasury General Account (TGA)",       # 2021-10 → 2022-04
+})
+TGA_MODERN_ACCOUNT = "Treasury General Account (TGA) Closing Balance"  # 2022-04 →
+
+
+def normalize_cash_balance(
+    typed: pd.DataFrame,
+    *,
+    country: str = "US",
+    currency: str = "USD",
+    source: str = "fiscaldata/operating_cash_balance",
+    retrieval_date: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    """Daily Treasury General Account closing balance, as one continuous series.
+
+    The column holding the balance CHANGES with the 2022-04-18 restructure, and
+    the trap is quiet in both directions.
+
+    Before the restructure there is one row per day and the closing balance is in
+    `close_today_bal`. From 2022-04-18 the endpoint publishes four rows per day —
+    opening balance, deposits, withdrawals, closing balance — as separate
+    `account_type` values, `close_today_bal` is null on every one of them, and the
+    figure lives in `open_today_bal`, which despite its name carries that line
+    item's value. So the closing-balance row's `open_today_bal` IS the close.
+
+    Reading `close_today_bal` throughout silently truncates the series at
+    2022-04. Reading `open_today_bal` throughout silently shifts every pre-2022
+    observation back by one day. Neither raises.
+    """
+    required = {"record_date", "account_type", "open_today_bal", "close_today_bal"}
+    missing = sorted(required - set(typed.columns))
+    if missing:
+        raise NormalizationError(f"operating_cash_balance frame is missing {missing}")
+
+    df = typed.copy()
+    df["account_type"] = df["account_type"].astype(str)
+
+    legacy = df[df["account_type"].isin(TGA_LEGACY_ACCOUNTS)][
+        ["record_date", "close_today_bal"]
+    ].rename(columns={"close_today_bal": "balance"})
+    modern = df[df["account_type"] == TGA_MODERN_ACCOUNT][
+        ["record_date", "open_today_bal"]
+    ].rename(columns={"open_today_bal": "balance"})
+
+    if legacy.empty and modern.empty:
+        raise NormalizationError(
+            "no Treasury General Account rows found under any known account_type; "
+            f"observed: {sorted(set(df['account_type']))[:6]}"
+        )
+
+    combined = (
+        pd.concat([legacy, modern], ignore_index=True)
+        .dropna(subset=["balance"])
+        .sort_values("record_date")
+        .drop_duplicates("record_date", keep="last")
+    )
+
+    out = pd.DataFrame(
+        {
+            "date": pd.to_datetime(combined["record_date"]),
+            "country": country,
+            "balance": combined["balance"] * MILLIONS,
+            "currency": currency,
+            "source": source,
+        }
+    )
+    out["retrieval_date"] = (
+        pd.Timestamp(retrieval_date) if retrieval_date is not None else pd.NaT
+    )
+    return out.reset_index(drop=True)
+
+
+def month_end_cash_balance(cash: pd.DataFrame) -> pd.Series:
+    """Month-end TGA balance, indexed by monthly Period."""
+    series = cash.set_index(pd.PeriodIndex(pd.to_datetime(cash["date"]), freq="M"))[
+        "balance"
+    ]
+    out = series.groupby(level=0).last()
+    out.index.name = "period"
+    out.name = "tga_balance"
+    return out

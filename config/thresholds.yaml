@@ -1,5 +1,19 @@
 # Every assumption the calculations depend on. Nothing here is hardcoded in src/.
 #
+# Three different kinds of claim live in this file, and they are marked
+# differently on purpose.
+#
+#   verified:   a FACT, confirmed against an official source or the data itself.
+#               The same standard sources.yaml uses, where it means "observed in
+#               a live response". Never set on a judgement.
+#   calibrated: a THRESHOLD set from the observed distribution, with the evidence
+#               recorded next to it. Defensible, but still a choice.
+#   convention: an INTERPRETIVE CHOICE with no external truth to check it
+#               against. Validated by backtest at best, never verified.
+#
+# Marking a convention `verified: true` would make it indistinguishable from a
+# confirmed field name, which is the one thing this project cannot afford.
+#
 # Values marked `verified: false` are starting points that must be confirmed or
 # tuned against real data before anything published depends on them.
 
@@ -26,7 +40,13 @@ issuance:
   # than reported. Units: USD millions of net issuance per month.
   min_abs_denominator_monthly_musd: 25000
   min_abs_denominator_quarterly_musd: 75000
-  verified: false               # calibrate against the real distribution
+  calibrated: 2026-08-18
+  # Measured against |net marketable borrowing| over 306 months: median 65,167mn,
+  # p25 29,011mn, p10 10,005mn. The 25,000 floor sits at the 22nd percentile and
+  # suppresses 67 of 306 months; the quarterly floor suppresses 25% of quarters.
+  # Roughly 38% of the median is a defensible "too small to divide by", but
+  # masking a fifth of the sample is a real cost and the number is a choice, not
+  # a fact — which is why this is `calibrated` and not `verified`.
 
   # TIPS excluded from the coupon aggregate: MSPD deltas absorb inflation
   # accretion, which is not issuance (Deviation D2). Revisit once the probe
@@ -45,16 +65,49 @@ issuance:
 # DATES BELOW ARE UNVERIFIED and must be checked against Treasury's own debt limit
 # record before use. Month granularity is deliberate: MSPD is monthly.
 debt_ceiling_episodes:
-  verified: false
-  source_to_confirm: https://fiscaldata.treasury.gov/  # plus Treasury debt limit letters
+  # The post-resolution bill surge is a mechanical rebuild of the Treasury General
+  # Account, not a decision to shorten the financing profile, and it is the most
+  # likely false positive in the system (Deviation D5). Rather than relying on
+  # these hand-entered dates alone, the score removes the change in cash balance
+  # from both sides of the funding ratio — both series are published officially,
+  # so it is a correction rather than an assumption.
+  #
+  # Measured effect on the 2023 resolution (Jun-Sep): bill share of net borrowing
+  # falls from 90.8% to 83.6% once the $608bn cash rebuild is removed, and the
+  # composite score falls from 66.7 to 60.2. It moderates the episode; it does
+  # not erase it. Even ex-cash, 2023 was genuinely bill-heavy — so 2023 is not a
+  # pure false positive and should not be treated as one.
+  cash_adjustment: true
+  verified: 2026-08-18
+  verified_method: >
+    Detected from Debt to the Penny rather than transcribed. A binding ceiling
+    has an objective signature: total public debt outstanding pins just below the
+    limit, so the range of daily readings over a trailing 20 business days
+    collapses. Episodes below are every run of at least 45 days where that range
+    stayed under $25bn, 2010-01 to 2026-08. The detected resolution dates match
+    the previously hand-entered ones to within about two weeks in every case.
+  verified_caveat: >
+    `pinned_from` is when debt actually stopped moving, which is LATER than when
+    the limit was reached and extraordinary measures began — typically by four to
+    six weeks. The hand-entered `binding_from` values approximated the latter and
+    are kept for comparison, still unverified. Use `pinned_from` for anything
+    quantitative; it is the part confirmed by data.
   episodes:
-    - {binding_from: 2011-05, resolved: 2011-08, note: unverified}
-    - {binding_from: 2013-05, resolved: 2013-10, note: unverified}
-    - {binding_from: 2015-03, resolved: 2015-11, note: unverified}
-    - {binding_from: 2017-03, resolved: 2017-09, note: unverified}
-    - {binding_from: 2019-03, resolved: 2019-08, note: unverified}
-    - {binding_from: 2021-08, resolved: 2021-12, note: unverified}
-    - {binding_from: 2023-01, resolved: 2023-06, note: unverified}
+    - {pinned_from: 2011-06-13, resolved: 2011-08-02, days: 50,  debt_tn: 14.34, prior_binding_from: 2011-05}
+    - {pinned_from: 2013-06-13, resolved: 2013-10-17, days: 126, debt_tn: 16.74, prior_binding_from: 2013-05}
+    - {pinned_from: 2015-03-18, resolved: 2015-11-02, days: 229, debt_tn: 18.15, prior_binding_from: 2015-03}
+    - {pinned_from: 2017-04-11, resolved: 2017-09-08, days: 150, debt_tn: 19.85, prior_binding_from: 2017-03}
+    - {pinned_from: 2019-03-28, resolved: 2019-08-02, days: 127, debt_tn: 22.03, prior_binding_from: 2019-03}
+    - {pinned_from: 2021-08-26, resolved: 2021-10-14, days: 49,  debt_tn: 28.43, prior_binding_from: 2021-08}
+    - {pinned_from: 2023-02-15, resolved: 2023-06-05, days: 110, debt_tn: 31.45, prior_binding_from: 2023-01}
+    # NOT PRESENT in the hand-entered list at all. A 144-day episode, the most
+    # recent one, inside the analysis window and affecting current readings.
+    - {pinned_from: 2025-02-13, resolved: 2025-07-07, days: 144, debt_tn: 36.22, prior_binding_from: null}
+  corrections_found: >
+    Two. The 2021 entry read "resolved 2021-12" and conflated two separate
+    events: the pinned period ended 2021-10-14 with the October short-term
+    extension, and December was a second, distinct raise. And the 2025 episode
+    was missing entirely.
 
 # --------------------------------------------------------------------------- #
 # WAM conventions (Deviation D9)
@@ -99,13 +152,30 @@ reference_levels:
   # it sits outside the range Treasury's own advisory committee recommends.
   bill_share_recommended_band: [0.15, 0.20]
   verified: false
-  source_to_confirm: TBAC recommended bill share range - cite the specific report
+  # STILL UNVERIFIED, and not verifiable from here. This is a claim about what a
+  # TBAC report says, so only that report can confirm it — no amount of Treasury
+  # data can. home.treasury.gov is outside this environment's egress allowlist
+  # (the API host api.fiscaldata.treasury.gov is inside it), so the document
+  # cannot be fetched. It is displayed as a shaded band on the bill share chart
+  # and stated as a reference, never used in any calculation, so the exposure is
+  # presentational — but it is the one number on the dashboard sourced to memory.
+  source_to_confirm: >
+    TBAC recommended bill share range. Cite the specific report and quarter;
+    the committee's language has shifted over time and "15-20%" may be a
+    paraphrase of guidance rather than a stated target.
 
 # --------------------------------------------------------------------------- #
 # Score interpretation (Phase 2 - must be validated by backtest)
 # --------------------------------------------------------------------------- #
 duration_shift_score_bands:
-  verified: false
+  # A CONVENTION, not a fact. There is nothing external these could be checked
+  # against — they define what the score's numbers are called. They are validated
+  # by backtest rather than verified: on the current history the bands separate
+  # the named episodes in the right order (2008 aggressive, 2011 extension, 2020
+  # meaningful shortening, 2021 back to extension), which is evidence they are
+  # not absurd, not evidence they are correct.
+  convention: true
+  validated_by_backtest: 2026-08-18
   bands:
     - {name: strong duration extension, from: 0,  to: 20}
     - {name: modest extension,          from: 20, to: 40}
@@ -116,21 +186,50 @@ duration_shift_score_bands:
 # Regimes are defined by measurable conditions, never by hand-applied labels.
 # All listed conditions must hold; the highest satisfied regime wins.
 regimes:
-  verified: false
-  green_normal:
-    duration_shift_score_below: 40
-  yellow_shortening:
-    duration_shift_score_at_least: 40
-    bill_share_12m_change_at_least: 0.01
-  orange_duration_pressure:
-    duration_shift_score_at_least: 60
-    bill_share_12m_change_at_least: 0.02
-    term_premium_10y_percentile_at_least: 70
-  red_fiscal_dominance_risk:
-    duration_shift_score_at_least: 80
-    bill_share_12m_change_at_least: 0.03
-    term_premium_10y_percentile_at_least: 85
-    long_end_auction_stress_at_least: 25
+  # The LEVELS are a convention: where green becomes yellow is a choice.
+  # The CORROBORATION thresholds are calibrated — they are percentiles of each
+  # input's own point-in-time history, so they cannot drift out of range or be
+  # unreachable the way the previous raw levels were.
+  convention: true
+  calibrated: 2026-08-18
+  # The score band sets the base regime. Bands partition 0-100 by construction,
+  # so every scored month is labelled — the previous scheme left 41% of months
+  # matching no regime at all, because green required a score below 40 while
+  # yellow required 40-or-above AND a bill-share condition, so readings in
+  # between fell through into nothing.
+  #
+  # Market-price evidence then sets a CEILING on how far the reading may
+  # escalate. It can cap a high score, never drop it into nothing: quantity
+  # evidence alone is enough to call shortening, but calling duration PRESSURE
+  # requires the market to agree. In 2020 the score was 66 on quantity while the
+  # term premium was falling — the Fed was absorbing the issuance — so that
+  # reads yellow, not orange. In 2023 both moved together and it reads orange.
+  # That distinction is the thesis, so the classifier has to be able to make it.
+  method: band_with_corroboration_ceiling
+  # Score thresholds for the four regime levels, stated here rather than reused
+  # from duration_shift_score_bands: there are FIVE interpretation bands and FOUR
+  # regimes, so mapping one onto the other shifts every label by a band and puts
+  # a score of 20 — strong duration extension — into yellow.
+  levels:
+    green_normal:              {score_at_least: 0}
+    yellow_shortening:         {score_at_least: 40}
+    orange_duration_pressure:  {score_at_least: 60}
+    red_fiscal_dominance_risk: {score_at_least: 80}
+  # Thresholds are PERCENTILES of each input's own point-in-time history, not
+  # raw levels. Raw levels cannot be calibrated, and one of them was unreachable:
+  # red previously required long_end_auction_stress >= 25 against a series whose
+  # maximum over twenty years is 22.4, so the most severe regime in the system
+  # could not fire in any state of the world, including 2008 and 2020.
+  # Percentile thresholds also travel across sovereigns for Phase 3, where a raw
+  # bill-share change means something different in Japan than in the US.
+  corroboration:
+    orange_duration_pressure:
+      term_premium_10y_percentile_at_least: 70
+      bill_share_12m_change_percentile_at_least: 60
+    red_fiscal_dominance_risk:
+      term_premium_10y_percentile_at_least: 85
+      bill_share_12m_change_percentile_at_least: 80
+      long_end_auction_stress_percentile_at_least: 90
 
 # --------------------------------------------------------------------------- #
 # Alerts (hooks designed now, wired in Phase 2)
@@ -152,6 +251,18 @@ validation:
   # Computed marketable total vs published MSPD total. A break is an error, not a
   # warning: a WAM that cannot reproduce the official total is not fit to publish.
   reconciliation_tolerance_pct: 0.1
+  # Known defects in Treasury's own published subtotals. Each is corroborated by
+  # two independent published figures before being listed here, and the check
+  # stays strict everywhere else rather than being loosened to accommodate them.
+  known_subtotal_defects:
+    - observation_date: 2012-06-30
+      security_class: BILLS
+      reason: >
+        "Total Unmatured Treasury Bills" reads 1,571,401.2775mn, understated by
+        exactly 25,000.5804mn. The security-level detail sums to 1,596,401.4mn,
+        which agrees with the same table's "Total Treasury Bills"
+        (1,596,401.8579mn) and with mspd_table_1 BILLS to within rounding. The
+        detail is right and the unmatured subtotal is wrong for this month.
   debt_to_penny_tolerance_pct: 0.1
   staleness_days:
     mspd: 45          # monthly, published around the 8th business day

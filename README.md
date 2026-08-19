@@ -11,9 +11,10 @@ credential at all.
 
 ## Status
 
-**Phase 1 is complete.** Eight pages, six of eight headline metrics live (the other
-two are the Phase 2 and Phase 3 scores), every source verified, and a scheduled
-refresh that fails loudly. Bill
+**Phase 1 complete; Phase 2 scoring live.** Seven of eight headline metrics render
+from official data — only the Phase 3 global score is outstanding. The Fiscal
+Duration Shift Score runs from 2007 and passes the brief's stated test: the 2020
+spike appears (61.9 → 79.4) and normalises through 2021 (43.7). Bill
 share, incremental bill funding, WAM, the 10y ACM term premium and long-end auction
 stress are all built end-to-end and reconciled against published figures. The two
 remaining cards are the Phase 2 composite score and the Phase 3 global score.

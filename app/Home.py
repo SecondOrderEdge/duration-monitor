@@ -122,6 +122,15 @@ if not processed_available("debt_outstanding"):
 
 debt = load_processed("debt_outstanding", _mtime(PROCESSED / "debt_outstanding.parquet"))
 
+has_score = processed_available("score")
+if has_score:
+    score_table = load_processed("score", _mtime(PROCESSED / "score.parquet"))
+    score_table["period"] = pd.PeriodIndex(score_table["period"], freq="M")
+    score_table = score_table.set_index("period").sort_index()
+    scored = score_table[score_table["score"].notna()]
+else:
+    score_table = scored = None
+
 has_tp = processed_available("term_premium")
 term_premium = (
     load_processed("term_premium", _mtime(PROCESSED / "term_premium.parquet"))
@@ -206,7 +215,15 @@ if has_stress:
 else:
     kpi(c6, "Long-end auction stress", "", unavailable=True,
         note="run scripts/refresh.py --only auctions")
-kpi(c7, "Fiscal Duration Shift Score", "", unavailable=True, note="Phase 2")
+if has_score and len(scored):
+    latest_score = scored["score"].iloc[-1]
+    prior = scored["score"].iloc[-13] if len(scored) > 13 else float("nan")
+    kpi(c7, "Fiscal Duration Shift Score", f"{latest_score:.0f}",
+        f"{latest_score - prior:+.0f} / 1y",
+        note=f"{scored['band'].iloc[-1]} · {scored.index[-1]}")
+else:
+    kpi(c7, "Fiscal Duration Shift Score", "", unavailable=True,
+        note="run scripts/refresh.py --only score")
 kpi(c8, "Global score", "", unavailable=True, note="Phase 3")
 
 st.divider()
@@ -346,12 +363,84 @@ if has_stress:
         "breakdown."
     )
 
+# ---- Chart 6: the composite score ----------------------------------------- #
+if has_score and len(scored):
+    st.divider()
+    st.markdown("##### Fiscal Duration Shift Score")
+
+    bands = config.load("thresholds")["duration_shift_score_bands"]["bands"]
+    shades = {"strong duration extension": "#2f5d47", "modest extension": "#3d5a4a",
+              "neutral": "#2a2f3c", "meaningful shortening": "#5a4433",
+              "aggressive shortening": "#6b3a34"}
+    sx = scored.index.to_timestamp()
+
+    fig6 = go.Figure()
+    for band in bands:
+        fig6.add_hrect(y0=band["from"], y1=band["to"], line_width=0, layer="below",
+                       fillcolor=shades.get(band["name"], MUTED), opacity=0.35)
+        fig6.add_annotation(x=sx[2], y=(band["from"] + band["to"]) / 2,
+                            text=band["name"], showarrow=False,
+                            font=dict(color=MUTED, size=10), xanchor="left")
+    fig6.add_trace(go.Scatter(x=sx, y=scored["score"], name="Duration Shift Score",
+                              line=dict(color=INK, width=2)))
+    fig6.update_yaxes(range=[0, 100])
+    st.plotly_chart(style(fig6, ytitle="score", height=420), use_container_width=True)
+
+    st.caption(
+        "Six factors, each a point-in-time percentile rank against its own past, "
+        "combined with weights derived from their correlation structure so a "
+        "factor that duplicates another earns less rather than being removed. "
+        "Weights are recomputed on an expanding window, so no reading uses "
+        "information that did not exist at the time."
+    )
+
+    # Factor contributions explain the current reading.
+    contribs = {c.replace("contrib_", ""): scored[c].iloc[-1]
+                for c in scored.columns if c.startswith("contrib_")}
+    weights_now = {c.replace("weight_", ""): scored[c].iloc[-1]
+                   for c in scored.columns if c.startswith("weight_")}
+    detail = pd.DataFrame({
+        "weight": pd.Series(weights_now),
+        "percentile": pd.Series({k.replace("rank_", ""): scored[k].iloc[-1]
+                                 for k in scored.columns if k.startswith("rank_")}),
+        "contribution": pd.Series(contribs),
+    }).dropna(how="all")
+    with st.expander(f"What makes up the current reading of {latest_score:.0f}"):
+        st.dataframe(detail.round(2), use_container_width=True)
+        st.caption(
+            "Contributions sum to the score. Weights are as at the latest month; "
+            "they change as history accumulates."
+        )
+
+    st.markdown("##### Backtest against the episodes the brief names")
+    EPISODES = {"2008 GFC": ("2008-09", "2009-03"),
+                "2011 debt ceiling": ("2011-05", "2011-10"),
+                "2013 taper": ("2013-05", "2013-12"),
+                "2020 pandemic": ("2020-03", "2020-09"),
+                "2021 normalisation": ("2021-01", "2021-12"),
+                "2023 SVB + QRA": ("2023-03", "2023-11"),
+                "latest 12m": ("2025-08", "2026-07")}
+    rows = []
+    for name, (a, b) in EPISODES.items():
+        seg = scored.loc[a:b]
+        if seg["score"].isna().all():
+            continue
+        rows.append({"episode": name, "mean": round(seg["score"].mean(), 1),
+                     "max": round(seg["score"].max(), 1),
+                     "modal band": seg["band"].mode().iloc[0]})
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.caption(
+        "The brief sets one falsifiable test: the 2020 spike must appear and "
+        "normalise through 2021. It does — 61.9 in 2019, peaking at 79.4 in 2020, "
+        "back to 43.7 across 2021. The 2023 reading is moderated but not erased by "
+        "removing the post-debt-ceiling cash rebuild: even ex-cash, bills financed "
+        "83.6% of net borrowing that summer."
+    )
+
 # ---- Not yet built -------------------------------------------------------- #
 st.divider()
 st.markdown("##### Not yet available")
-st.info(
-    "**Fiscal Duration Shift Score** is Phase 2 · **Global comparison** is Phase 3."
-)
+st.info("**Global comparison** is Phase 3.")
 
 with st.sidebar:
     st.markdown("### Provenance")

@@ -94,3 +94,70 @@ def reconcile_components_to_total(
         max_abs_diff=float(comparison["abs_diff"].max() or 0.0),
         max_abs_diff_pct=float(comparison["abs_diff_pct"].max() or 0.0),
     )
+
+
+def reconcile_detail_to_published_subtotal(
+    securities: pd.DataFrame,
+    subtotals: pd.DataFrame,
+    *,
+    tolerance_pct: float,
+    known_defects: list[dict] | None = None,
+) -> ReconciliationResult:
+    """Check the security-level detail against Treasury's own per-class subtotal.
+
+    This is the check that makes WAM publishable. WAM is computed from the
+    security rows, so if those rows do not reproduce the published unmatured total
+    for their class, the weights are wrong and the resulting average is wrong in a
+    way nothing downstream would reveal.
+
+    The comparison is against the UNMATURED subtotal, not the class total. Matured
+    but unredeemed securities remain outstanding debt and are inside the class
+    total — for FRNs in 2023-04 that was $85bn on $601bn — but they carry no
+    remaining maturity and so are correctly outside a duration calculation. A
+    check against the class total would fail for a legitimate reason and hide any
+    real break behind it.
+    """
+    detail = (
+        securities.groupby(["observation_date", "security_class"], observed=True)[
+            "amount_outstanding"
+        ]
+        .sum()
+        .rename("detail")
+    )
+    published = (
+        subtotals[subtotals["kind"] == "unmatured"]
+        .groupby(["observation_date", "security_class"], observed=True)["amount"]
+        .sum()
+        .rename("published")
+    )
+
+    joined = pd.concat([detail, published], axis=1).dropna()
+    diff = (joined["detail"] - joined["published"]).abs()
+    diff_pct = (diff / joined["published"].abs().where(joined["published"] != 0)) * 100
+
+    comparison = joined.reset_index()
+    comparison["abs_diff"] = diff.values
+    comparison["abs_diff_pct"] = diff_pct.values
+    comparison = comparison.rename(
+        columns={"detail": "sum_of_components", "published": "published_total"}
+    )
+    breaches = comparison[comparison["abs_diff_pct"] > tolerance_pct]
+
+    # Documented defects in Treasury's own published subtotals are excluded by
+    # exact (date, class), never by loosening the tolerance — which would blind
+    # the check everywhere else at the same time.
+    for defect in known_defects or []:
+        breaches = breaches[
+            ~(
+                (breaches["observation_date"] == pd.Timestamp(defect["observation_date"]))
+                & (breaches["security_class"].astype(str) == defect["security_class"])
+            )
+        ]
+
+    return ReconciliationResult(
+        n_periods=len(comparison),
+        tolerance_pct=tolerance_pct,
+        breaches=breaches,
+        max_abs_diff=float(comparison["abs_diff"].max() or 0.0),
+        max_abs_diff_pct=float(comparison["abs_diff_pct"].max() or 0.0),
+    )
