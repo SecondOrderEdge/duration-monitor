@@ -106,6 +106,60 @@ def kpi(col, label: str, value: str, delta: str | None = None,
                 st.caption(note)
 
 
+def stale_tables(tables: dict[str, str] | None = None) -> list[dict]:
+    """Processed tables whose newest observation is older than their own cadence.
+
+    Uses the same `check_staleness` the refresh pipeline uses, rather than
+    reimplementing the comparison — two copies of a staleness rule drift, and the
+    one on the page is the one a reader would trust.
+    """
+    from src import config
+    from src.validation.quality import check_staleness
+
+    thresholds = config.load("thresholds")["validation"]["staleness_days"]
+    tables = tables or {"debt_outstanding": "mspd", "term_premium": "nyfed_acm",
+                        "auctions": "auctions", "rates": "fred_daily"}
+
+    events = []
+    for table, key in tables.items():
+        if not available(table) or key not in thresholds:
+            continue
+        frame = load(table)
+        column = next((c for c in ("observation_date", "date", "auction_date")
+                       if c in frame.columns), None)
+        if column is None:
+            continue
+        event = check_staleness(
+            pd.to_datetime(frame[column]).max(),
+            source=table, endpoint=table, max_age_days=thresholds[key],
+        )
+        if event:
+            events.append(event)
+    return events
+
+
+def staleness_banner(tables: dict[str, str] | None = None) -> None:
+    """Warn on the page when the data behind it has stopped being refreshed.
+
+    The deployed app reads whatever the last committed refresh produced, so a
+    broken workflow does not break the app — it makes it quietly serve old
+    figures under a current-looking chart. The Data Quality page records
+    staleness events, but only when a refresh actually ran; a workflow that
+    stopped firing records nothing at all. This checks the age of the data
+    itself, where the reader is actually looking.
+    """
+    events = stale_tables(tables)
+    if not events:
+        return
+    lines = "\n- ".join(f"**{e['source']}** — {e['detail']}" for e in events)
+    st.warning(
+        "Some series have not been refreshed within their expected cadence, so the "
+        f"readings below may be out of date:\n\n- {lines}\n\nCadences differ by "
+        "source — MSPD publishes monthly, the DTS daily — so each is judged "
+        "against its own."
+    )
+
+
 def provenance(table: str, *, observation: str | None = None) -> None:
     """Sidebar provenance block. Every page states what it is showing and when."""
     df = load(table)

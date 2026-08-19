@@ -86,3 +86,34 @@ def test_a_feed_with_no_observations_at_all_is_an_error():
                             max_age_days=5, as_of=pd.Timestamp("2026-08-18"))
     assert event is not None
     assert "no observations" in event["detail"]
+
+
+# --------------------------------------------------------------------------- #
+# the banner the deployed app shows
+# --------------------------------------------------------------------------- #
+
+
+def test_the_app_and_the_pipeline_use_one_staleness_rule():
+    """The banner must not reimplement the comparison the pipeline already owns.
+
+    Two copies of a staleness rule drift, and the one on the page is the one a
+    reader would trust. This pins that `stale_tables` delegates rather than
+    duplicating: the app module imports the pipeline's checker.
+    """
+    import pathlib
+
+    shared = (pathlib.Path(__file__).resolve().parents[1] / "app" / "_shared.py").read_text()
+    assert "from src.validation.quality import check_staleness" in shared
+    assert "stale_tables" in shared
+
+
+def test_staleness_thresholds_cover_every_source_the_banner_watches():
+    """A table watched with no configured cadence would be silently skipped."""
+    import yaml
+    from src.config import CONFIG_DIR
+
+    configured = yaml.safe_load((CONFIG_DIR / "thresholds.yaml").read_text())[
+        "validation"
+    ]["staleness_days"]
+    watched = {"mspd", "nyfed_acm", "auctions", "fred_daily"}
+    assert watched <= set(configured), sorted(watched - set(configured))
