@@ -56,7 +56,8 @@ CANDIDATES: dict[str, dict] = {
                "on a harmonised basis across members.",
         "would_feed": "WAM proxy, maturity buckets",
         "urls": [
-            "https://sdmx.oecd.org/public/rest/dataflow/OECD",
+            # /dataflow/OECD 404s; the unqualified listing works but is 8.9MB.
+            "https://sdmx.oecd.org/public/rest/dataflow/OECD.GOV.GSD?format=sdmx-json",
             "https://sdmx.oecd.org/public/rest/dataflow",
         ],
     },
@@ -67,8 +68,11 @@ CANDIDATES: dict[str, dict] = {
                "the five Phase 3 sovereigns from a single publisher.",
         "would_feed": "bill share, net issuance, term premium inputs",
         "urls": [
-            "https://data-api.ecb.europa.eu/service/dataflow/ECB",
-            "https://data-api.ecb.europa.eu/service/data/SEC?lastNObservations=1&format=jsondata",
+            # Securities issues, euro area government, one series, one observation:
+            # enough to expose the dimension structure without pulling 18MB.
+            "https://data-api.ecb.europa.eu/service/data/SEC/Q.I9.1000.F33000.N.I.Z01.A?lastNObservations=1&format=jsondata",
+            "https://data-api.ecb.europa.eu/service/data/SEC?lastNObservations=1&format=jsondata&detail=serieskeysonly",
+            "https://data-api.ecb.europa.eu/service/datastructure/ECB/ECB_SEC1?format=sdmx-json",
         ],
     },
     "eurostat": {
@@ -77,8 +81,11 @@ CANDIDATES: dict[str, dict] = {
                "quarterly, harmonised across member states.",
         "would_feed": "bill share, debt composition",
         "urls": [
-            "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/dataflow/ESTAT",
-            "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/gov_10q_ggdebt?format=JSON&lang=EN",
+            # One country, one quarter. The dimension block is the same size
+            # whatever the filter, and it is the part that decides whether bill
+            # share and a maturity split are computable at all.
+            "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/gov_10q_ggdebt?format=JSON&lang=EN&geo=DE&time=2025-Q4",
+            "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/gov_10q_ggdebt?format=JSON&lang=EN&geo=IT&time=2025-Q4",
         ],
     },
     "uk_dmo": {
@@ -122,6 +129,48 @@ CANDIDATES: dict[str, dict] = {
 }
 
 
+def describe_dimensions(parsed: dict) -> dict | None:
+    """Name the axes of an SDMX-JSON or JSON-stat response and their categories.
+
+    This is the part that decides what Phase 3 can compute. A response is only
+    useful here if it splits government debt by MATURITY — without that there is
+    no bill share, and without per-security detail there is no WAM. Reading the
+    numbers tells you nothing about that; reading the dimensions tells you
+    everything, so they are recorded in full while the values are not.
+    """
+    out: dict = {}
+
+    # JSON-stat (Eurostat): dimension ids with a category label map each.
+    if isinstance(parsed.get("dimension"), dict):
+        for name, spec in parsed["dimension"].items():
+            if not isinstance(spec, dict):
+                continue
+            labels = ((spec.get("category") or {}).get("label")) or {}
+            out[name] = {
+                "label": spec.get("label"),
+                "n_categories": len(labels),
+                "categories": dict(list(labels.items())[:20]),
+            }
+        return out or None
+
+    # SDMX-JSON: structure.dimensions.series / .observation
+    structure = parsed.get("structure")
+    if isinstance(structure, dict):
+        groups = structure.get("dimensions") or {}
+        for where in ("series", "observation"):
+            for dim in groups.get(where, []) or []:
+                values = dim.get("values") or []
+                out[f"{where}:{dim.get('id')}"] = {
+                    "label": dim.get("name"),
+                    "n_categories": len(values),
+                    "categories": {
+                        v.get("id"): v.get("name") for v in values[:20]
+                    },
+                }
+        return out or None
+    return None
+
+
 def probe_url(url: str, timeout: int) -> dict:
     """Fetch one candidate URL and record what came back, without interpreting it."""
     entry: dict = {"url": url}
@@ -146,6 +195,9 @@ def probe_url(url: str, timeout: int) -> dict:
                 entry["json_top_level_keys"] = (
                     sorted(parsed)[:25] if isinstance(parsed, dict) else f"list[{len(parsed)}]"
                 )
+                dims = describe_dimensions(parsed)
+                if dims:
+                    entry["dimensions"] = dims
             except ValueError:
                 entry["json_parse_failed"] = True
     except Exception as exc:  # noqa: BLE001 - a probe reports failures, never raises
@@ -238,6 +290,14 @@ def write_markdown(report: dict, path: pathlib.Path) -> None:
                     lines.append(f"- redirected to `{result.get('final_url')}`")
                 if result.get("json_top_level_keys"):
                     lines.append(f"- JSON top-level keys: `{result['json_top_level_keys']}`")
+                for dim, spec in (result.get("dimensions") or {}).items():
+                    cats = ", ".join(
+                        f"`{k}`={v}" for k, v in list(spec["categories"].items())[:8]
+                    )
+                    lines.append(
+                        f"- **{dim}** ({spec['label']}) — {spec['n_categories']} "
+                        f"categories: {cats}"
+                    )
                 lines += ["", "```", result.get("sample", "")[:1200], "```", ""]
             else:
                 lines += [f"- **{result.get('status')}**: `{result.get('error', result.get('status_code'))}`"]
