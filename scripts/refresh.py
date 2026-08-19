@@ -601,10 +601,14 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
                   f"{len(live)} scored quarters from {live.index[0]}")
         else:
             print(f"    {country} [{variant_name}]: no scored quarters")
+        # min_factors is 3 of 3, so a masked funding ratio does not degrade the
+        # score, it removes it. That is the intended behaviour — a two-factor
+        # reading is a third measurement, not a weaker version of this one — but
+        # it is also the main reason the series has holes, so it is reported.
         print(f"      bill share {share.iloc[-1]:.1%}, "
-              f"12m change {share.diff(4).iloc[-1]:+.2%}, "
+              f"4q change {share.diff(4).iloc[-1]:+.2%}, "
               f"funding ratio masked in {masked} of {len(funding)} quarters "
-              f"(floor €{floor/1e6:,.0f}mn)")
+              f"(floor €{floor/1e6:,.0f}mn); a masked quarter has no score")
 
     combined = pd.concat(frames, ignore_index=True)
     combined["retrieval_date"] = pd.Timestamp.now("UTC")
@@ -614,12 +618,11 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
     if combined["variant"].isna().any():
         raise ValueError("scored rows are missing the variant label")
 
-    QUALITY_NOTES.append(
-        {"source": "euro_score", "endpoint": "duration_shift_score",
-         "event_type": "coverage", "severity": "info",
-         "detail": "DE/FR/IT scored on the quantity_only variant: three of six "
-                   "factors, quarterly, no regime. Not comparable to the US score."}
-    )
+    # No quality event is recorded for the narrowness of this variant. The quality
+    # log's event types are a closed vocabulary of things that went WRONG with a
+    # feed, and a quantity-only score is not a defect — it is the measurement.
+    # What stops it being misread is the `variant` column on every row, which is a
+    # stronger guarantee than a log line anyone can fail to read.
     return combined
 
 
