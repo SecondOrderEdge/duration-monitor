@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Restrict to one source (fiscaldata, fred, nyfed). Blank probes all."
+        description: "Restrict to one source (fiscaldata, fred, nyfed, phase3). Blank probes all."
         required: false
         default: ""
         type: string
@@ -26,6 +26,7 @@ on:
     paths:
       - config/sources.yaml
       - scripts/probe_sources.py
+      - scripts/probe_phase3.py
       - .github/workflows/probe-sources.yml
   schedule:
     # Weekly contract check: a field that disappears should surface on its own,
@@ -69,9 +70,21 @@ jobs:
         run: |
           set +e
           ARGS=""
-          if [ -n "${{ inputs.only }}" ]; then ARGS="--only ${{ inputs.only }}"; fi
+          case "${{ inputs.only }}" in
+            "")        ARGS="" ;;
+            phase3)    echo "skipping the Phase 1 contract probe" | tee probe_stdout.txt; exit 0 ;;
+            *)         ARGS="--only ${{ inputs.only }}" ;;
+          esac
           python scripts/probe_sources.py $ARGS | tee probe_stdout.txt
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Probe Phase 3 candidate sources
+        # Discovery, not a contract check, and it never fails the run: an
+        # unreachable publisher is a finding. It lives here because every Phase 3
+        # host is refused by the development environment's egress policy while
+        # the Phase 1 hosts are allowed, so this is the only place it can see them.
+        if: inputs.only == '' || inputs.only == 'phase3'
+        run: python scripts/probe_phase3.py | tee -a probe_stdout.txt
 
       - name: Summarise
         run: |

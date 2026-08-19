@@ -1,0 +1,25 @@
+{
+  "probe_timestamp_utc": "2026-08-19T00:45:53.892955+00:00",
+  "sources": {
+    "ecb": {
+      "publisher": "European Central Bank",
+      "why": "Securities issues statistics and government finance statistics cover Germany, France and Italy on one basis, which is three of the five Phase 3 sovereigns from a single publisher.",
+      "would_feed": "bill share, net issuance, term premium inputs",
+      "results": [
+        {
+          "url": "https://data-api.ecb.europa.eu/service/dataflow/ECB",
+          "status": "error",
+          "error": "ProxyError: HTTPSConnectionPool(host='data-api.ecb.europa.eu', port=443): Max retries exceeded with url: /service/dataflow/ECB (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+          "likely_cause": "network egress policy denial, not source failure"
+        },
+        {
+          "url": "https://data-api.ecb.europa.eu/service/data/SEC?lastNObservations=1&format=jsondata",
+          "status": "error",
+          "error": "ProxyError: HTTPSConnectionPool(host='data-api.ecb.europa.eu', port=443): Max retries exceeded with url: /service/data/SEC?lastNObservations=1&format=jsondata (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+          "likely_cause": "network egress policy denial, not source failure"
+        }
+      ],
+      "any_reachable": false
+    }
+  }
+}
