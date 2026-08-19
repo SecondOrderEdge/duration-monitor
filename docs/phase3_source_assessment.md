@@ -204,3 +204,53 @@ to matter more than it currently appears to.
    floor already implies. Recorded in `config/thresholds.yaml`.
 5. **Do the UK and Japan have structured endpoints at all?** Until that is
    answered, they are not Phase 3 candidates so much as Phase 3 aspirations.
+
+## The band labels do not mean what they say for this variant
+
+Found on the first live scoring run, and it is the most important thing on this
+page.
+
+Every factor in `quantity_only` is a **point-in-time percentile rank**, so it
+measures a quarter against the country's own recent behaviour, never against
+zero. The band names — "meaningful shortening", "aggressive shortening" — assert
+an absolute direction the score cannot support.
+
+France, 2026-Q1, from the live run:
+
+| factor | raw | rank | trailing 40q median | share negative |
+|---|---|---|---|---|
+| bill_share_trend | −0.0021 | 67.5 | −0.0057 | 70% |
+| incremental_bill_funding | +0.1234 | 57.5 | +0.1116 | 39% |
+| coupon_restraint | −0.9628 | 67.5 | −1.0438 | 100% |
+
+Score 63.4, band "meaningful shortening". **France's bill share fell 0.21pp over
+those four quarters.** It has fallen in 70% of the last 40 quarters, median 4q
+change −0.57pp. At −0.21pp France is extending more slowly than usual, ranks at
+the 68th percentile of its own decade, and the composite reports shortening.
+
+This is not a sign error. The distributions above confirm the convention is
+right: raw sits above the trailing median in each case, so a rank above 50 is
+arithmetically correct. Italy behaves identically (raw −0.0009 against a median
+of −0.0016, 68% negative, rank 60.0). The measurement is doing exactly what it
+was built to do — the *label* is making a claim the measurement never made.
+
+Why it bites here and not on the US score: six factors, two of them market
+prices, give the US composite an absolute anchor, and the regime classifier
+demands corroboration before escalating. A three-factor quantity-only score has
+no anchor at all. All three factors are relative, so the entire composite is
+relative, and a sovereign in a persistent extension trend will score above 50
+whenever it extends less than usual.
+
+Mitigation, pending a decision on the band names themselves: the raw unranked
+`bill_share`, `bill_share_4q_change` and a `direction_absolute` of
+extending/shortening/flat now ship on every scored row, along with
+`score_is_relative_to_own_history`. The app must show the absolute direction next
+to the score. A relative reading presented as an absolute one is precisely the
+failure the variant mechanism exists to prevent, and the variant label alone does
+not prevent it.
+
+Open: whether `duration_shift_score_bands` should carry variant-specific names,
+so a quantity-only reading reads as "shortening relative to its own norm" rather
+than "shortening". That is a naming decision with a real cost either way — one
+set of names is comparable across variants and misleading, the other is honest
+and makes the two scores harder to read side by side.

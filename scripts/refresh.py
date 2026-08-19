@@ -22,6 +22,7 @@ import argparse
 import pathlib
 import sys
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -591,14 +592,48 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
         out["country"] = country
         out["frequency"] = "Q"
         out["total_is_derived"] = True
+
+        # The band names assert an absolute direction the score cannot support
+        # here. Every factor in this variant is a POINT-IN-TIME PERCENTILE RANK,
+        # so it measures a quarter against the country's own recent behaviour, not
+        # against zero. France's bill share fell in 70% of the last 40 quarters
+        # (median 4q change -0.57pp); at -0.21pp it is falling more slowly than
+        # usual, ranks at the 68th percentile, and the composite lands on
+        # "meaningful shortening" while the bill share is going DOWN.
+        #
+        # On the US score two market-price factors anchor this and the regime
+        # classifier demands corroboration. A three-factor quantity-only score has
+        # no anchor at all — all three factors are relative — so the raw,
+        # unranked change ships alongside the score and the app is expected to
+        # show it. A relative reading presented as an absolute one is the failure
+        # mode this whole variant exists to avoid.
+        raw_change = share.diff(4).reindex(scored.index)
+        out["bill_share"] = share.reindex(scored.index).to_numpy()
+        out["bill_share_4q_change"] = raw_change.to_numpy()
+        out["direction_absolute"] = pd.Series(
+            np.select(
+                [raw_change.to_numpy() > 0, raw_change.to_numpy() < 0],
+                ["shortening", "extending"],
+                default="flat",
+            )
+        ).where(raw_change.notna().to_numpy())
+        out["score_is_relative_to_own_history"] = True
         frames.append(out)
 
         live = scored["score"].dropna()
         masked = int(funding.isna().sum())
         if len(live):
+            at_last = live.index[-1]
+            change = share.diff(4).get(at_last, float("nan"))
+            direction = ("shortening" if change > 0 else
+                         "extending" if change < 0 else "flat")
             print(f"    {country} [{variant_name}]: score {live.iloc[-1]:.1f} at "
-                  f"{live.index[-1]} ({scored.loc[live.index[-1], 'band']}), "
+                  f"{at_last} ({scored.loc[at_last, 'band']}), "
                   f"{len(live)} scored quarters from {live.index[0]}")
+            print(f"      ABSOLUTE direction: bill share is {direction} "
+                  f"({change:+.2%} over 4q). The score is RELATIVE to this "
+                  f"country's own history and can read high while the bill "
+                  f"share falls.")
         else:
             print(f"    {country} [{variant_name}]: no scored quarters")
         # min_factors is 3 of 3, so a masked funding ratio does not degrade the
