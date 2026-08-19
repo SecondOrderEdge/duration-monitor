@@ -63,6 +63,22 @@ TBAC_HINTS = re.compile(
     re.I,
 )
 
+# The first run searched 17 documents and every one was Q3 2026, because the
+# filter above demands a TBAC-ish WORD and the archive lists quarters by DATE —
+# "2015 - 2nd Quarter", "August 2011". Those links were dropped, coverage
+# collapsed to the current quarter, and a NOT FOUND over one quarter cannot
+# speak to a claim about what the committee has "long referenced".
+DATED_LINK = re.compile(r"(?:19|20)\d{2}|\b(?:1st|2nd|3rd|4th)\s+quarter\b", re.I)
+
+# Pages worth opening for MORE links rather than searching for text.
+INDEX_HINTS = re.compile(r"archive|quarterly-refunding|refunding-documents", re.I)
+
+# Anything under /system/files/ or ending .pdf is the artefact itself; press
+# releases carry the minutes and the report to the Secretary as HTML.
+DOCUMENT_HINTS = re.compile(r"/system/files/|\.pdf$|/news/press-releases/", re.I)
+
+YEAR = re.compile(r"(?:19|20)\d{2}")
+
 # Ranges stated as percentages, in either order relative to the word "bill".
 # Deliberately loose: a narrow pattern that found nothing would be indistinguishable
 # from an absent claim.
@@ -139,19 +155,48 @@ def text_of(record: dict) -> tuple[str, str | None]:
         return "", f"{type(exc).__name__}: {exc}"
 
 
-def links_from(base_url: str, raw: bytes) -> list[dict]:
-    out, seen = [], set()
+def links_from(base_url: str, raw: bytes) -> tuple[list[dict], list[dict]]:
+    """Split a page's links into documents to search and indexes to expand.
+
+    Returns (documents, indexes). A link qualifies as a document if it names a
+    TBAC artefact OR carries a date — the second test is what reaches the
+    per-quarter archive, which labels its entries by date and not by committee.
+    """
+    documents, indexes, seen = [], [], set()
     page = raw.decode("utf-8", errors="replace")
+    host = urllib.parse.urlparse(base_url).netloc
     for match in re.finditer(r'<a\b[^>]*href="([^"]+)"[^>]*>(.*?)</a>', page, re.I | re.S):
         href, label = match.group(1), clean_html(match.group(2))
-        absolute = urllib.parse.urljoin(base_url, href)
+        absolute = urllib.parse.urljoin(base_url, href).split("#")[0]
         if absolute in seen or not absolute.startswith("http"):
             continue
-        if not (TBAC_HINTS.search(label) or TBAC_HINTS.search(absolute)):
+        # Stay on Treasury's own site; an offsite link is not TBAC's word.
+        if urllib.parse.urlparse(absolute).netloc != host:
             continue
         seen.add(absolute)
-        out.append({"url": absolute, "label": label[:160]})
-    return out
+        entry = {"url": absolute, "label": label[:160]}
+        named = TBAC_HINTS.search(label) or TBAC_HINTS.search(absolute)
+        dated = DATED_LINK.search(label) or DATED_LINK.search(absolute)
+        if DOCUMENT_HINTS.search(absolute) and (named or dated):
+            documents.append(entry)
+        elif INDEX_HINTS.search(absolute) and (named or dated):
+            indexes.append(entry)
+    return documents, indexes
+
+
+def year_of(entry: dict) -> str | None:
+    """Best guess at which year a document belongs to, for coverage reporting.
+
+    Guessed, not authoritative — it reads the label and URL. Coverage stated from
+    a guess is still far better than coverage left unstated, which is how the
+    first run reported seventeen documents without revealing they were all one
+    quarter.
+    """
+    for text in (entry.get("label") or "", entry["url"]):
+        years = YEAR.findall(text)
+        if years:
+            return max(years)
+    return None
 
 
 def find_claims(text: str, *, window: int = 320) -> list[dict]:
@@ -198,14 +243,18 @@ def classify_outcome(documents_with_text: int, evidence: list[dict]) -> tuple[st
         )
     return "NOT FOUND", (
         f"Searched {documents_with_text} document(s) with extractable text and "
-        "found no stated percentage range near a mention of bills."
+        "found no stated percentage range near a mention of bills. Weigh this "
+        "against coverage_by_year: the claim is that TBAC has LONG referenced "
+        "the band, so a NOT FOUND spanning few years does not answer it."
     )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--timeout", type=int, default=45)
-    parser.add_argument("--max-documents", type=int, default=40)
+    parser.add_argument("--max-documents", type=int, default=400)
+    parser.add_argument("--max-indexes", type=int, default=60,
+                        help="archive pages to expand for links")
     parser.add_argument("--delay", type=float, default=1.0,
                         help="seconds between requests; this is someone else's server")
     args = parser.parse_args()
@@ -219,17 +268,52 @@ def main() -> int:
     }
 
     candidates: list[dict] = []
+    indexes: list[dict] = []
     for url in ENTRY_POINTS:
         record = fetch(url, args.timeout)
         payload = record.pop("_payload", None)
-        found = []
+        found, found_indexes = ([], [])
         if payload is not None:
-            found = links_from(record.get("final_url", url), payload)
+            found, found_indexes = links_from(record.get("final_url", url), payload)
             candidates.extend(found)
+            indexes.extend(found_indexes)
         record["links_found"] = len(found)
+        record["indexes_found"] = len(found_indexes)
         report["entry_points"].append(record)
         print(f"  {url}\n    {'ok' if record['fetched'] else record.get('error')}"
-              f" — {len(found)} candidate link(s)", flush=True)
+              f" — {len(found)} document link(s), {len(found_indexes)} index page(s)",
+              flush=True)
+        time.sleep(args.delay)
+
+    # Second hop. The archive is a page of pages: the entry points list years and
+    # quarters, and the documents hang off those. One level of expansion is what
+    # separates "the current quarter" from "the record".
+    seen_indexes: set[str] = {e["url"] for e in report["entry_points"]}
+    queue = [i for i in indexes if i["url"] not in seen_indexes][: args.max_indexes]
+    print(f"\nexpanding {len(queue)} index page(s) (cap {args.max_indexes})")
+    report["indexes_expanded"] = []
+    for index in queue:
+        if index["url"] in seen_indexes:
+            continue
+        seen_indexes.add(index["url"])
+        record = fetch(index["url"], args.timeout)
+        payload = record.pop("_payload", None)
+        found = []
+        if payload is not None:
+            found, deeper = links_from(record.get("final_url", index["url"]), payload)
+            candidates.extend(found)
+            # Deliberately not recursing further. Depth is where a crawl stops
+            # being a probe and starts being a mirror of someone else's site.
+            for entry in deeper:
+                if entry["url"] not in seen_indexes and len(queue) < args.max_indexes:
+                    seen_indexes.add(entry["url"])
+                    queue.append(entry)
+        record["links_found"] = len(found)
+        record["label"] = index["label"]
+        report["indexes_expanded"].append(record)
+        print(f"  {index['label'][:60] or index['url'][-55:]}: "
+              f"{len(found) if record['fetched'] else record.get('error')} document link(s)",
+              flush=True)
         time.sleep(args.delay)
 
     if not any(e["fetched"] for e in report["entry_points"]):
@@ -281,6 +365,15 @@ def main() -> int:
 
     report["documents_with_text"] = extracted
     report["documents_examined"] = len(ordered)
+
+    years: dict[str, int] = {}
+    for entry, doc in zip(ordered, report["documents"][-len(ordered):]):
+        if doc.get("characters_extracted"):
+            year = year_of(entry) or "unknown"
+            years[year] = years.get(year, 0) + 1
+    report["coverage_by_year"] = dict(sorted(years.items()))
+    print("\ncoverage of documents that yielded text, by year:")
+    print("  " + "  ".join(f"{y}:{n}" for y, n in report["coverage_by_year"].items()))
     report["outcome"], report["detail"] = classify_outcome(extracted, report["evidence"])
 
     _write(report)
@@ -301,13 +394,27 @@ def _write(report: dict) -> None:
         "`NOT FOUND` means the record was searched and the statement is absent.",
         "`NOT REACHED` means the search did not happen. They are not the same finding.",
         "",
+    ]
+    if report.get("coverage_by_year"):
+        lines += [
+            "## Coverage", "",
+            "Documents that yielded text, by year. **Read the verdict against "
+            "this.** The claim is that TBAC has *long* referenced the band, so a "
+            "`NOT FOUND` spanning a couple of years does not answer it.", "",
+            "| year | documents searched |", "|---|---|",
+        ]
+        lines += [f"| {year} | {count} |"
+                  for year, count in report["coverage_by_year"].items()]
+        lines.append("")
+    lines += [
         "## Entry points", "",
-        "| url | fetched | status | candidate links |", "|---|---|---|---|",
+        "| url | fetched | status | documents | indexes |", "|---|---|---|---|---|",
     ]
     for entry in report["entry_points"]:
         lines.append(
-            f"| `{entry['url'][:80]}` | {'yes' if entry['fetched'] else 'no'} | "
-            f"{entry.get('status', entry.get('error', ''))} | {entry.get('links_found', 0)} |"
+            f"| `{entry['url'][:70]}` | {'yes' if entry['fetched'] else 'no'} | "
+            f"{entry.get('status', entry.get('error', ''))} | "
+            f"{entry.get('links_found', 0)} | {entry.get('indexes_found', 0)} |"
         )
     if report.get("documents"):
         lines += ["", "## Documents examined", "",
