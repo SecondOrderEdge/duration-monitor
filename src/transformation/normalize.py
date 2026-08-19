@@ -633,3 +633,102 @@ def month_end_cash_balance(cash: pd.DataFrame) -> pd.Series:
     out.index.name = "period"
     out.name = "tga_balance"
     return out
+
+
+# --------------------------------------------------------------------------- #
+# Eurostat quarterly government debt (Phase 3, euro-area sovereigns)
+# --------------------------------------------------------------------------- #
+
+# ESA 2010 instrument codes. Only the two maturity classes are mapped: F3 is
+# their sum and would double-count, and loans and deposits are not securities.
+EUROSTAT_INSTRUMENT_MAP = {
+    "F31": "BILLS",       # short-term debt securities
+    "F32": "COUPONS",     # long-term debt securities
+}
+# The US table separates NOTES, BONDS, TIPS and FRN; Eurostat does not, so the
+# long-term class is called COUPONS rather than being split into names the source
+# cannot support. A schema that promised NOTES here would be inventing detail.
+
+EUROSTAT_CENTRAL_GOVERNMENT = "S1311"
+
+
+def normalize_eurostat_debt(
+    decoded: pd.DataFrame,
+    *,
+    sector: str = EUROSTAT_CENTRAL_GOVERNMENT,
+    unit: str = "MIO_EUR",
+    source: str = "eurostat/gov_10q_ggdebt",
+    retrieval_date: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    """Eurostat JSON-stat rows to the `debt_outstanding` schema.
+
+    Central government only, to match the US series, which is Treasury debt
+    rather than general government. Comparing a central-government bill share in
+    one country to a general-government one in another would be comparing
+    different denominators under one name.
+
+    There is no published total here, so TOTAL_MARKETABLE is the SUM of the two
+    maturity classes — the opposite of the US arrangement, where the published
+    total is carried independently precisely so the reconciliation check has
+    something to test against. That check is therefore not available for these
+    countries, and the derived total is flagged as derived rather than passed off
+    as published.
+    """
+    required = {"geo", "na_item", "sector", "unit", "time", "value"}
+    missing = sorted(required - set(decoded.columns))
+    if missing:
+        raise NormalizationError(f"Eurostat frame is missing {missing}")
+
+    df = decoded[
+        (decoded["sector"] == sector)
+        & (decoded["unit"] == unit)
+        & (decoded["na_item"].isin(EUROSTAT_INSTRUMENT_MAP))
+    ].copy()
+    if df.empty:
+        raise NormalizationError(
+            f"no rows for sector={sector!r}, unit={unit!r} and instruments "
+            f"{sorted(EUROSTAT_INSTRUMENT_MAP)}; observed sectors "
+            f"{sorted(decoded['sector'].unique())[:6]}"
+        )
+
+    df["security_class"] = df["na_item"].map(EUROSTAT_INSTRUMENT_MAP)
+    # Quarter labels are "2026-Q1"; period arithmetic downstream needs a real date.
+    df["observation_date"] = pd.PeriodIndex(
+        df["time"].str.replace("-", "", regex=False), freq="Q"
+    ).to_timestamp(how="end").normalize()
+
+    components = (
+        df.groupby(["observation_date", "geo", "security_class"], observed=True)["value"]
+        .sum(min_count=1)
+        .reset_index()
+    )
+
+    totals = (
+        components.groupby(["observation_date", "geo"], observed=True)["value"]
+        .sum(min_count=1)
+        .reset_index()
+        .assign(security_class="TOTAL_MARKETABLE")
+    )
+
+    combined = pd.concat([components, totals], ignore_index=True)
+
+    out = pd.DataFrame({
+        "observation_date": combined["observation_date"],
+        "publication_date": pd.NaT,
+        "country": combined["geo"],
+        "security_class": combined["security_class"].astype("category"),
+        "amount_outstanding": combined["value"] * MILLIONS,
+        "amount_basis": "NOMINAL",
+        "currency": "EUR",
+        "source": source,
+        # Flagged because the US total is published and this one is not: the
+        # reconciliation check that guards the US series cannot run here.
+        "total_is_derived": combined["security_class"] == "TOTAL_MARKETABLE",
+    })
+    out["amount_basis"] = out["amount_basis"].astype("category")
+    out["retrieval_date"] = (
+        pd.Timestamp(retrieval_date) if retrieval_date is not None else pd.NaT
+    )
+    return out.sort_values(["country", "observation_date", "security_class"]).reset_index(
+        drop=True
+    )

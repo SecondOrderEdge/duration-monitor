@@ -361,3 +361,79 @@ def test_score_bands_are_half_open_so_a_boundary_lands_upward():
              {"name": "meaningful shortening", "from": 60, "to": 80}]
     out = score_band(pd.Series([59.9, 60.0, 79.9]), bands)
     assert list(out) == ["neutral", "meaningful shortening", "meaningful shortening"]
+
+
+# --------------------------------------------------------------------------- #
+# score variants (Phase 3)
+# --------------------------------------------------------------------------- #
+
+from src.signals.duration_shift_score import comparable, resolve_variant  # noqa: E402
+
+VARIANT_CONFIG = {
+    "score_variants": {
+        "full": {"factors": ["a", "b", "c", "d", "e", "f"], "min_factors": 4,
+                 "comparable_with": ["full"]},
+        "quantity_only": {"factors": ["a", "b", "c"], "min_factors": 3,
+                          "comparable_with": ["quantity_only"]},
+    },
+    "country_variants": {"US": "full", "DE": "quantity_only"},
+}
+
+
+def test_a_country_with_no_variant_raises_rather_than_defaulting():
+    """Defaulting would score a sovereign on whatever factors happen to exist and
+    label the result as though it were the six-factor measurement."""
+    with pytest.raises(ValueError, match="no score variant configured"):
+        resolve_variant("JP", VARIANT_CONFIG)
+
+
+def test_variants_resolve_to_their_own_factor_set():
+    name, spec = resolve_variant("DE", VARIANT_CONFIG)
+    assert name == "quantity_only"
+    assert spec["min_factors"] == 3
+    assert "term_premium_10y_trend" not in spec["factors"]
+
+
+def test_quantity_only_and_full_are_not_comparable():
+    """Both are 0-100 and both look like scores, which is exactly the risk.
+
+    A quantity-only 70 was reached without any market-price evidence; a full 70
+    required it. Ranking them together reads as a comparison and is not one.
+    """
+    assert comparable("full", "full", VARIANT_CONFIG)
+    assert comparable("quantity_only", "quantity_only", VARIANT_CONFIG)
+    assert not comparable("quantity_only", "full", VARIANT_CONFIG)
+    assert not comparable("full", "quantity_only", VARIANT_CONFIG)
+
+
+def test_the_variant_is_carried_on_every_scored_row():
+    idx = pd.period_range("2020-01", periods=3, freq="M")
+    ranks = pd.DataFrame({"a": [70.0] * 3, "b": [70.0] * 3, "c": [70.0] * 3}, index=idx)
+    out = duration_shift_score(
+        ranks, pd.Series(1 / 3, index=list("abc")), min_factors=3,
+        variant="quantity_only",
+    )
+    assert (out["variant"] == "quantity_only").all()
+
+
+def test_the_shipped_config_maps_every_enabled_country_to_a_variant():
+    """A country enabled for ingestion with no variant would score unlabelled."""
+    import yaml
+    from src.config import CONFIG_DIR
+
+    weights = yaml.safe_load((CONFIG_DIR / "factor_weights.yaml").read_text())
+    countries = yaml.safe_load((CONFIG_DIR / "countries.yaml").read_text())["countries"]
+    enabled = {c for c, spec in countries.items() if spec.get("enabled")}
+    mapped = set(weights["country_variants"])
+    assert enabled <= mapped, f"enabled but unmapped: {sorted(enabled - mapped)}"
+
+
+def test_every_variant_factor_has_a_known_direction():
+    """A factor in a variant with no declared direction could be summed the wrong way."""
+    import yaml
+    from src.config import CONFIG_DIR
+
+    weights = yaml.safe_load((CONFIG_DIR / "factor_weights.yaml").read_text())
+    for name, spec in weights["score_variants"].items():
+        unknown = [f for f in spec["factors"] if f not in FACTOR_DIRECTION]
+        assert not unknown, f"variant {name} has undirected factors: {unknown}"

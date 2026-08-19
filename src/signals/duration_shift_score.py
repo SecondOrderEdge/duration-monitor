@@ -138,11 +138,47 @@ def expanding_weights(
     return pd.DataFrame(rows).T
 
 
+def resolve_variant(country: str, config: dict) -> tuple[str, dict]:
+    """Which score variant a country is scored under, and its definition.
+
+    A country with no variant configured raises rather than defaulting to the
+    full score. Defaulting would score a sovereign on whichever factors happened
+    to be present and label the result as though it were the six-factor
+    measurement — which is the one outcome the variant mechanism exists to stop.
+    """
+    variants = config["score_variants"]
+    mapping = config["country_variants"]
+    if country not in mapping:
+        raise ValueError(
+            f"no score variant configured for {country!r}; add it to "
+            f"country_variants (known: {sorted(mapping)}). Refusing to default: a "
+            "score built from whatever factors happen to exist is not a variant, "
+            "it is an unlabelled measurement."
+        )
+    name = mapping[country]
+    if name not in variants:
+        raise ValueError(f"country {country!r} maps to unknown variant {name!r}")
+    return name, variants[name]
+
+
+def comparable(variant_a: str, variant_b: str, config: dict) -> bool:
+    """Whether two variants' scores may be placed on the same axis.
+
+    Quantity-only and full are both 0-100 and both look like scores, which is
+    exactly why this has to be asked explicitly. A quantity-only 70 was reached
+    without any market-price evidence; a full 70 required it. Ranking them
+    together reads as a comparison and is not one.
+    """
+    allowed = config["score_variants"][variant_a].get("comparable_with", [variant_a])
+    return variant_b in allowed
+
+
 def duration_shift_score(
     ranks: pd.DataFrame,
     weights: pd.DataFrame | pd.Series,
     *,
     min_factors: int = DEFAULT_MIN_FACTORS,
+    variant: str | None = None,
 ) -> pd.DataFrame:
     """Combine ranked factors into the 0-100 score.
 
@@ -174,6 +210,10 @@ def duration_shift_score(
             "n_factors": n_available,
         }
     )
+    if variant is not None:
+        # Carried on every row, so a score can never be read without knowing what
+        # it was built from.
+        out["variant"] = variant
     # Contribution of each factor, so a reading can always be explained.
     for name in names:
         out[f"contrib_{name}"] = (

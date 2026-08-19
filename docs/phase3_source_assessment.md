@@ -138,7 +138,12 @@ how defensible they are:
    construction, and it throws away the market-price evidence that makes the
    thesis falsifiable. Not recommended.
 
-Option 1 with 2 pursued in parallel is the honest path. What must not happen is
+**Decision: option 1**, with 2 pursued in parallel. Implemented as score
+variants in `config/factor_weights.yaml`: `full` for the US and `quantity_only`
+for Germany, France and Italy, with the variant carried on every scored row and
+`comparable_with` declaring which variants may share an axis. A country with no
+configured variant raises rather than defaulting — a score built from whatever
+factors happen to exist is not a variant, it is an unlabelled measurement. What must not happen is
 scoring Japan on three factors and the US on six and putting both under one
 heading — the brief's own instruction is that country is a first-class dimension,
 and that has to include which inputs each country's number is built from.
