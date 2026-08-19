@@ -1,5 +1,5 @@
 {
-  "probe_timestamp_utc": "2026-08-19T00:58:03.434077+00:00",
+  "probe_timestamp_utc": "2026-08-19T01:42:19.797037+00:00",
   "sources": {
     "bis": {
       "publisher": "Bank for International Settlements",
@@ -22,7 +22,7 @@
           "content_type": "application/xml;charset=UTF-8",
           "content_length_bytes": 16687,
           "final_url": "https://stats.bis.org/api/v1/dataflow",
-          "sample": "<?xml version=\"1.0\" ?><mes:Structure xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:mes=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message\" xmlns:str=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure\" xmlns:com=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common\"><mes:Header><mes:ID>IDREF38e62c73-d7a2-499b-bac9-59db9f425b30</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-18T13:35:17Z</mes:Prepared><mes:Sender id=\"UNKNOWN\"></mes:Sender><mes:Receiver id=\"not_supplied\"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)\" isExternalReference=\"false\" agencyID=\"BIS\" id=\"BIS_REL_CAL\" isFinal=\"false\" version=\"1.0\"><com:Name xml:lang=\"en\">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package=\"datastructure\" agencyID=\"BIS\" id=\"BIS_RELEASE_CALENDAR\" version=\"1.0\" class=\"DataStructure\"></Ref></str:Structure></str:Dataflow><str:Dataflow urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)\" isExternalReference=\"false\" agencyID=\"BIS\" id=\"WS_CBPOL\" isFinal=\"false\" version=\"1.0\"><com:Name xml:lang=\"en\">Central bank policy rates</com:Name><com:Description xml:lang=\"en\">The interest rate which best captures the monetary authorities' policy intentions.</com:Description><str:Structure><Ref package=\"datastructure\" agencyID=\"BIS\" id=\"BIS_CBPOL\" version=\"1.0\" class=\"DataStructure\"></Ref></str:Structure></str:Dataflow><str:Dataflow u"
+          "sample": "<?xml version=\"1.0\" ?><mes:Structure xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:mes=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message\" xmlns:str=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure\" xmlns:com=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common\"><mes:Header><mes:ID>IDREF3c419daa-a15b-461e-a58e-626cbbc3688d</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-18T20:41:53Z</mes:Prepared><mes:Sender id=\"UNKNOWN\"></mes:Sender><mes:Receiver id=\"not_supplied\"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)\" isExternalReference=\"false\" agencyID=\"BIS\" id=\"BIS_REL_CAL\" isFinal=\"false\" version=\"1.0\"><com:Name xml:lang=\"en\">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package=\"datastructure\" agencyID=\"BIS\" id=\"BIS_RELEASE_CALENDAR\" version=\"1.0\" class=\"DataStructure\"></Ref></str:Structure></str:Dataflow><str:Dataflow urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)\" isExternalReference=\"false\" agencyID=\"BIS\" id=\"WS_CBPOL\" isFinal=\"false\" version=\"1.0\"><com:Name xml:lang=\"en\">Central bank policy rates</com:Name><com:Description xml:lang=\"en\">The interest rate which best captures the monetary authorities' policy intentions.</com:Description><str:Structure><Ref package=\"datastructure\" agencyID=\"BIS\" id=\"BIS_CBPOL\" version=\"1.0\" class=\"DataStructure\"></Ref></str:Structure></str:Dataflow><str:Dataflow u"
         },
         {
           "url": "https://www.bis.org/statistics/index.htm",
@@ -205,7 +205,7 @@
           "content_type": "application/vnd.sdmx.structure+xml;version=2.1",
           "content_length_bytes": 30851,
           "final_url": "https://data-api.ecb.europa.eu/service/datastructure/ECB/ECB_SEC1?format=sdmx-json",
-          "sample": "<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xml=\"http://www.w3.org/XML/1998/namespace\" xmlns:mes=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message\" xmlns:str=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure\" xmlns:com=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common\"><mes:Header><mes:ID>IREF010954</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-19T00:58:10Z</mes:Prepared><mes:Sender id=\"Unknown\"/><mes:Receiver id=\"not_supplied\"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)\" isExternalReference=\"false\" agencyID=\"ECB\" id=\"ECB_SEC1\" isFinal=\"false\" uri=\"https://www.ecb.europa.eu/vocabulary/stats/sec/1\" version=\"1.0\"><com:Name xml:lang=\"en\">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor\" id=\"DimensionDescriptor\"><str:Dimension urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ\" id=\"FREQ\" position=\"1\"><str:ConceptIdentity><Ref maintainableParentID=\"ECB_CONCEPTS\" package=\"conceptscheme\" maintainableParentVersion=\"1.0\" agencyID=\"ECB\" id=\"FREQ\" class=\"Concept\"/></str:ConceptIdentity><str:LocalRepresentation><str:Enumeration><Ref package=\"codelist\" agencyID=\"ECB\" id=\"CL_FREQ\" version=\"1.0\" class=\"Codelist\"/></str:Enumeration><"
+          "sample": "<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xml=\"http://www.w3.org/XML/1998/namespace\" xmlns:mes=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message\" xmlns:str=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure\" xmlns:com=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common\"><mes:Header><mes:ID>IREF037456</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-19T01:42:28Z</mes:Prepared><mes:Sender id=\"Unknown\"/><mes:Receiver id=\"not_supplied\"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)\" isExternalReference=\"false\" agencyID=\"ECB\" id=\"ECB_SEC1\" isFinal=\"false\" uri=\"https://www.ecb.europa.eu/vocabulary/stats/sec/1\" version=\"1.0\"><com:Name xml:lang=\"en\">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor\" id=\"DimensionDescriptor\"><str:Dimension urn=\"urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ\" id=\"FREQ\" position=\"1\"><str:ConceptIdentity><Ref maintainableParentID=\"ECB_CONCEPTS\" package=\"conceptscheme\" maintainableParentVersion=\"1.0\" agencyID=\"ECB\" id=\"FREQ\" class=\"Concept\"/></str:ConceptIdentity><str:LocalRepresentation><str:Enumeration><Ref package=\"codelist\" agencyID=\"ECB\" id=\"CL_FREQ\" version=\"1.0\" class=\"Codelist\"/></str:Enumeration><"
         }
       ],
       "any_reachable": true
@@ -469,7 +469,7 @@
           "status": "ok",
           "status_code": 200,
           "content_type": "text/html",
-          "content_length_bytes": 21911,
+          "content_length_bytes": 21912,
           "final_url": "https://www.mof.go.jp/english/policy/jgbs/index.html",
           "sample": "<!DOCTYPE html>\n<html lang=\"en\">\n\n\n<head prefix=\"og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#\">\n  <!-- meta -->\n  <meta charset=\"UTF-8\">\n  <meta name=\"robots\" content=\"index,follow\">\n  <meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <meta name=\"format-detection\" content=\"telephone=no\">\n  <meta name=\"copyright\" content=\"Copyright (C) Ministry of Finance, The Japanese Government\" />\n  <meta name=\"description\" content=\"Japanese Government Bonds\" />\n  <meta name=\"keywords\" content=\"Japanese Government Bonds\" />\n  <meta name=\"date\" content=\"2026-05-29\" />\n\n  <!-- og -->\n  <meta property=\"og:title\" content=\"Japanese Government Bonds : Ministry of Finance\" />\n  <meta property=\"og:type\" content=\"article\" />\n  <meta property=\"og:url\" content=\"https://www.mof.go.jp/english/policy/jgbs/index.html\" />\n  <meta property=\"og:image\" content=\"https://www.mof.go.jp/english/common/images/og_img.png\" />\n  <meta property=\"og:site_name\" content=\"Ministry of Finance\" />\n  <meta property=\"fb:app_id\" content=\"253099528071523\" />\n  <title>Japanese Government Bonds : Ministry of Finance</title>\n\n  <!-- icon -->\n  <link rel=\"shortcut icon\" href=\"/favicon.ico\">\n  <link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\">\n\n  <!-- seo -->\n  <link rel=\"canonical\" href=\"https://www.mof.go.jp/english/policy/jgbs/index.html\">\n\n  <!-- stylesheet -->\n  <link rel=\"stylesheet\" href=\"/english/comm"
         },
@@ -478,7 +478,7 @@
           "status": "ok",
           "status_code": 200,
           "content_type": "text/html",
-          "content_length_bytes": 46460,
+          "content_length_bytes": 46477,
           "final_url": "https://www.mof.go.jp/",
           "sample": "\ufeff<!DOCTYPE html>\n<html lang=\"ja\">\n\n<head prefix=\"og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#\">\n  <!-- meta -->\n  <meta charset=\"UTF-8\">\n  <meta name=\"robots\" content=\"index,follow\">\n  <meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <meta name=\"format-detection\" content=\"telephone=no\">\n  <meta name=\"copyright\" content=\"Copyright (C) \u8ca1\u52d9\u7701 Ministry of Finance, The Japanese Government\" />\n  <meta name=\"description\" content=\"\u8ca1\u52d9\u7701\u30c8\u30c3\u30d7\u30da\u30fc\u30b8\" />\n  <meta name=\"keywords\" content=\"\u8ca1\u52d9\u7701,MOF,Ministry of Finance Japan,\u30c8\u30c3\u30d7\u30da\u30fc\u30b8,\u4e88\u7b97,\u6c7a\u7b97,\u8ca1\u653f,\u7a0e\u5236,\u56fd\u50b5,\u95a2\u7a0e,\u56fd\u5eab,\u901a\u8ca8,\u56fd\u6709\u8ca1\u7523,\u8ca1\u653f\u6295\u878d\u8cc7,\u653f\u7b56\u91d1\u878d,\u305f\u3070\u3053,\u5869\" />\n  <meta name=\"date\" content=\"2026-07-29\" />\n\n  <!-- og -->\n  <meta property=\"og:title\" content=\"\u8ca1\u52d9\u7701\u30db\u30fc\u30e0\u30da\u30fc\u30b8\" />\n  <meta property=\"og:type\" content=\"website\" />\n  <meta property=\"og:url\" content=\"https://www.mof.go.jp/index.htm\" />\n  <meta property=\"og:image\" content=\"https://www.mof.go.jp/common/images/og_img.png\" />\n  <meta property=\"og:site_name\" content=\"\u8ca1\u52d9\u7701\" />\n  <meta property=\"fb:app_id\" content=\"253099528071523\" />\n  <title>\u8ca1\u52d9\u7701</title>\n\n  <!-- icon -->\n  <link rel=\"shortcut icon\" href=\"/favicon.ico\">\n  <link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\">\n\n  <!-- seo -->\n  <link rel=\"canonical\" href=\"https://www.mof.go.jp/index.htm\">\n\n  <!-- stylesheet -->\n  <"
         }
@@ -503,10 +503,10 @@
           "url": "https://sdmx.oecd.org/public/rest/dataflow",
           "status": "ok",
           "status_code": 200,
-          "content_type": "application/vnd.sdmx.structure+xml; version=2.1; charset=utf-8",
+          "content_type": "application/vnd.sdmx.structure+xml; charset=utf-8; version=2.1",
           "content_length_bytes": 8880150,
           "final_url": "https://sdmx.oecd.org/public/rest/dataflow",
-          "sample": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!--NSI Web Service v8.19.8.0-->\r\n<message:Structure xmlns:message=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message\" xmlns:structure=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure\" xmlns:common=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common\">\r\n  <message:Header>\r\n    <message:ID>IDREF14173</message:ID>\r\n    <message:Test>false</message:Test>\r\n    <message:Prepared>2026-08-19T02:58:24.0650964+02:00</message:Prepared>\r\n    <message:Sender id=\"Unknown\" />\r\n    <message:Receiver id=\"Unknown\" />\r\n  </message:Header>\r\n  <message:Structures>\r\n    <structure:Dataflows>\r\n      <structure:Dataflow id=\"SEEA_AEA_A\" agencyID=\"ESTAT\" version=\"1.4\" isFinal=\"true\">\r\n        <common:Annotations>\r\n          <common:Annotation>\r\n            <common:AnnotationType>NonProductionDataflow</common:AnnotationType>\r\n            <common:AnnotationText xml:lang=\"en\">true</common:AnnotationText>\r\n          </common:Annotation>\r\n        </common:Annotations>\r\n        <common:Name xml:lang=\"en\">Air Emissions Accounts</common:Name>\r\n        <common:Description xml:lang=\"en\">Air Emissions Accounts</common:Description>\r\n        <structure:Structure>\r\n          <Ref id=\"SEEAAIR\" version=\"1.4\" agencyID=\"ESTAT\" package=\"datastructure\" class=\"DataStructure\" />\r\n        </structure:Structure>\r\n      </structure:Dataflow>\r\n      <structure:Dataflow id=\"DF_SDG_GLC\" agencyID=\"IAEG-SDGs\" version=\"1.20\" isFinal=\"true\">\r\n        <common:Annotatio"
+          "sample": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<!--NSI Web Service v8.19.8.0-->\r\n<message:Structure xmlns:message=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message\" xmlns:structure=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure\" xmlns:common=\"http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common\">\r\n  <message:Header>\r\n    <message:ID>IDREF14928</message:ID>\r\n    <message:Test>false</message:Test>\r\n    <message:Prepared>2026-08-19T03:42:42.1928351+02:00</message:Prepared>\r\n    <message:Sender id=\"Unknown\" />\r\n    <message:Receiver id=\"Unknown\" />\r\n  </message:Header>\r\n  <message:Structures>\r\n    <structure:Dataflows>\r\n      <structure:Dataflow id=\"SEEA_AEA_A\" agencyID=\"ESTAT\" version=\"1.4\" isFinal=\"true\">\r\n        <common:Annotations>\r\n          <common:Annotation>\r\n            <common:AnnotationType>NonProductionDataflow</common:AnnotationType>\r\n            <common:AnnotationText xml:lang=\"en\">true</common:AnnotationText>\r\n          </common:Annotation>\r\n        </common:Annotations>\r\n        <common:Name xml:lang=\"en\">Air Emissions Accounts</common:Name>\r\n        <common:Description xml:lang=\"en\">Air Emissions Accounts</common:Description>\r\n        <structure:Structure>\r\n          <Ref id=\"SEEAAIR\" version=\"1.4\" agencyID=\"ESTAT\" package=\"datastructure\" class=\"DataStructure\" />\r\n        </structure:Structure>\r\n      </structure:Dataflow>\r\n      <structure:Dataflow id=\"DF_SDG_GLC\" agencyID=\"IAEG-SDGs\" version=\"1.20\" isFinal=\"true\">\r\n        <common:Annotatio"
         }
       ],
       "any_reachable": true
@@ -531,11 +531,58 @@
           "status_code": 200,
           "content_type": "text/html; charset=UTF-8",
           "content_length_bytes": 15238,
-          "final_url": "https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=344dfdc8-14cd-416c-851b-3c98e2a45b7a&ssb=73907252937&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=e3fa9020-bhbz-4545-a954-da103e3a53ce&ssk=support@shieldsquare.com&ssm=64142074420822758108301211419703&ssn=eee836ae96d689a8ca2962ffa695ecac47515e7d1439-ec09-4ccc-a06978&sso=ec3dba47-9b837786f066541041f5f06018e7dd3b0e2bd1190cde502a&ssp=94120618921787172176178718467480110&ssq=94740910110680654921501106727361446258253&ssr=MjAuMjIxLjY5LjIz&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJfX3V6bWYiOiI3ZjkwMDA1ZTdkMTQzOS1lYzA5LTRjY2MtYWE0Ny05YjgzNzc4NmYwNjYxLTE3ODcxMDExMDY0MjkwLTAwNDgzMjllYTY2NWM3MGFjYmYxMCIsInV6bXgiOiI3ZmMwMDBjNjIzZmM2Zi05YWIyLTQxOGUtYWEzMC1jNjMyMmE5ZDkxNzUxLTE3ODcxMDExMDY0MjkwLTAwMWExNGRkOTZkYjlhNjQ2MTAxMCIsInJkIjoiZG1vLmdvdi51ayJ9",
-          "sample": "<head><title>ShieldSquare Captcha</title><script type=\"text/javascript\">\n\twindow.SSJSInternal = 18155;\n\n\tvar __uzdbm_1 = \"5e7d1439-ec09-4ccc-aa47-9b837786f066\";\n\tvar __uzdbm_2 = \"ZTNmYTkwMjAtYmhiei00NTQ1LWE5NTQtZGExMDNlM2E1M2NlJDIwLjIyMS42OS4yMw==\";\n\t\n\t(function(w, d, e, u, c, g, a, b){\n\t\tw[\"SSJSConnectorObj\"] = w[\"SSJSConnectorObj\"] || {ss_cid : c, domain_info: g};\n\t\ta = d.createElement(e);\n\t\ta.async = true;\n\t\ta.src = u;\n\t\tb = d.getElementsByTagName(e)[0];\n\t\tb.parentNode.insertBefore(a, b);\n\t})(window,document,\"script\",\"https://cdn.perfdrive.com/aperture/aperture.js\",\"b8c3\",\"auto\");\n</script>\n\n<script type=\"text/javascript\">\nfunction _0x147a(){var _0x2ec979=['ecb5e100e5a9a3e7f6d1fd97512215282','mousemove','toGMTString','0xcvd','1976572igpWBa','touches','1993290amMtaY','block','2128497rXvxFu','Udr9HvhYUw','getTime','style','parentElement','5876928iktpYv',';\\x20path=/','8QVQoCR','height','6mLcKVK','mouseup','cssl','div','className','Enyf7MTcBK','27LqzsxS','cbfcl','DOMContentLoaded','indexOf','tagName','charCodeAt','display','8tqwifW','complete','substring','hsol','ssi','1114395tUAPUj','floor','cf_input','cbfm','length','hidden','outerHTML','cbfer','mousedown','split','opacity','83604qtrwiD','interactive','00000','csil','visible','value','random','touchmove','toString','vbe','trim','cbft','blk','location','csol','iid','clientY','join','changedTouches','visibility','Bdr9HvhYUw','Unyf7MTcBK','hcaptcha',';\\x20expires=','264VNJZSS','186838SghUiN','querySelector','splice','replace',"
+          "final_url": "https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=36bffb7a-ff41-4c07-8461-26c851d2ddaa&ssb=34092290427&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=f90bb68e-bhbz-4bd8-8df7-6da6c8bcf619&ssk=support@shieldsquare.com&ssm=09326992058325928106234465881719&ssn=1abf061563128a8022ec2f51ff009d64f18684ff5d47-1135-4992-b6cc87&sso=561a5fd1-f44fbe0984c89230a275d10221ed0c17fbe8f1574a23d588&ssp=34921242191787110481178713897773061&ssq=80059650376520605368703765770713167798159&ssr=NTIuMjUwLjIxMC42NA==&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJfX3V6bWYiOiI3ZjkwMDA4NGZmNWQ0Ny0xMTM1LTQ5OTItYmZkMS1mNDRmYmUwOTg0YzgxLTE3ODcxMDM3NjU0NjAwLTAwNDBhOWFjM2JmYmJmMjJiZDkxMCIsInJkIjoiZG1vLmdvdi51ayIsInV6bXgiOiI3ZmMwMDAyMDYzNjIyZi1jMTEzLTRkMzUtODYzMi0zYTUwZjk0Nzg1YWIxLTE3ODcxMDM3NjU0NjAwLTAwMWU0NmFmMzJmOGM4MjNlOWUxMCJ9",
+          "sample": "<head><title>ShieldSquare Captcha</title><script type=\"text/javascript\">\n\twindow.SSJSInternal = 18155;\n\n\tvar __uzdbm_1 = \"84ff5d47-1135-4992-bfd1-f44fbe0984c8\";\n\tvar __uzdbm_2 = \"ZjkwYmI2OGUtYmhiei00YmQ4LThkZjctNmRhNmM4YmNmNjE5JDUyLjI1MC4yMTAuNjQ=\";\n\t\n\t(function(w, d, e, u, c, g, a, b){\n\t\tw[\"SSJSConnectorObj\"] = w[\"SSJSConnectorObj\"] || {ss_cid : c, domain_info: g};\n\t\ta = d.createElement(e);\n\t\ta.async = true;\n\t\ta.src = u;\n\t\tb = d.getElementsByTagName(e)[0];\n\t\tb.parentNode.insertBefore(a, b);\n\t})(window,document,\"script\",\"https://cdn.perfdrive.com/aperture/aperture.js\",\"b8c3\",\"auto\");\n</script>\n\n<script type=\"text/javascript\">\nfunction _0x147a(){var _0x2ec979=['ecb5e100e5a9a3e7f6d1fd97512215282','mousemove','toGMTString','0xcvd','1976572igpWBa','touches','1993290amMtaY','block','2128497rXvxFu','Udr9HvhYUw','getTime','style','parentElement','5876928iktpYv',';\\x20path=/','8QVQoCR','height','6mLcKVK','mouseup','cssl','div','className','Enyf7MTcBK','27LqzsxS','cbfcl','DOMContentLoaded','indexOf','tagName','charCodeAt','display','8tqwifW','complete','substring','hsol','ssi','1114395tUAPUj','floor','cf_input','cbfm','length','hidden','outerHTML','cbfer','mousedown','split','opacity','83604qtrwiD','interactive','00000','csil','visible','value','random','touchmove','toString','vbe','trim','cbft','blk','location','csol','iid','clientY','join','changedTouches','visibility','Bdr9HvhYUw','Unyf7MTcBK','hcaptcha',';\\x20expires=','264VNJZSS','186838SghUiN','querySelector','splice','replace',"
         }
       ],
       "any_reachable": true
+    }
+  },
+  "ecb_coverage": {
+    "DE_shortterm_stock": {
+      "key": "M.DE.S131.F33100.N.1....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "DE_longterm_stock": {
+      "key": "M.DE.S131.F33200.N.1....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "DE_shortterm_netissues": {
+      "key": "M.DE.S131.F33100.N.4....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "FR_shortterm_stock": {
+      "key": "M.FR.S131.F33100.N.1....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "FR_longterm_stock": {
+      "key": "M.FR.S131.F33200.N.1....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "FR_shortterm_netissues": {
+      "key": "M.FR.S131.F33100.N.4....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "IT_shortterm_stock": {
+      "key": "M.IT.S131.F33100.N.1....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "IT_longterm_stock": {
+      "key": "M.IT.S131.F33200.N.1....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
+    },
+    "IT_shortterm_netissues": {
+      "key": "M.IT.S131.F33100.N.4....",
+      "first": "HTTP 400",
+      "last": "HTTP 400"
     }
   }
 }
