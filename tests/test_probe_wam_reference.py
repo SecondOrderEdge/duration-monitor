@@ -15,7 +15,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
-from scripts.probe_wam_reference import find_values
+from scripts.probe_wam_reference import find_values, term_mentions
 
 
 def test_a_value_in_months_is_recorded_as_months():
@@ -59,3 +59,22 @@ def test_a_chart_axis_does_not_yield_a_published_figure():
         "Average Maturity 0 12 24 36 48 60 72 84 96 months 0 12 24 36 48 60 72 84"
     )
     assert all(h["rejected"] for h in hits)
+
+
+def test_the_term_is_recorded_even_when_no_value_is_matched():
+    """Zero values must be diagnosable.
+
+    The first run read ODM's own deck and reported zero. That is two findings
+    wearing one number — the document may not state a figure, or may state it in
+    a shape the pattern misses — and without the raw mentions there is no way to
+    tell which, or to improve.
+    """
+    text = ("Slide 12: Average Maturity of Marketable Debt Outstanding. "
+            "See the chart for the current level.")
+    assert not find_values(text)
+    assert term_mentions(text), "the term appears and must be reported"
+
+
+def test_mentions_are_capped_so_one_deck_cannot_flood_the_report():
+    text = "average maturity " * 50
+    assert len(term_mentions(text)) <= 6

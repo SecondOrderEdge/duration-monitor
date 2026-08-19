@@ -44,6 +44,24 @@ from scripts.probe_tbac import (  # noqa: E402
     text_of,
 )
 
+# Every mention of the term, whether or not a value was matched near it.
+# The first run read ODM's own deck — 55,807 characters — and reported zero
+# values, which is two completely different findings wearing one number: the
+# document may not state it, or it may state it in a shape the pattern misses.
+# Without the raw mentions there is no way to tell, and no way to improve.
+TERM = re.compile(r"average[- ]maturity|weighted[- ]average[- ]maturity|average[- ]length|\bWAM\b", re.I)
+
+
+def term_mentions(text: str, *, window: int = 200, limit: int = 6) -> list[str]:
+    """Snippets around the term itself, so a zero can be diagnosed."""
+    out = []
+    for match in TERM.finditer(text):
+        start = max(match.start() - window, 0)
+        out.append(" ".join(text[start:match.end() + window].split()))
+        if len(out) >= limit:
+            break
+    return out
+
 OUT_DIR = REPO_ROOT / "docs" / "source_probe" / "wam_reference"
 
 # "average maturity of 71 months", "weighted average maturity was 5.9 years",
@@ -99,6 +117,7 @@ def main() -> int:
     parser.add_argument("--budget-seconds", type=float, default=600)
     parser.add_argument("--max-bytes", type=int, default=12_000_000)
     parser.add_argument("--delay", type=float, default=1.0)
+    parser.add_argument("--max-indexes", type=int, default=40)
     args = parser.parse_args()
 
     started = time.monotonic()
@@ -120,12 +139,31 @@ def main() -> int:
         report["our_observation"] = str(wam["observation_date"].iloc[-1])[:10]
 
     candidates: list[dict] = []
+    indexes: list[dict] = []
     for url in ENTRY_POINTS:
         record = fetch(url, args.timeout, max_bytes=args.max_bytes)
         payload = record.pop("_payload", None)
         if payload is not None:
-            documents, _ = links_from(record.get("final_url", url), payload)
+            documents, found_indexes = links_from(record.get("final_url", url), payload)
             candidates.extend(documents)
+            indexes.extend(found_indexes)
+        time.sleep(args.delay)
+
+    # The archive hop. Omitted in the first version of this probe, which then
+    # read 16 documents all from one quarter — the identical failure this
+    # project already diagnosed and fixed in probe_tbac. Reusing that module's
+    # fetching helpers did not carry over its lesson.
+    seen = {e["url"] for e in candidates}
+    for index in indexes[: args.max_indexes]:
+        if time.monotonic() - started > args.budget_seconds * 0.4:
+            report["index_expansion_truncated"] = True
+            break
+        record = fetch(index["url"], args.timeout, max_bytes=args.max_bytes)
+        payload = record.pop("_payload", None)
+        if payload is not None:
+            documents, _ = links_from(record.get("final_url", index["url"]), payload)
+            candidates.extend(d for d in documents if d["url"] not in seen)
+            seen.update(d["url"] for d in documents)
         time.sleep(args.delay)
 
     # ODM's own quarterly deck is where the figure is published; the committee's
@@ -156,11 +194,23 @@ def main() -> int:
             record["text_unavailable"] = why_empty
         if text:
             kept = [h for h in find_values(text) if not h["rejected"]]
+            mentions = term_mentions(text)
+            record["term_mentions"] = len(mentions)
             if kept:
                 report["evidence"].append(
                     {"url": link["url"], "label": link["label"], "hits": kept}
                 )
                 print(f"  {link['label'][:55]}: {len(kept)} value(s)", flush=True)
+            elif mentions:
+                # The diagnostic case: the document DOES discuss average maturity
+                # and no value was extracted next to it. Either it is stated in a
+                # shape the pattern misses, or it is only in a chart. Recorded
+                # verbatim so the next iteration is informed rather than guessed.
+                report.setdefault("term_without_value", []).append(
+                    {"url": link["url"], "label": link["label"], "samples": mentions}
+                )
+                print(f"  {link['label'][:55]}: term appears {len(mentions)}x, "
+                      f"no value matched", flush=True)
         report["documents"].append(record)
         time.sleep(args.delay)
 
@@ -188,6 +238,10 @@ def main() -> int:
               f"({report['our_value_months']} months) at {report['our_observation']}")
     for hit in values[:12]:
         print(f"  {hit['value']} {hit['unit']}(s) — {hit['population']}")
+    for item in (report.get("term_without_value") or [])[:6]:
+        print(f"\n  TERM WITHOUT VALUE — {item['label'][:60]}")
+        for sample in item["samples"][:2]:
+            print(f"    ...{sample[:260]}")
     return 0
 
 
