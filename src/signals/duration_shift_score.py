@@ -173,6 +173,54 @@ def comparable(variant_a: str, variant_b: str, config: dict) -> bool:
     return variant_b in allowed
 
 
+def bands_for_variant(variant: str | None, band_config: dict) -> list[dict] | None:
+    """The interpretation bands a variant may use, or None if it has none.
+
+    Band cut-points are fixed numbers on a 0-100 scale, so their meaning depends
+    on the width of the score's distribution — which differs by variant. The US
+    bands were validated by backtest against named episodes on the six-factor
+    score; that validation does not transfer to a composite built from three
+    correlated factors with no market-price anchor, which measurably runs wider.
+
+    Returning None is the point. A variant with no validated bands gets no band,
+    the same way these scores get no regime, rather than a renamed set of
+    thresholds that would look more careful without being better evidenced.
+    """
+    if variant is None:
+        return band_config.get("bands")
+    allowed = band_config.get("validated_for_variants")
+    if allowed is not None and variant not in allowed:
+        return None
+    return band_config.get("bands")
+
+
+def band_contradicts_direction(band: object, direction: object) -> bool:
+    """Whether a band's wording claims a direction the raw data contradicts.
+
+    The score is a composite of point-in-time percentile RANKS, so it says how a
+    reading compares to that sovereign's own recent behaviour. The band names say
+    "shortening" and "extension", which are absolute claims. For the six-factor US
+    score two market-price factors anchor the composite; for `quantity_only` every
+    factor is relative and nothing anchors it, so a country extending more slowly
+    than usual ranks high and lands in a band named for the opposite direction.
+
+    Confirmed on live data: France, 2026-Q1, score 63.4, band "meaningful
+    shortening", bill share DOWN 0.21pp over four quarters against a trailing
+    median of -0.57pp.
+
+    Kept here rather than inline in the page so the contradiction is testable and
+    so any surface showing these scores asks the same question the same way.
+    """
+    if not isinstance(band, str) or not isinstance(direction, str):
+        return False
+    claims_shortening = "shortening" in band.lower()
+    claims_extension = "extension" in band.lower() or "extending" in band.lower()
+    return (
+        (claims_shortening and direction == "extending")
+        or (claims_extension and direction == "shortening")
+    )
+
+
 def duration_shift_score(
     ranks: pd.DataFrame,
     weights: pd.DataFrame | pd.Series,

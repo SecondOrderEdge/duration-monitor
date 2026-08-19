@@ -201,6 +201,24 @@ duration_shift_score_bands:
   # not absurd, not evidence they are correct.
   convention: true
   validated_by_backtest: 2026-08-18
+  # ...and validated for the SIX-FACTOR US SCORE ONLY. The cut-points are fixed
+  # at 0/20/40/60/80/100, so what they mean depends entirely on how wide the
+  # score's distribution is — and that differs by variant.
+  #
+  # Measured 2026-08-19 on live data, 234 US months against 179 euro-area
+  # quarters: US sd 19.2, quantity_only sd 23.4. The two most severe labels
+  # ("strong duration extension" and "aggressive shortening") catch 10.3% of US
+  # readings and 24.0% of quantity-only ones — 2.3x as often, and 29.5% for
+  # Germany alone. Three correlated quantity factors with no market-price anchor
+  # diversify less than six with two orthogonal ones, so the composite is wider
+  # and the same cut-points reach much further into the tail.
+  #
+  # So a quantity-only 63 has never been shown to mean what a full-score 63
+  # means, and no euro-area backtest exists to show it. A variant not listed here
+  # gets NO BAND rather than a relabelled one: renaming would give more careful
+  # words to cut-points that still have no evidence behind them for that variant.
+  # Same standard that already denies these scores a regime.
+  validated_for_variants: [full]
   bands:
     - {name: strong duration extension, from: 0,  to: 20}
     - {name: modest extension,          from: 20, to: 40}
