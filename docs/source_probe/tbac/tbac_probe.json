@@ -1,5 +1,6 @@
 {
   "probe": "tbac_bill_share_band",
+  "budget_seconds": 900,
   "claim_under_test": "reference_levels.bill_share_recommended_band == [0.15, 0.20]",
   "entry_points": [
     {
@@ -8,7 +9,8 @@
       "status": 200,
       "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding",
       "content_type": "text/html; charset=UTF-8",
-      "links_found": 3
+      "links_found": 0,
+      "indexes_found": 2
     },
     {
       "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives",
@@ -16,7 +18,8 @@
       "status": 200,
       "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives",
       "content_type": "text/html; charset=UTF-8",
-      "links_found": 7
+      "links_found": 0,
+      "indexes_found": 8
     },
     {
       "url": "https://home.treasury.gov/policy-issues/financing-the-government/treasury-borrowing-advisory-committee",
@@ -25,7 +28,8 @@
       "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/treasury-borrowing-advisory-committee",
       "content_type": "text/html; charset=UTF-8",
       "error": "HTTPError: 404 Client Error: Not Found for url: https://home.treasury.gov/policy-issues/financing-the-government/treasury-borrowing-advisory-committee",
-      "links_found": 0
+      "links_found": 0,
+      "indexes_found": 0
     },
     {
       "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
@@ -33,98 +37,19 @@
       "status": 200,
       "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
       "content_type": "text/html; charset=UTF-8",
-      "links_found": 11
+      "links_found": 16,
+      "indexes_found": 2
     }
   ],
   "documents": [
     {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
+      "url": "https://home.treasury.gov/news/press-releases/sb0584",
       "fetched": true,
       "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0584",
       "content_type": "text/html; charset=UTF-8",
-      "label": "Most Recent Documents",
-      "characters_extracted": 11526,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/treasury-borrowing-advisory-committee-tbac",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/treasury-borrowing-advisory-committee-tbac",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "Treasury Borrowing Advisory Committee (TBAC)",
-      "characters_extracted": 11603,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://www.treasury.gov/resource-center/data-chart-center/quarterly-refunding/Pages/Latest.aspx",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "Most Recent Quarterly Refunding Documents",
-      "characters_extracted": 11526,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-report-to-the-secretary-by-calendar-year",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-report-to-the-secretary-by-calendar-year",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "Treasury Borrowing Advisory Committee Report to the Secretary by Calendar Year",
-      "characters_extracted": 13443,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/tbac-recommended-financing-tables-by-calendar-year",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/tbac-recommended-financing-tables-by-calendar-year",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "TBAC Recommended Financing Tables by Calendar Year",
-      "characters_extracted": 12652,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-meeting-minutes-by-calendar-year",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-meeting-minutes-by-calendar-year",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "Treasury Borrowing Advisory Committee Meeting Minutes by Calendar Year",
-      "characters_extracted": 13200,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/office-of-economic-policy-statements-to-tbac",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/office-of-economic-policy-statements-to-tbac",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "Office of Economic Policy Statements to TBAC",
-      "characters_extracted": 12430,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-discussion-charts-by-calendar-year",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-discussion-charts-by-calendar-year",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "Treasury Borrowing Advisory Committee Discussion Charts by Calendar Year",
-      "characters_extracted": 12559,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents#main-content",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/most-recent-quarterly-refunding-documents#main-content",
-      "content_type": "text/html; charset=UTF-8",
-      "label": "Skip to main content",
-      "characters_extracted": 11526,
+      "label": "Financing Estimates: 2026 - 3rd Quarter",
+      "characters_extracted": 12833,
       "mentions_bill_share": false
     },
     {
@@ -135,6 +60,16 @@
       "content_type": "text/html; charset=UTF-8",
       "label": "Economic Policy Statements to TBAC: 2026 - 3rd Quarter\u200b",
       "characters_extracted": 31486,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0590",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0590",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Policy Statement: 2026 - 3rd Quarter",
+      "characters_extracted": 14801,
       "mentions_bill_share": false
     },
     {
@@ -206,12 +141,825 @@
       "label": "Archives",
       "characters_extracted": 111011,
       "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.xml",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.xml",
+      "content_type": "application/xml",
+      "label": "Auction Schedule: XML Format",
+      "characters_extracted": 10916,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Auction Schedule: PDF Format",
+      "characters_extracted": 21096,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.xml",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.xml",
+      "content_type": "application/xml",
+      "label": "Buyback Schedule: XML Format",
+      "characters_extracted": 2528,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Buyback Schedule: PDF Format",
+      "characters_extracted": 3120,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/Dealer-Agenda-Aug-2026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/Dealer-Agenda-Aug-2026.pdf",
+      "content_type": "application/pdf",
+      "label": "Primary Dealer Meeting Agenda: 2026 - 3rd Quarter",
+      "characters_extracted": 7122,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
+      "content_type": "application/vnd.ms-excel",
+      "label": "Quarterly Release Data: 2026 - 3rd Quarter",
+      "characters_extracted": 126910,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2023-05-09.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2023-05-09.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated May 9, 2023 from Former TBAC Chairs and Vice Chairs on Raising the Debt Limit",
+      "characters_extracted": 5617,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2021-09-21.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2021-09-21.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated September 21, 2021 from TBAC Chair Beth Hammack and Vice Chair Brian Sack on Raising the Debt Limit",
+      "characters_extracted": 4332,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Matt-Zames-letter-to-Treasury-Secretary-Jacob-Lew5-2-16.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Matt-Zames-letter-to-Treasury-Secretary-Jacob-Lew5-2-16.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated May 2, 2016 from Outgoing TBAC Member Matthew E. Zames on Debt Management and the Debt Limit\u200b\u200b",
+      "characters_extracted": 0,
+      "text_unavailable": "no extractable text (likely a scanned image PDF)"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Geithner_Debt_Limit_Letter_4_25_11E.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Geithner_Debt_Limit_Letter_4_25_11E.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated April 25, 2011 from TBAC Chairman Matthew E. Zames on Raising the Debt Limit",
+      "characters_extracted": 0,
+      "text_unavailable": "no extractable text (likely a scanned image PDF)"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 13526,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Chart-Data-February-2010.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Chart-Data-February-2010.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 43107,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 14853,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q1-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 25989,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 15074,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 27491,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q3-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q3",
+      "characters_extracted": 14539,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 15662,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 14594,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q4-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 15893,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 11397,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q1-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 27284,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 13417,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 17400,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 27261,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q4-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q4-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 12874,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q4-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q4-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 25082,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q1-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q1-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 8761,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q1-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q1-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 25011,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q2-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q2-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 9194,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 25927,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q3-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q3-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q3",
+      "characters_extracted": 9193,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 27005,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q4-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q4-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 10257,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2007-q4-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2007-q4-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 26209,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q1-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q1-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 11231,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q1-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q1-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 46033,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q2-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q2-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 13188,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 40075,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q3-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q3-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q3",
+      "characters_extracted": 12678,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 36915,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q4-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q4-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 11229,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2006-q4-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2006-q4-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 34018,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q1-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q1-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 12213,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q1-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q1-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 34902,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q2-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q2-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 13150,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 57597,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q3-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q3-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q3",
+      "characters_extracted": 12158,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 46611,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q4-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q4-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 12472,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q4-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2005-q4-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 48001,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q1-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q1-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 7200,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q1-chart_data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q1-chart_data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 59274,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q2-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q2-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 5271,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 24676,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q3-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q3-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q3",
+      "characters_extracted": 7211,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 64043,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q4-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q4-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 5546,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q4-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2004-q4-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 23299,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-Feb.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2003-Feb.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 9917,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-q1-data-files.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2003-q1-data-files.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 57078,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-May.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2003-May.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 5469,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-q2-data-files.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2003-q2-data-files.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 16867,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-q3-data-files.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2003-q3-data-files.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 51837,
+      "mentions_bill_share": true
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-q4-charts.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2003-q4-charts.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 4915,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-q4-data-files.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2003-q4-data-files.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 22030,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2002-Feb.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2002-Feb.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 7308,
+      "mentions_bill_share": false
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/feb2002datafile.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/feb2002datafile.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 15329,
+      "mentions_bill_share": true
     }
   ],
-  "evidence": [],
+  "evidence": [
+    {
+      "url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "label": "Q1",
+      "hits": [
+        {
+          "range": [
+            8,
+            70
+          ],
+          "matches_configured_band": false,
+          "context": "5.7 -7.8 -15.1 -17.6 -11.9 -9.1 -9.3 -20.3 -5.2 25 -20 -15 -10 -5 25 -20 -15 -10 -5 P a y d o w n \u2022 Treasury has reduced 30% 90% 100% Percentage Breakdown of Quarterly Marketable Issuance Fiscal Year -25-25 I 05 II III IV I 06 II III IV I 07 II III IV I 08 II III IV I 09 II III IV I 10 Treasury has reduced reliance on bill financing over the past calendar year, moving from 84% in December 2008 to 70% in 15% 20% 25% 40% 50% 60% 70% 80% 90% Bills followleft \u2010side scale. Coupons followright \u2010side scale. December 2009. 0% 5% 10% 0% 10% 20% 30% 40% 1981 1983 1985 1987 1989 1991 1993 1995 1997 1999 2001 2003 2005 2007 2009 Office of Debt Management 5 Bills 2-3 yrs 4-7 yrs 8-10 yrs Bonds TIPS Note: Previous releases of Q"
+        }
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "label": "Q4",
+      "hits": [
+        {
+          "range": [
+            20,
+            10
+          ],
+          "matches_configured_band": false,
+          "context": "rrowing estimates by primary dealersscenarios given the wide range of borrowing estimates by primary dealers for FY 2010. Office of Debt Management 10 30% 40% Rolling 12-Month Growth Rates Corp Taxes WH Taxes nWH Taxes \u2022 Withheld taxes, comprising nearly 79% of revenues, continue to decline. 0% 10% 20% ae s -40% -30% -20% -10% -50% Mar-82 Mar-83 Mar-84 Mar-85 Mar-86 Mar-87 Mar-88 Mar-89 Mar-90 Mar-91 Mar-92 Mar-93 Mar-94 Mar-95 Mar-96 Mar-97 Mar-98 Mar-99 Mar-00 Mar-01 Mar-02 Mar-03 Mar-04 Mar-05 Mar-06 Mar-07 Mar-08 Mar-09 Central Dealer Estimates For Coupon and 52-Wk Bill Auctions Over the Next 3 Months Pi d l 30 35 40 45 50 ns Avg of High Est \u2022 Primary dealers estimate that marginal and gradual increases in coupon sizes can address additional borrowing needs 5 10 15 20 25 30 $ Billion Avg of Central Est Avg of Low Est Office of Debt Management 11 borrowing needs. 5 52-wk Nov 52-wk Dec"
+        }
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2005-q3-charts.pdf",
+      "label": "Q3",
+      "hits": [
+        {
+          "range": [
+            4,
+            2
+          ],
+          "matches_configured_band": false,
+          "context": "IV I 04 II III IV I 05 II $billions -15 -10 -5 0 5 10 15 20 25 30 $ billions State and Local Govt. Series Savings Bonds Foreign Series 6 \u2022 Percentage changes in auction sizes are equally distributed across auctioned securities to meet financing needs. Projected Net Marketable Borrowing and Hypothetical Auction Sizes -4% -2% 0% 2% 4% 6% 8% 10% 12% 14% 2005 2006 2007 2008 2009 2010 Percent 50 100 150 200 250 300 350 400$ Billions Net Marketable Borrowing (RHS) Projections are based on current OMB MSR budget estimates (except internal Treasury estimate for FY2005). Future residual financing needs are spread equally across auctioned securities to maintain constant maturity of issuance. Bars represent percentage change in average auction size"
+        }
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q1-charts.pdf",
+      "label": "Q1",
+      "hits": [
+        {
+          "range": [
+            4,
+            8
+          ],
+          "matches_configured_band": false,
+          "context": "ther Mortgages Consumer Credit Other February 2, 2004-7 DOMESTIC NONFINANCIAL CREDIT MARKET AND TREASURY DEBT $Bil. $Bil. Source: U.S. Federal Reserve Board of Governors Flow of Funds. 30 20 10 0 PercentPercent 30 20 10 0 Department of the Treasury Office of Debt Management 1969 1973 1977 1981 1985 1989 1993 1997 2001 TREASURY BILLS AS A PERCENTAGE OF THE MONEY MARKET Quarterly Department of the Treasury Office of Debt ManagementFebruary 2, 2004-8 Percent Percent 1 1Money market = Treasury bills, nonfinancial commercial paper, and financial open market paper. 25 30 35 40 45 50 55 60 65 70 25 30 35 40 45 50 55 60 65 70 Source: U.S. Federal Reserve Board of Governors Flow of Funds statistical release Z.1. 0 50 100 150 200 250 300 350 400 450 0 50 100 150 200 250 300 350"
+        }
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2004-q3-charts.pdf",
+      "label": "Q3",
+      "hits": [
+        {
+          "range": [
+            4,
+            8
+          ],
+          "matches_configured_band": false,
+          "context": "Other Mortgages Consumer Credit Other August 2, 2004-7 DOMESTIC NONFINANCIAL CREDIT MARKET AND TREASURY DEBT $Bil.$Bil. Source: U.S. Federal Reserve Board of Governors Flow of Funds. 30 20 10 0 Percent Percent 30 20 10 0 Department of the Treasury Office of Debt Management 1969 1973 1977 1981 1985 1989 1993 1997 2001 TREASURY BILLS AS A PERCENTAGE OF THE MONEY MARKET Quarterly Department of the Treasury Office of Debt Management August 2, 2004-8 PercentPercent 1 1 Money market = Treasury bills, nonfinancial commercial paper, and financial open market paper. 25 30 35 40 45 50 55 60 65 70 25 30 35 40 45 50 55 60 65 70 Source: U.S. Federal Reserve Board of Governors Flow of Funds statistical release Z.1. 0 50 100 150 200 250 300 350 400 450 0 50 100 150 200 250 300 350"
+        }
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2003-Feb.pdf",
+      "label": "Q1",
+      "hits": [
+        {
+          "range": [
+            3,
+            5
+          ],
+          "matches_configured_band": false,
+          "context": "and stable Treasuries Muni's Corporates Home Mortgages Consumer Credit Other Department of the Treasury Office of Market Finance February 3, 2003-4 Domestic Nonfinancial Credit Market and Treasury Debt Source: U.S. Federal Reserve Board of Governors Flow of Funds. Quarterly 1969 1973 1977 1981 1985 1989 1993 1997 2001 Treasury Bills as a Percentage of the Money Market Quarterly Department of the Treasury Office of Market Finance February 3, 2003-5 PercentPercent 1 25 30 35 40 45 50 55 60 65 70 25 30 35 40 45 50 55 60 65 70 Treasury's share of money markets near historic lows Source: U.S. Federal Reserve Board of Governors Flow of Funds statistical release Z.1. 1 Money market = Treasury bills, nonfinancial commercial paper and bankers acceptances. 0 50 100 150 200 250 3"
+        }
+      ]
+    }
+  ],
+  "indexes_expanded": [
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/treasury-borrowing-advisory-committee-tbac",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/treasury-borrowing-advisory-committee-tbac",
+      "content_type": "text/html; charset=UTF-8",
+      "links_found": 4,
+      "label": "Treasury Borrowing Advisory Committee (TBAC)"
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/treasury-borrowing/quarterly-refunding/quarterly-refunding-archives/2010-and-before-quarterly-refunding-charts-data",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/treasury-borrowing/quarterly-refunding/quarterly-refunding-archives/2010-and-before-quarterly-refunding-charts-data",
+      "content_type": "text/html; charset=UTF-8",
+      "links_found": 163,
+      "label": "2010 and Before - Quarterly Refunding Charts & Data"
+    },
+    {
+      "url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-report-to-the-secretary-by-calendar-year",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/policy-issues/financing-the-government/quarterly-refunding/quarterly-refunding-archives/treasury-borrowing-advisory-committee-report-to-the-secretary-by-calendar-year",
+      "content_type": "text/html; charset=UTF-8",
+      "links_found": 155,
+      "label": "Treasury Borrowing Advisory Committee Report to the Secretary by Calendar Year"
+    }
+  ],
   "documents_skipped_by_cap": 0,
-  "documents_with_text": 17,
-  "documents_examined": 17,
-  "outcome": "NOT FOUND",
-  "detail": "Searched 17 document(s) with extractable text and found no stated percentage range near a mention of bills."
+  "stopped_on_budget": {
+    "after_documents": 78,
+    "documents_unread": 259,
+    "budget_seconds": 900
+  },
+  "documents_with_text": 76,
+  "documents_examined": 337,
+  "coverage_by_year": {
+    "2002": 2,
+    "2003": 7,
+    "2004": 8,
+    "2005": 8,
+    "2006": 8,
+    "2007": 8,
+    "2008": 7,
+    "2009": 8,
+    "2010": 2,
+    "2021": 1,
+    "2023": 1,
+    "2026": 16
+  },
+  "outcome": "OTHER RANGES FOUND",
+  "detail": "Ranges near bill mentions were found, but none was 15-20%. If these are the committee's actual language, the configured band is wrong."
 }
