@@ -36,6 +36,7 @@ from src.ingestion.fiscaldata import (  # noqa: E402
 from src.calculations.wam import wam_series  # noqa: E402
 from src.ingestion.fred import FredClient, MissingCredential  # noqa: E402
 from src.ingestion.nyfed import detect_revisions, fetch_acm  # noqa: E402
+from src.ingestion.eurostat import EurostatClient  # noqa: E402
 from src.calculations.issuance import (  # noqa: E402
     bill_share,
     cash_adjusted_bill_funding,
@@ -57,7 +58,9 @@ from src.signals.auction_stress import (  # noqa: E402
     long_end_stress,
 )
 from src.transformation.normalize import (  # noqa: E402
+    EUROSTAT_CENTRAL_GOVERNMENT,
     extract_subtotals,
+    normalize_eurostat_debt,
     month_end_cash_balance,
     normalize_cash_balance,
     normalize_auctions,
@@ -74,6 +77,11 @@ from src.validation.reconciliation import (  # noqa: E402
 
 PROCESSED = REPO_ROOT / "data" / "processed"
 THRESHOLDS = REPO_ROOT / "config" / "thresholds.yaml"
+
+EURO_DATASET = "gov_10q_ggdebt"
+# Phase 3 scope. Not the euro area as a whole: these are the three sovereigns
+# whose quantity factors Eurostat actually supports (docs/phase3_source_assessment.md).
+EURO_COUNTRIES = ["DE", "FR", "IT"]
 
 # Builders append informational notes here; main() folds them into the event log.
 QUALITY_NOTES: list[dict] = []
@@ -375,6 +383,115 @@ def build_cash_balance(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFr
     return cash
 
 
+def build_euro_debt(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """Eurostat central-government debt securities for Germany, France and Italy.
+
+    Phase 3's quantity inputs. Quarterly, because that is the only frequency any
+    current euro-area publisher serves at the short/long split — the ECB dataflow
+    that carried it monthly stopped in 2022-03 (docs/phase3_source_assessment.md).
+
+    Nothing here has ever been fetched live: the development environment refuses
+    Eurostat at CONNECT, so the decoder and the normalizer are tested against
+    fixtures. This builder therefore prints what the response actually contained —
+    dimensions, coverage, the instrument split, and the distribution of net
+    borrowing that any ratio floor has to be calibrated against — rather than
+    asserting the fixtures were right.
+    """
+    print("  fetching eurostat gov_10q_ggdebt ...", flush=True)
+    eurostat = EurostatClient()
+    result = eurostat.fetch(
+        EURO_DATASET,
+        geo=EURO_COUNTRIES,
+        sector=EUROSTAT_CENTRAL_GOVERNMENT,
+        unit="MIO_EUR",
+        na_item=["F31", "F32"],
+    )
+    frame = result.frame
+    print(f"    {result.n_values} values, {len(frame)} decoded rows")
+    print(f"    published {result.updated!r}; label {str(result.label)[:70]!r}")
+
+    # The decoder's whole risk is attributing a cell to the wrong series, and a
+    # transposed frame is still well-formed. Printing the dimensions the response
+    # actually carried is how a shape the fixtures never anticipated becomes
+    # visible instead of being silently reinterpreted.
+    dims = [c for c in frame.columns if c != "value"]
+    print(f"    dimensions returned: {dims}")
+    for dim in dims:
+        seen = sorted(frame[dim].astype(str).unique())
+        shown = seen if len(seen) <= 8 else seen[:4] + ["..."] + seen[-2:]
+        print(f"      {dim}: {len(seen)} — {shown}")
+
+    if keep_raw:
+        outdir = REPO_ROOT / "data" / "raw" / "eurostat" / EURO_DATASET / (
+            f"retrieved_date={result.retrieval_date:%Y-%m-%d}"
+        )
+        outdir.mkdir(parents=True, exist_ok=True)
+        frame.astype("object").to_parquet(outdir / "part.parquet", index=False)
+        print(f"    raw → {(outdir / 'part.parquet').relative_to(REPO_ROOT)}")
+
+    debt = normalize_eurostat_debt(frame, retrieval_date=result.retrieval_date)
+
+    # Coverage is asserted per country rather than in aggregate: three countries
+    # summing to the expected number of rows would hide one of them being short.
+    for country in EURO_COUNTRIES:
+        rows = debt[debt["country"] == country]
+        if rows.empty:
+            raise ValueError(
+                f"eurostat returned no usable rows for {country!r}; requested "
+                f"{EURO_COUNTRIES} and decoded {sorted(debt['country'].unique())}"
+            )
+        quarters = rows["observation_date"].nunique()
+        classes = sorted(rows["security_class"].astype(str).unique())
+        latest = rows["observation_date"].max()
+        bills = rows[(rows.security_class == "BILLS") & (rows.observation_date == latest)]
+        total = rows[(rows.security_class == "TOTAL_MARKETABLE")
+                     & (rows.observation_date == latest)]
+        share = (float(bills.amount_outstanding.iloc[0]) /
+                 float(total.amount_outstanding.iloc[0])) if len(bills) and len(total) else float("nan")
+        print(f"    {country}: {quarters} quarters, "
+              f"{rows.observation_date.min():%Y-Q}{rows.observation_date.min().quarter} → "
+              f"{latest:%Y-Q}{latest.quarter}, classes {classes}, "
+              f"bill share {share:.1%}, total €{float(total.amount_outstanding.iloc[0])/1e9:,.0f}bn")
+
+        if set(classes) != {"BILLS", "COUPONS", "TOTAL_MARKETABLE"}:
+            QUALITY_NOTES.append(
+                {"source": "euro_debt", "endpoint": EURO_DATASET,
+                 "event_type": "contract_break", "severity": "error",
+                 "detail": f"{country} carries {classes}; the quantity factors need "
+                           "both F31 short-term and F32 long-term"}
+            )
+
+    # A country that stopped publishing while the others continued would leave the
+    # cross-country comparison silently mismatched in time, so the latest quarter
+    # is compared across countries rather than taken as one number.
+    latest_by_country = debt.groupby("country", observed=True)["observation_date"].max()
+    if latest_by_country.nunique() > 1:
+        detail = ("euro-area countries end on different quarters: "
+                  + ", ".join(f"{c} {d:%Y-%m}" for c, d in latest_by_country.items()))
+        print(f"    WARNING: {detail}")
+        QUALITY_NOTES.append(
+            {"source": "euro_debt", "endpoint": EURO_DATASET,
+             "event_type": "staleness", "severity": "warning", "detail": detail}
+        )
+
+    # The ratio floor the US series uses is calibrated against the distribution of
+    # |net borrowing| (thresholds.yaml, issuance.calibrated). No euro equivalent
+    # has been calibrated yet, because until this run there was no live series to
+    # calibrate against. The distribution is printed so that number comes from
+    # data rather than from scaling the US one by a guess at relative size.
+    for country in EURO_COUNTRIES:
+        one = debt[(debt.country == country) & (debt.security_class != "TOTAL_MARKETABLE")]
+        wide = one.pivot(index="observation_date", columns="security_class",
+                         values="amount_outstanding")
+        net_total = wide.sum(axis=1, min_count=1).diff().abs().dropna() / 1e6
+        if len(net_total):
+            q = net_total.quantile([0.10, 0.25, 0.50]).round(0)
+            print(f"    {country} |net borrowing|/quarter (EUR mn): "
+                  f"p10 {q.loc[0.10]:,.0f}  p25 {q.loc[0.25]:,.0f}  median {q.loc[0.50]:,.0f}")
+
+    return debt
+
+
 def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     """Fiscal Duration Shift Score, from tables the other builders produced.
 
@@ -522,6 +639,7 @@ BUILDERS = {
     "wam": build_wam,
     "term_premium": build_term_premium,
     "rates": build_rates,
+    "euro_debt": build_euro_debt,
     # Last: it reads what the others wrote.
     "score": build_score,
 }
@@ -578,7 +696,8 @@ def main() -> int:
                     "wam": ("observation_date", "mspd"),
                     "term_premium": ("date", "nyfed_acm"),
                     "auctions": ("auction_date", "auctions"),
-                    "rates": ("date", "fred_daily")}
+                    "rates": ("date", "fred_daily"),
+                    "euro_debt": ("observation_date", "eurostat_quarterly")}
     for name, table in built.items():
         column, threshold_key = date_columns.get(name, (None, None))
         if column is None or column not in table.columns:

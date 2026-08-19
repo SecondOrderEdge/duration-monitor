@@ -270,6 +270,11 @@ validation:
     fred_daily: 5
     nyfed_acm: 10
     qra_manual: 100   # roughly one quarter plus a grace period
+    # Eurostat gov_10q_ggdebt is quarterly and published roughly three months
+    # after the reference quarter ends, so a healthy series is already ~100
+    # days stale on the day it appears. 200 days allows one quarter's normal
+    # lag plus a full quarter's grace before the feed is called dead.
+    eurostat_quarterly: 200
 
 # --------------------------------------------------------------------------- #
 # Frequency alignment (Deviation D8)
