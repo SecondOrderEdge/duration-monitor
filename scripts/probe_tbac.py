@@ -207,13 +207,50 @@ def fetch(url: str, timeout: int, *, max_bytes: int = 0) -> dict:
     return record
 
 
+def extract_spreadsheet(payload: bytes) -> tuple[str, str | None]:
+    """Render every sheet of a workbook as text, one row per line.
+
+    Needed because a workbook fetched as bytes and decoded as UTF-8 does not
+    fail — it yields mojibake. Treasury's quarterly release data is an .xls and
+    was counted as 126,910 characters of "text" on that basis, inflating every
+    coverage figure it appeared in while carrying no readable content at all.
+
+    Rendering row-wise keeps a label and its value on one line, which is what
+    the value matchers need: "Average Maturity | 69.8" reads the same way a
+    sentence does.
+    """
+    import io
+
+    try:
+        import pandas as pd
+
+        sheets = pd.read_excel(io.BytesIO(payload), sheet_name=None, header=None)
+    except Exception as exc:  # noqa: BLE001
+        return "", f"{type(exc).__name__}: {exc}"
+
+    lines = []
+    for name, frame in sheets.items():
+        lines.append(f"### SHEET: {name}")
+        for row in frame.itertuples(index=False):
+            cells = [str(c) for c in row if c is not None and str(c) != "nan"]
+            if cells:
+                lines.append(" | ".join(cells))
+    if not lines:
+        return "", "workbook parsed but contained no rows"
+    return "\n".join(lines), None
+
+
 def text_of(record: dict) -> tuple[str, str | None]:
     payload = record.get("_payload")
     if payload is None:
         return "", record.get("skipped") or record.get("error", "not fetched")
     kind = (record.get("content_type") or "").lower()
-    if "pdf" in kind or record["url"].lower().endswith(".pdf"):
+    url = record["url"].lower()
+    if "pdf" in kind or url.endswith(".pdf"):
         return extract_pdf(payload)
+    if ("excel" in kind or "spreadsheet" in kind
+            or url.endswith((".xls", ".xlsx", ".xlsm"))):
+        return extract_spreadsheet(payload)
     try:
         return clean_html(payload.decode("utf-8", errors="replace")), None
     except Exception as exc:  # noqa: BLE001

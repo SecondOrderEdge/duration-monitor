@@ -14,8 +14,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 from scripts.probe_tbac import (classify_outcome, clean_html, find_claims,
-                                classify_document, links_from,
-                                looks_like_chart_axis, read_order, text_of, year_of)
+                                classify_document, extract_spreadsheet,
+                                links_from, looks_like_chart_axis, read_order,
+                                text_of, year_of)
 
 
 def test_a_stated_range_after_the_word_bill_is_found():
@@ -278,3 +279,52 @@ def test_an_undated_press_release_is_honestly_unknown():
 
 def test_a_real_year_in_the_label_wins_over_url_digits():
     assert year_of({"label": "2011 - 3rd Quarter", "url": "https://x/files/276/a.pdf"}) == "2011"
+
+
+# --------------------------------------------------------------------------- #
+# Workbooks — silently decoded as text for four runs
+# --------------------------------------------------------------------------- #
+
+def _workbook(rows: list[list], sheet: str = "Portfolio") -> bytes:
+    import io
+
+    import pandas as pd
+
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        pd.DataFrame(rows).to_excel(writer, sheet_name=sheet, index=False, header=False)
+    return buf.getvalue()
+
+
+def test_a_workbook_is_parsed_rather_than_decoded_as_text():
+    """Treasury's quarterly release data is an .xls. Decoding it as UTF-8 does not
+    fail — it yields mojibake, which counted as 126,910 characters of 'text'."""
+    payload = _workbook([["Average Maturity of Marketable Debt Outstanding"], ["69.8 months"]])
+    text, why = extract_spreadsheet(payload)
+    assert why is None
+    assert "Average Maturity" in text and "69.8" in text
+
+
+def test_a_label_and_its_value_stay_on_one_line():
+    """Row-wise rendering is what lets a value matcher see label next to number."""
+    payload = _workbook([["Average Maturity", 69.8, "months"]])
+    text, _ = extract_spreadsheet(payload)
+    row = [ln for ln in text.splitlines() if "Average Maturity" in ln][0]
+    assert "69.8" in row, "label and value must share a line"
+
+
+def test_sheet_names_are_preserved():
+    text, _ = extract_spreadsheet(_workbook([["x"]], sheet="Debt Metrics"))
+    assert "SHEET: Debt Metrics" in text
+
+
+def test_a_corrupt_workbook_reports_why_rather_than_returning_mojibake():
+    text, why = extract_spreadsheet(b"this is not a workbook at all")
+    assert text == "" and why
+
+
+def test_text_of_routes_a_workbook_by_content_type():
+    record = {"url": "https://x/2026-3rd-Quarter.xls", "content_type": "application/vnd.ms-excel",
+              "_payload": _workbook([["Average Maturity", 69.8]])}
+    text, why = text_of(record)
+    assert why is None and "69.8" in text
