@@ -1,0 +1,13 @@
+{
+  "workbook": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
+  "sheet": "Avg. mat. of debt outstanding: Average Maturity of Treasury Marketable Securities--Total Outstanding  (in months) Year Jan Feb Mar Apr May Jun Jul Aug ",
+  "published_months": 318,
+  "overlap_months": 306,
+  "overlap_from": "2001-01",
+  "overlap_to": "2026-06",
+  "mean_difference_months": 0.64,
+  "median_difference_months": 0.011,
+  "max_abs_difference_months": 5.111,
+  "within_half_month": 188,
+  "within_half_month_share": 0.6144
+}
