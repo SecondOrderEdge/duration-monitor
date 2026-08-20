@@ -62,54 +62,54 @@ floating-rate security the next reset is not the maturity, so WANRR is a
 different number wearing a very similar name. Anything reconciling against
 "Treasury's WAM" has to establish which of these four it has.
 
-## CONCLUSION: the ODM decks cannot support this reconciliation
+## RESULT: our WAM matches Treasury's, except in 2001-2007
 
-Final run, 38 documents with extractable text, **zero comparable values**. Every
-one of the 21 candidate figures was rejected, and reading the rejections back
-shows all of them were rejected correctly:
+**The earlier conclusion on this page — that the ODM decks cannot support this
+reconciliation — is WITHDRAWN.** Treasury does publish the series. The quarterly
+release workbook carries a sheet `Avg. mat. of debt outstanding` holding
+*"Average Maturity of Treasury Marketable Securities--Total Outstanding (in
+months)"* as a Year x Jan..Dec grid, 318 months back to 2000. Four probe runs
+concluded otherwise because that workbook is an `.xls` that was being decoded as
+UTF-8 — which does not raise, it yields mojibake — so the file counted as
+searched while carrying nothing readable.
 
-| rejected | reason |
-|---|---|
-| 8 | a horizon, not a level — "over the next 10 years", "next 75 years" |
-| 6 | a projection — "settle to approximately 68 and 79 months" |
-| 5 | chart axis labels |
-| 2 | average maturity of ISSUANCE, not of the stock |
+306 months overlap, 2001-01 to 2026-06. Difference is **ours minus Treasury**, in
+months:
 
-The decisive extract is the chart itself:
+| era | n | mean | median | worst |
+|---|---|---|---|---|
+| 2001-2007 | 84 | **+2.73** | **+2.87** | +5.11 |
+| 2008-2012 | 60 | -0.32 | -0.34 | 1.04 |
+| 2013-2019 | 84 | -0.14 | -0.16 | 0.69 |
+| 2020-2026 | 78 | -0.03 | -0.02 | 0.74 |
 
-> `20 30 40 50 60 70 80 90 months  Average Maturity of Issuance 1/  Average
-> Maturity of Marketable Debt Outstanding 2/`
+**From 2008 onward the two series agree to within about a month, usually far
+less.** Median difference across the whole overlap is +0.011 months. That is the
+external check the WAM pipeline never had, and it passes for the entire modern
+period.
 
-Both series are plotted on one chart with a months axis. **ODM states average
-maturity of the outstanding stock only as projections and as chart geometry.
-There is no current actual value in extractable prose**, in the current decks or
-the historical ones.
+### The 2001-2007 gap is systematic, not noise
 
-The 51-month figure that looked most promising reads in full: "over the next 5
-years: Average maturity of total outstanding and average maturity of issuance
-settle to about 52 and 51 months, respectively" — a five-year projection, and 51
-is the issuance leg. Comparing it to our series would have produced a confident
-false discrepancy from a number that is neither current nor our metric.
+A stable +2.9 month bias in one direction across 84 consecutive months, decaying
+to zero by 2008, is a definitional difference. **Hypothesis, not yet confirmed:
+callable bonds.** `wam.model_call_dates` is `false` — our calculation matures
+callables at FINAL maturity. Treasury may use the call date. The 30-year bonds
+issued through 1984 were callable at 25 years, so callables were outstanding
+through roughly 2009 and gone thereafter, which matches the timing of the bias
+and its decay almost exactly.
 
-This is a finding about the source, not a probe defect. Text extraction is the
-wrong instrument, and no further iteration on it is warranted.
+That is a testable claim: isolate the callable securities in `mspd_table_3_market`
+for 2002, recompute WAM at call dates, and see whether the gap closes. Until that
+is done it stays a hypothesis with a good fit, not a finding.
 
-## What would actually close this
+### What it means for the score
 
-1. **Transcribe one checkpoint by hand.** Read the current value off ODM's chart,
-   record it in config with the deck and date, and mark it `transcribed` — not
-   `verified`, because nothing fetched it. One dated point is enough to catch a
-   systematic weighting error, which is the risk that matters.
-2. **Open the Quarterly Release Data file.** It extracted 126,910 characters and
-   has never been examined; if it is tabular it may carry the series directly.
-3. **Accept the internal check and say so.** WAM already reconciles against
-   published MSPD subtotals across 935 (month, class) pairs, worst case 1.59%.
-   That tests the arithmetic against Treasury's own totals. It does not test the
-   maturity convention, which is what an external comparison would add.
+The published score starts 2007-01, so only its first year sits in the biased
+era. WAM enters the score as a 12-month CHANGE, and a roughly constant offset
+cancels in a difference — but the offset does not stay constant, it decays from
+about +2.7 to about -0.3 across 2007-2008. That decay does not cancel: it adds up
+to roughly three months of spurious WAM decline to our 12-month trend over that
+window, which reads as extra shortening in 2008-2009.
 
-## Coverage of the runs
-
-41 documents examined, 38-39 with text, **~783 left unread** on the time budget
-after the archive hop widened discovery to 823 candidates. The unread remainder
-is overwhelmingly chart decks, which the above shows cannot answer the question
-anyway.
+Material for those two years specifically, immaterial from 2010 on. It should be
+resolved before the 2008-2009 readings are used to argue anything.
