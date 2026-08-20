@@ -147,3 +147,35 @@ def test_an_undated_value_is_never_paired_with_our_latest_month():
     )
     assert not result[0]["comparable"]
     assert "no date" in result[0]["why"]
+
+
+# --------------------------------------------------------------------------- #
+# Average maturity of ISSUANCE is not average maturity of the STOCK
+# --------------------------------------------------------------------------- #
+
+def test_maturity_of_issuance_is_refused():
+    """ODM prints both on ONE slide. New issues are far longer-dated than the
+    stock — a live run returned 77 and 78 months for issuance against an
+    outstanding stock nearer 50, and would have called that a 27-month error."""
+    hits = find_values(
+        "DEBT MATURITY MEASURES Average Maturity of Issuance 1/ rose to 78 months."
+    )
+    assert hits and "ISSUANCE" in hits[0]["rejected"]
+
+
+def test_maturity_of_debt_outstanding_is_kept():
+    hits = find_values("Average maturity of total debt outstanding rose to 51 months.")
+    assert hits and hits[0]["rejected"] is None
+    assert "OUTSTANDING" in hits[0]["metric"]
+
+
+def test_a_projection_on_the_same_slide_is_refused():
+    hits = find_values(
+        "average maturity of marketable debt outstanding is projected to rise to 78 months"
+    )
+    assert hits and "projection" in hits[0]["rejected"]
+
+
+def test_an_unattributed_figure_is_not_assumed_to_be_ours():
+    hits = find_values("Average maturity climbed to 62 months.")
+    assert hits and hits[0]["rejected"], "an unidentified series must not be compared"

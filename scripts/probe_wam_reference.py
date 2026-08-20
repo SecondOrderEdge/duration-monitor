@@ -120,6 +120,29 @@ def document_date(text: str, *, head: int = 4000) -> str | None:
 # the distinction decides whether a match is a check or a different measurement.
 PRIVATE_INVESTORS = re.compile(r"private investors?|held by the public", re.I)
 
+# The fifth metric, and the one most likely to be mistaken for ours. ODM prints
+# "Average Maturity of Issuance" and "Average Maturity of Marketable Debt
+# Outstanding" ON THE SAME SLIDE. New issues are longer-dated than the stock, so
+# the two differ by twenty months or more — the 77 and 78 month values a live run
+# returned are issuance, against an outstanding stock nearer 50.
+OF_ISSUANCE = re.compile(r"maturity of (?:marketable )?issuance|issuance\s*1/", re.I)
+OF_OUTSTANDING = re.compile(
+    r"maturity of (?:the )?(?:total|marketable)?\s*debt outstanding"
+    r"|maturity of marketable debt|debt outstanding", re.I
+)
+
+# Projected and hypothetical figures share the slide with actual ones.
+FORWARD_LOOKING = re.compile(r"project\w*|hypothetical|would lead|expected to", re.I)
+
+
+def classify_metric(context: str) -> str:
+    """Which of Treasury's average-maturity series a match belongs to."""
+    if OF_ISSUANCE.search(context):
+        return "average maturity of ISSUANCE — not our measurement"
+    if OF_OUTSTANDING.search(context):
+        return "average maturity of debt OUTSTANDING — comparable to ours"
+    return "unstated — which series is unclear, do not compare"
+
 
 def find_values(text: str, *, window: int = 300) -> list[dict]:
     """Stated average-maturity values, with units and population, unconverted."""
@@ -143,6 +166,12 @@ def find_values(text: str, *, window: int = 300) -> list[dict]:
             rejected = "surroundings read as chart axis labels, not prose"
         elif NOT_A_LEVEL.search(between):
             rejected = "the number is a horizon or a scenario, not a level"
+        elif FORWARD_LOOKING.search(context):
+            rejected = "the slide is a projection or a hypothetical, not an actual"
+
+        metric = classify_metric(context)
+        if rejected is None and not metric.startswith("average maturity of debt"):
+            rejected = metric
 
         hits.append({
             "value": float(value),
@@ -152,6 +181,7 @@ def find_values(text: str, *, window: int = 300) -> list[dict]:
             "unit": "month" if unit.startswith(("month", "mo")) else "year",
             "population": ("private investors" if PRIVATE_INVESTORS.search(context)
                            else "unstated — assume all marketable, but check"),
+            "metric": metric,
             "rejected": rejected,
             "context": context,
         })
@@ -324,6 +354,16 @@ def main() -> int:
     if report.get("stopped_on_budget") and report["outcome"] == "NOT FOUND":
         report["outcome"] = "NOT FOUND (PARTIAL)"
 
+    # BEFORE the write. This block sat after it, so the reconciliation was
+    # computed, printed to stdout, and never persisted — the committed evidence
+    # had no comparison in it at all.
+    if values and wam_path.exists():
+        import pandas as pd
+
+        comparisons = reconcile(values, pd.read_parquet(wam_path))
+        report["reconciliation"] = comparisons
+        report["comparable_values"] = sum(1 for c in comparisons if c["comparable"])
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "wam_reference.json").write_text(
         json.dumps(report, indent=2, default=str), encoding="utf-8"
@@ -333,13 +373,9 @@ def main() -> int:
     if report.get("our_value_years"):
         print(f"ours: {report['our_value_years']}y "
               f"({report['our_value_months']} months) at {report['our_observation']}")
-    if values and wam_path.exists():
-        import pandas as pd
-
-        comparisons = reconcile(values, pd.read_parquet(wam_path))
-        report["reconciliation"] = comparisons
+    if report.get("reconciliation"):
+        comparisons = report["reconciliation"]
         usable = [c for c in comparisons if c["comparable"]]
-        report["comparable_values"] = len(usable)
         print(f"\n{len(usable)} of {len(comparisons)} stated value(s) could be "
               f"dated and matched to our series")
         for c in usable[:15]:
