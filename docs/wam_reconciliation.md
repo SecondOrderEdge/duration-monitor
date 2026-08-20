@@ -62,15 +62,54 @@ floating-rate security the next reset is not the maturity, so WANRR is a
 different number wearing a very similar name. Anything reconciling against
 "Treasury's WAM" has to establish which of these four it has.
 
-## Probe noise, still present
+## CONCLUSION: the ODM decks cannot support this reconciliation
 
-The value matcher pairs "average maturity" with any number within 160 characters,
-so projection language — "over the next 10 years", "shocked higher after 10
-years" — produces spurious hits like `10.0 year` and `75.0 year`. Twenty values
-were returned and most are this. Requires adjacency, not proximity, before any
-extracted number is trusted.
+Final run, 38 documents with extractable text, **zero comparable values**. Every
+one of the 21 candidate figures was rejected, and reading the rejections back
+shows all of them were rejected correctly:
 
-## Coverage of the run
+| rejected | reason |
+|---|---|
+| 8 | a horizon, not a level — "over the next 10 years", "next 75 years" |
+| 6 | a projection — "settle to approximately 68 and 79 months" |
+| 5 | chart axis labels |
+| 2 | average maturity of ISSUANCE, not of the stock |
 
-41 documents examined, 39 with text, **782 left unread** on the time budget after
-the archive hop widened discovery to 823 candidates.
+The decisive extract is the chart itself:
+
+> `20 30 40 50 60 70 80 90 months  Average Maturity of Issuance 1/  Average
+> Maturity of Marketable Debt Outstanding 2/`
+
+Both series are plotted on one chart with a months axis. **ODM states average
+maturity of the outstanding stock only as projections and as chart geometry.
+There is no current actual value in extractable prose**, in the current decks or
+the historical ones.
+
+The 51-month figure that looked most promising reads in full: "over the next 5
+years: Average maturity of total outstanding and average maturity of issuance
+settle to about 52 and 51 months, respectively" — a five-year projection, and 51
+is the issuance leg. Comparing it to our series would have produced a confident
+false discrepancy from a number that is neither current nor our metric.
+
+This is a finding about the source, not a probe defect. Text extraction is the
+wrong instrument, and no further iteration on it is warranted.
+
+## What would actually close this
+
+1. **Transcribe one checkpoint by hand.** Read the current value off ODM's chart,
+   record it in config with the deck and date, and mark it `transcribed` — not
+   `verified`, because nothing fetched it. One dated point is enough to catch a
+   systematic weighting error, which is the risk that matters.
+2. **Open the Quarterly Release Data file.** It extracted 126,910 characters and
+   has never been examined; if it is tabular it may carry the series directly.
+3. **Accept the internal check and say so.** WAM already reconciles against
+   published MSPD subtotals across 935 (month, class) pairs, worst case 1.59%.
+   That tests the arithmetic against Treasury's own totals. It does not test the
+   maturity convention, which is what an external comparison would add.
+
+## Coverage of the runs
+
+41 documents examined, 38-39 with text, **~783 left unread** on the time budget
+after the archive hop widened discovery to 823 candidates. The unread remainder
+is overwhelmingly chart decks, which the above shows cannot answer the question
+anyway.
