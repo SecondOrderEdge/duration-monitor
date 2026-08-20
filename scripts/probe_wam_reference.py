@@ -316,7 +316,20 @@ def main() -> int:
         if why_empty:
             record["text_unavailable"] = why_empty
         if text:
-            kept = [h for h in find_values(text) if not h["rejected"]]
+            found = find_values(text)
+            kept = [h for h in found if not h["rejected"]]
+            # Rejections are recorded, as they are in probe_tbac. Without them a
+            # zero is unreadable: filters that are correctly conservative and
+            # filters that are over-aggressive both produce no values, and the
+            # difference decides whether the conclusion is about Treasury's
+            # documents or about my regex.
+            for hit in found:
+                if hit["rejected"]:
+                    report.setdefault("rejected_values", []).append({
+                        "url": link["url"], "value": hit["value"],
+                        "unit": hit["unit"], "why": hit["rejected"],
+                        "context": hit["context"][:400],
+                    })
             published = document_date(text)
             record["document_date"] = published
             for hit in kept:
@@ -389,6 +402,13 @@ def main() -> int:
                   f"at {worst['document_date']}")
     for hit in values[:12]:
         print(f"  {hit['value']} {hit['unit']}(s) — {hit['population']}")
+    rejected = report.get("rejected_values") or []
+    if rejected:
+        from collections import Counter
+
+        print(f"\n{len(rejected)} value(s) rejected:")
+        for why, count in Counter(r["why"] for r in rejected).most_common():
+            print(f"  {count:>3}  {why}")
     for item in (report.get("term_without_value") or [])[:6]:
         print(f"\n  TERM WITHOUT VALUE — {item['label'][:60]}")
         for sample in item["samples"][:2]:
