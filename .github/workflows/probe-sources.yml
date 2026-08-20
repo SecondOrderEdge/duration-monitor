@@ -29,6 +29,7 @@ on:
       - scripts/probe_phase3.py
       - scripts/probe_tbac.py
       - scripts/probe_wam_reference.py
+      - scripts/reconcile_wam.py
       - .github/workflows/probe-sources.yml
   schedule:
     # Weekly contract check: a field that disappears should surface on its own,
@@ -135,6 +136,15 @@ jobs:
         run: |
           pip install -r requirements-probe.txt
           python -u scripts/probe_wam_reference.py | tee -a probe_stdout.txt
+
+      - name: Reconcile WAM against Treasury's published series
+        # Treasury DOES publish it: the quarterly release workbook carries a
+        # monthly grid, 'Average Maturity of Treasury Marketable Securities
+        # --Total Outstanding (in months)', back to 2000. Four earlier runs
+        # concluded otherwise because the workbook was decoded as UTF-8.
+        if: inputs.only == 'wam'
+        timeout-minutes: 10
+        run: python -u scripts/reconcile_wam.py | tee -a probe_stdout.txt
 
       - name: Summarise
         run: |
