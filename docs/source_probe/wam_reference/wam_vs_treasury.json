@@ -1,4 +1,8 @@
 {
+  "check_from": "2008-01",
+  "check_limit_months": 0.5,
+  "check_median_abs_months": 0.1578,
+  "check_passed": true,
   "workbook": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
   "sheet": "Avg. mat. of debt outstanding: Average Maturity of Treasury Marketable Securities--Total Outstanding  (in months) Year Jan Feb Mar Apr May Jun Jul Aug ",
   "published_months": 318,

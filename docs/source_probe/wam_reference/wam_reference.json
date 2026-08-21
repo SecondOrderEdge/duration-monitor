@@ -428,6 +428,17 @@
       "characters_extracted": 17400,
       "document_date": "2008-05",
       "term_mentions": 3
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 27261,
+      "document_date": "2007-10",
+      "term_mentions": 3
     }
   ],
   "evidence": [],
@@ -655,6 +666,15 @@
         "% 10.2% 5.2% 1.6% 2.8% 12/31/07 61.7% 17.4% 10.7% 5.3% 1.57% 2.5% 3/31/08 63.0% 16.4% 10.4% 5.4% 1.65% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/",
         "4% 10.7% 5.3% 1.57% 2.5% 3/31/08 63.0% 16.4% 10.4% 5.4% 1.65% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
       ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q3-chart-data.pdf",
+      "label": "Data",
+      "samples": [
+        ".6% 19.9% 10.4% 5.3% 1.6% 3.2% 9/30/07 61.6% 17.7% 10.2% 5.2% 1.6% 2.8% 12/31/07 61.7% 17.4% 10.7% 5.3% 1.6% 2.5% 3/31/08 63.0% 16.4% 10.4% 5.4% 1.7% 2.3% 6/30/08 60.0% 17.6% 11.5% 6.0% 1.8% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48",
+        "7.4% 10.7% 5.3% 1.6% 2.5% 3/31/08 63.0% 16.4% 10.4% 5.4% 1.7% 2.3% 6/30/08 60.0% 17.6% 11.5% 6.0% 1.8% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/",
+        "6.4% 10.4% 5.4% 1.7% 2.3% 6/30/08 60.0% 17.6% 11.5% 6.0% 1.8% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
     }
   ],
   "rejected_values": [
@@ -814,9 +834,9 @@
     }
   ],
   "stopped_on_budget": {
-    "after_documents": 39,
-    "documents_unread": 784
+    "after_documents": 40,
+    "documents_unread": 783
   },
-  "documents_with_text": 37,
+  "documents_with_text": 38,
   "outcome": "NOT FOUND (PARTIAL)"
 }
