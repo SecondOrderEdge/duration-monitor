@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Restrict to one source (fiscaldata, fred, nyfed, phase3). Blank probes all."
+        description: "Restrict to one source (fiscaldata, fred, nyfed, phase3, tbac, wam). Blank probes all."
         required: false
         default: ""
         type: string
@@ -27,6 +27,9 @@ on:
       - config/sources.yaml
       - scripts/probe_sources.py
       - scripts/probe_phase3.py
+      - scripts/probe_tbac.py
+      - scripts/probe_wam_reference.py
+      - scripts/reconcile_wam.py
       - .github/workflows/probe-sources.yml
   schedule:
     # Weekly contract check: a field that disappears should surface on its own,
@@ -72,7 +75,7 @@ jobs:
           ARGS=""
           case "${{ inputs.only }}" in
             "")        ARGS="" ;;
-            phase3)    echo "skipping the Phase 1 contract probe" | tee probe_stdout.txt; exit 0 ;;
+            phase3|tbac|wam) echo "skipping the Phase 1 contract probe" | tee probe_stdout.txt; exit 0 ;;
             *)         ARGS="--only ${{ inputs.only }}" ;;
           esac
           python scripts/probe_sources.py $ARGS | tee probe_stdout.txt
@@ -85,6 +88,63 @@ jobs:
         # the Phase 1 hosts are allowed, so this is the only place it can see them.
         if: inputs.only == '' || inputs.only == 'phase3'
         run: python scripts/probe_phase3.py | tee -a probe_stdout.txt
+
+      - name: Probe the TBAC bill-share band
+        timeout-minutes: 25
+        # The one dashboard number sourced to memory rather than to a fetched
+        # artefact. home.treasury.gov is refused by the development
+        # environment while api.fiscaldata.treasury.gov is allowed, so this is
+        # the only place the document itself can be reached.
+        #
+        # pypdf is installed HERE and not in requirements.txt: the deployed app
+        # has no use for a PDF parser and should not carry one.
+        if: inputs.only == '' || inputs.only == 'tbac'
+        run: |
+          # NOT weekly. This crawls ~80 documents off Treasury's own web server
+          # over fifteen minutes, and the claim it checks is now verified and
+          # changes rarely — running that every Monday is disproportionate to
+          # what it can learn and impolite to someone else's infrastructure.
+          #
+          # Scheduled runs therefore fire only in the first week of a refunding
+          # month (Feb/May/Aug/Nov), which is TBAC's own publication cycle: the
+          # cadence is set by when new minutes can exist, not by the workflow
+          # this step happens to live in. An explicit dispatch always runs.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            MONTH=$(date -u +%m); DAY=$(date -u +%d)
+            case "$MONTH" in
+              02|05|08|11) ;;
+              *) echo "Not a refunding month; skipping the TBAC probe." | tee -a probe_stdout.txt; exit 0 ;;
+            esac
+            if [ "$DAY" -gt 07 ]; then
+              echo "Past the first week of the refunding month; skipping." | tee -a probe_stdout.txt
+              exit 0
+            fi
+          fi
+          pip install -r requirements-probe.txt
+          python -u scripts/probe_tbac.py | tee -a probe_stdout.txt
+
+      - name: Probe Treasury's published average maturity
+        # The last unvalidated number in the US score. Fiscal Data does not
+        # publish an average maturity — probed across mspd_table_2..5 and
+        # avg_interest_rates — so the figure comes from ODM's quarterly deck,
+        # which lives on the host only reachable from here.
+        #
+        # Dispatch-only for now. It is a reconciliation run against a specific
+        # question, not a contract check, and it crawls someone else's server.
+        if: inputs.only == 'wam'
+        timeout-minutes: 20
+        run: |
+          pip install -r requirements-probe.txt
+          python -u scripts/probe_wam_reference.py | tee -a probe_stdout.txt
+
+      - name: Reconcile WAM against Treasury's published series
+        # Treasury DOES publish it: the quarterly release workbook carries a
+        # monthly grid, 'Average Maturity of Treasury Marketable Securities
+        # --Total Outstanding (in months)', back to 2000. Four earlier runs
+        # concluded otherwise because the workbook was decoded as UTF-8.
+        if: inputs.only == 'wam'
+        timeout-minutes: 10
+        run: python -u scripts/reconcile_wam.py | tee -a probe_stdout.txt
 
       - name: Summarise
         run: |

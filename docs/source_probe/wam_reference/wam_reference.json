@@ -1,0 +1,822 @@
+{
+  "probe": "treasury_published_average_maturity",
+  "our_value_years": 5.816,
+  "documents": [
+    {
+      "url": "https://home.treasury.gov/system/files/221/TreasuryPresentationToTBACQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TreasuryPresentationToTBACQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Treasury Presentation to TBAC (Final): 2026 - 3rd Quarter",
+      "characters_extracted": 55807,
+      "document_date": "2026-07",
+      "term_mentions": 1
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TBACCharge1Q32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TBACCharge1Q32026.pdf",
+      "content_type": "application/pdf",
+      "label": "TBAC Presentation to Treasury: (Charge 1",
+      "characters_extracted": 26928,
+      "document_date": "2026-08",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Nov15-TBAC-Presentation.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Nov15-TBAC-Presentation.pdf",
+      "content_type": "application/pdf",
+      "label": "4th Quarter",
+      "characters_extracted": 63781,
+      "document_date": "2015-05",
+      "term_mentions": 6
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/August2015TreasuryPresentationToTBAC.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/August2015TreasuryPresentationToTBAC.pdf",
+      "content_type": "application/pdf",
+      "label": "3rd Quarter",
+      "characters_extracted": 72360,
+      "document_date": "2015-09",
+      "term_mentions": 6
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/May2015TreasuryPresentationToTBAC.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/May2015TreasuryPresentationToTBAC.pdf",
+      "content_type": "application/pdf",
+      "label": "2nd Quarter",
+      "characters_extracted": 61427,
+      "document_date": "2015-04",
+      "term_mentions": 6
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Treasury-and-TBAC-Presentation-for-Archives-2nd-Quarter.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Treasury-and-TBAC-Presentation-for-Archives-2nd-Quarter.pdf",
+      "content_type": "application/pdf",
+      "label": "2nd Quarter",
+      "characters_extracted": 71681,
+      "document_date": null,
+      "term_mentions": 6
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Treasury-and-TBAC-Presentation-for-Archives-12014-FINAL.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Treasury-and-TBAC-Presentation-for-Archives-12014-FINAL.pdf",
+      "content_type": "application/pdf",
+      "label": "1st Quarter",
+      "characters_extracted": 73261,
+      "document_date": null,
+      "term_mentions": 5
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0584",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0584",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Financing Estimates: 2026 - 3rd Quarter",
+      "characters_extracted": 12946,
+      "document_date": null,
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0585",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0585",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Economic Policy Statements to TBAC: 2026 - 3rd Quarter\u200b",
+      "characters_extracted": 31599,
+      "document_date": null,
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0590",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0590",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "Policy Statement: 2026 - 3rd Quarter",
+      "characters_extracted": 14914,
+      "document_date": null,
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0591",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0591",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "TBAC Report to Secretary: 2026 - 3rd Quarter",
+      "characters_extracted": 21093,
+      "document_date": null,
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/news/press-releases/sb0592",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/news/press-releases/sb0592",
+      "content_type": "text/html; charset=UTF-8",
+      "label": "TBAC Minutes: 2026 - 3rd Quarter",
+      "characters_extracted": 22224,
+      "document_date": "2026-08",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TBACRecommendedFinancingTableByRefundingQuarter-08052026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TBACRecommendedFinancingTableByRefundingQuarter-08052026.pdf",
+      "content_type": "application/pdf",
+      "label": "TBAC Recommended Financing Table by Refunding Quarter",
+      "characters_extracted": 999,
+      "document_date": "2026-08",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TBACCharge2Q32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TBACCharge2Q32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Charge 2",
+      "characters_extracted": 28274,
+      "document_date": "2026-08",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/CombinedChargesforArchivesQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/CombinedChargesforArchivesQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Archives",
+      "characters_extracted": 111011,
+      "document_date": "2026-07",
+      "term_mentions": 1
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.xml",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.xml",
+      "content_type": "application/xml",
+      "label": "Auction Schedule: XML Format",
+      "characters_extracted": 10916,
+      "document_date": null,
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/TentativeAuctionScheduleQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Auction Schedule: PDF Format",
+      "characters_extracted": 21096,
+      "document_date": "2026-08",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.xml",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.xml",
+      "content_type": "application/xml",
+      "label": "Buyback Schedule: XML Format",
+      "characters_extracted": 2528,
+      "document_date": "2026-08",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/Tentative-Buyback-ScheduleQ32026.pdf",
+      "content_type": "application/pdf",
+      "label": "Buyback Schedule: PDF Format",
+      "characters_extracted": 3120,
+      "document_date": "2026-08",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/Dealer-Agenda-Aug-2026.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/Dealer-Agenda-Aug-2026.pdf",
+      "content_type": "application/pdf",
+      "label": "Primary Dealer Meeting Agenda: 2026 - 3rd Quarter",
+      "characters_extracted": 7122,
+      "document_date": "2026-07",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
+      "content_type": "application/vnd.ms-excel",
+      "label": "Quarterly Release Data: 2026 - 3rd Quarter",
+      "characters_extracted": 73885,
+      "document_date": null,
+      "term_mentions": 2
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2023-05-09.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2023-05-09.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated May 9, 2023 from Former TBAC Chairs and Vice Chairs on Raising the Debt Limit",
+      "characters_extracted": 5617,
+      "document_date": "2023-05",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2021-09-21.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/TBAC-Letter-to-Secretary-2021-09-21.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated September 21, 2021 from TBAC Chair Beth Hammack and Vice Chair Brian Sack on Raising the Debt Limit",
+      "characters_extracted": 4332,
+      "document_date": "2021-09",
+      "term_mentions": 0
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Matt-Zames-letter-to-Treasury-Secretary-Jacob-Lew5-2-16.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Matt-Zames-letter-to-Treasury-Secretary-Jacob-Lew5-2-16.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated May 2, 2016 from Outgoing TBAC Member Matthew E. Zames on Debt Management and the Debt Limit\u200b\u200b",
+      "characters_extracted": 0,
+      "text_unavailable": "no extractable text (likely a scanned image PDF)"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Geithner_Debt_Limit_Letter_4_25_11E.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Geithner_Debt_Limit_Letter_4_25_11E.pdf",
+      "content_type": "application/pdf",
+      "label": "Letter dated April 25, 2011 from TBAC Chairman Matthew E. Zames on Raising the Debt Limit",
+      "characters_extracted": 0,
+      "text_unavailable": "no extractable text (likely a scanned image PDF)"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 13526,
+      "document_date": "2010-02",
+      "term_mentions": 5
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Chart-Data-February-2010.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/Chart-Data-February-2010.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 43107,
+      "document_date": "2009-10",
+      "term_mentions": 3
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 14853,
+      "document_date": "2009-02",
+      "term_mentions": 5
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q1-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 25989,
+      "document_date": "2008-10",
+      "term_mentions": 3
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 15074,
+      "document_date": "2009-04",
+      "term_mentions": 5
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 27491,
+      "document_date": "2008-10",
+      "term_mentions": 3
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q3-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q3",
+      "characters_extracted": 14539,
+      "document_date": "2009-08",
+      "term_mentions": 6
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q3-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 15662,
+      "document_date": "2008-10",
+      "term_mentions": 3
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q4",
+      "characters_extracted": 14594,
+      "document_date": "2009-11",
+      "term_mentions": 5
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2009-q4-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 15893,
+      "document_date": "2008-10",
+      "term_mentions": 3
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q1",
+      "characters_extracted": 11397,
+      "document_date": "2008-01",
+      "term_mentions": 5
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q1-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 27284,
+      "document_date": "2008-02",
+      "term_mentions": 3
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "content_type": "application/pdf",
+      "label": "Q2",
+      "characters_extracted": 13417,
+      "document_date": "2008-04",
+      "term_mentions": 5
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart-data.pdf",
+      "fetched": true,
+      "status": 200,
+      "final_url": "https://home.treasury.gov/system/files/276/2008-q2-chart-data.pdf",
+      "content_type": "application/pdf",
+      "label": "Data",
+      "characters_extracted": 17400,
+      "document_date": "2008-05",
+      "term_mentions": 3
+    }
+  ],
+  "evidence": [],
+  "our_value_months": 69.8,
+  "our_observation": "2026-07-31",
+  "term_without_value": [
+    {
+      "url": "https://home.treasury.gov/system/files/221/TreasuryPresentationToTBACQ32026.pdf",
+      "label": "Treasury Presentation to TBAC (Final): 2026 - 3rd Quarter",
+      "samples": [
+        "FY27 & FY28 (see page 18). Buybacks are included in these projections using the same assumptions as Section IV. 23 24 Consolidated WANRR Calculation* * Weighted Average Next Rate Reset (WANRR) is a \u201cWeighted Average Maturity\u201d metric that attempts to adjust for the floating rate aspect of some Treasury debt. The WANRR is the average time until the outstanding debt\u2019s interest rate is set to a new interest rate. For bills a"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Nov15-TBAC-Presentation.pdf",
+      "label": "4th Quarter",
+      "samples": [
+        "15 B. OMB\u2019s Projections of Net Borrowing from the Public p. 17 C. Interest Rate Assumptions p. 18 D. Net Marketable Borrowing on \u201cAuto P ilot\u201d Versus Deficit Forecasts p. 19 IV. Portfolio Metrics A. Weighted Average Maturity of Marketable Debt Outstanding with Projections p. 24 B. Projected Gross Borrowing p. 25 C. Maturity Profile p. 26 V. Demand A. Summary Statistics p. 31 B. Bid-to-Cover Ratios p. 32 C. Investor Class",
+        "l Year 2016 Mid-Session Review.\u201d 25This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2",
+        "hanges to the mix of securities issued by Treasury. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Historical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2015 Q4 69.8 month",
+        "y. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Historical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2015 Q4 69.8 months on 9/30/2015 58.9 months (Historical Average fr",
+        "al Average from 1980 to Present) 26This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 0 500 1,000 1,500 2,000 2,500 3,000 3,500 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 $ bn Projected Gross Borrowing excluding Bills",
+        "ls OMB's Projected Net Borrowing 27This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. See table on following page ford e t a i l s . 0 5 10 15 20 25 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 $tr Projected Maturity Pro"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/August2015TreasuryPresentationToTBAC.pdf",
+      "label": "3rd Quarter",
+      "samples": [
+        ". 15 B. OMB\u2019s Projections of Net Borrowing from the Public p. 17 C. Interest Rate Assumptions p. 18 D. Net Marketable Borrowing on \u201cAuto Pilot\u201d Versus Deficit Forecasts p. 19 IV. Portfolio Metrics A. Weighted Average Maturity of Marketable Debt Outstanding with Projections p. 24 B. Projected Gross Borrowing p. 25 C. Maturity Profile p. 26 V. Demand A. Summary Statistics p. 31 B. Bid-to-Cover Ratios p. 32 C. Investor Class",
+        "Year 2016 Mid-Session Review.\u201d 25 This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2",
+        "hanges to the mix of securities issued by Treasury. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Histor ical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2015 Q3 69.6 mont",
+        "y. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Histor ical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2015 Q3 69.6 months on 6/30/2015 58.8 months (Historical Average f",
+        "l Average from 1980 to Present) 26 This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 0 500 1,000 1,500 2,000 2,500 3,000 3,500 4,000 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 $ bn Projected Gross Borrowing exclu",
+        "s OMB's Projected Net Borrowing 27 This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. See table on following page for details. 0 5 10 15 20 25 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 $tr Projected Maturity Prof"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/May2015TreasuryPresentationToTBAC.pdf",
+      "label": "2nd Quarter",
+      "samples": [
+        "13 B. OMB\u2019s Projections of Net Borrowing from the Public p. 15 C. Interest Rate Assumptions p. 16 D. Net Marketable Borrowing on \u201cAuto Pilot\u201d Versus Deficit Forecasts p. 17 III. Portfolio Metrics A. Weighted Average Maturity of Marketable Debt Outstanding with Projections p. 22 B. Projected Gross Borrowing p. 23 C. Recent and Projected Maturity Profile p. 24 IV. Demand A. Summary Statistics p. 29 B. Bid-to-Cover Ratios p",
+        "Budget of the U.S. Government.\u201d 22 This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2",
+        "hanges to the mix of securities issued by Treasury. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Histor ical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2015 Q2 68.7 mont",
+        "y. 40 45 50 55 60 65 70 75 80 85 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Histor ical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2015 Q2 68.7 months on 3/31/2015 58.9 months (Historical Average f",
+        "s OMB's Projected Net Borrowing 23 This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 0 5 10 15 20 25 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025 $ tr Projected Maturity Profile from end of Fiscal Year <= 1yr (1,2]",
+        "] (2,3] (3,5] (5,7] (7,10] > 10 24 This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. See table on following page for details. 25 This scenario does not represent any particular course of action that Treasury is expected to f"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Treasury-and-TBAC-Presentation-for-Archives-2nd-Quarter.pdf",
+      "label": "2nd Quarter",
+      "samples": [
+        "12 B. OMB\u2019s Projections of Net Borrowing from the Public p. 14 C. Interest Rate Assumptions p. 15 D. Net Marketable Borrowing on \u201cAuto Pilot\u201d Versus Deficit Forecasts p. 16 III. Portfolio Metrics A. Weighted Average Maturity of Marketable Debt Outstanding with Projections p. 20 B. Projected Gross Borrowing p. 21 C. Recent and Projected Maturity Profile p. 22 IV. Demand A. Summary Statistics p. 27 B. Bid-to-Cover Ratios p",
+        "(7) (0) 182 545 812 Section III: Portfolio Metrics 19 40 45 50 55 60 65 70 75 80 85 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Historical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2014 Q2 20 Portfol",
+        "cs 19 40 45 50 55 60 65 70 75 80 85 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Historical Adjust Nominal Coupons to Match Financing Needs Historical Average from 1980 to end of FY 2014 Q2 20 Portfolio & SOMA holdings as of 03/31/2014 and estimated",
+        "15 Budget of the U.S. Government.\u201d This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 66.7 months on 03/31/2014 58.65 months (Historical Average from 1980 to Present) 21 0 500 1,000 1,500 2,000 2,500 3,000 3,500 2014 2015 201",
+        "15 Budget of the U.S. Government.\u201d This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. 22 Recent and Projected Maturity Profile, $ Trillion 0 2 4 6 8 10 12 14 16 18 20 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 $ t",
+        "15 Budget of the U.S. Government.\u201d This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securities issued by Treasury. See table on following page for details 23 Portfolio & SOMA holdings as of 03/31/2014 and estimated projections of the Large Scale Asset Pu"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Treasury-and-TBAC-Presentation-for-Archives-12014-FINAL.pdf",
+      "label": "1st Quarter",
+      "samples": [
+        "12 B. OMB\u2019s Projections of Net Borrowing from the Public p. 14 C. Interest Rate Assumptions p. 15 D. Net Marketable Borrowing on \u201cAuto Pilot\u201d Versus Deficit Forecasts p. 16 III. Portfolio Metrics A. Weighted Average Maturity of Marketable Debt Outstanding with Projections p. 20 B. Recent and Projected Maturity Profile p. 21 IV. Demand A. Summary Statistics p. 26 B. Bid-to-Cover Ratios p. 27 C. Investor Class Awards at Au",
+        "(7) (0) 221 666 624 Section III: Portfolio Metrics 19 40 45 50 55 60 65 70 75 80 85 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Historical Average from 1980 to 2013 Historical Adjust Nominal Coupons to Match Financing Needs 20 Portfolio & SOMA hol",
+        "cs 19 40 45 50 55 60 65 70 75 80 85 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 2020 2022 2024 Weighted Average Maturity (Months) Calendar Year Weighted Average Maturity of Marketable Debt Outstanding Historical Average from 1980 to 2013 Historical Adjust Nominal Coupons to Match Financing Needs 20 Portfolio & SOMA holdings as of 12/31/2013 and estimated projections",
+        "view Budget of the US Government.\u201d This scenario does not represent any particular course of action that Treasury is expected to follow. Instead, it is intended to demonstrate the basic trajectory of average maturity absent changes to the mix of securiti es issued by Treasury. 66.7 months on 12/31/2013 58.6 months (Historical Average from 1980 to 2013) 21 0 2 4 6 8 10 12 14 16 18 20 2014 2015 2016 2017 2018 2019",
+        "more aggressive bidding in the initial auction. \u2022 If the option is regularly exercised, Treasury can reduce bill issuance in lieu of the Greenshoe coupon issuance, fulfilling the desire to extend the average maturity of the outstanding debt. If all add-on's are exercised, there is room to reduce bill supply in lieu of coupons, given current forecasts. The \u201cGreenshoe\u201d Option 60 The mechanics of syndications and th"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/CombinedChargesforArchivesQ32026.pdf",
+      "label": "Archives",
+      "samples": [
+        "FY27 & FY28 (see page 18). Buybacks are included in these projections using the same assumptions as Section IV. 23 24 Consolidated WANRR Calculation* * Weighted Average Next Rate Reset (WANRR) is a \u201cWeighted Average Maturity\u201d metric that attempts to adjust for the floating rate aspect of some Treasury debt. The WANRR is the average time until the outstanding debt\u2019s interest rate is set to a new interest rate. For bills a"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
+      "label": "Quarterly Release Data: 2026 - 3rd Quarter",
+      "samples": [
+        "### SHEET: Avg. mat. of debt outstanding Average Maturity of Treasury Marketable Securities--Total Outstanding (in months) Year | Jan | Feb | Mar | Apr | May | Jun | Jul | Aug | Sep | Oct | Nov | Dec 2000 | 68 | 69 | 67 | 69 | 70 | 69 | 69 | 69 | 69 | 70 |",
+        "ing Public Debt Amount maturing within End of Month | Total Outstanding ($ billions) | One Year or less | % | 1-5 Years | % | 5-10 Years | % | 10-20 Years | % | 20 Years and over | % | Average Length (months) 2026 | June | 31082.2 | 10146.5 | 33 | 10907.4 | 35 | 4310 | 14 | 2863.3 | 9 | 2855 | 9 | 71 2026 | May | 30909.9 | 10371.3 | 34 | 10660.7 | 34 | 4210.9 | 14 | 2831.9 | 9 | 2835.1 | 9 | 70 2"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "label": "Q1",
+      "samples": [
+        "ns assume no change to future issuance patterns\u2022 Projections assume no change to future issuance patterns. Using the above assumptions, over the next 10 years: A t it f t t l t t di d t it f i ttl t\u2022 Average maturity of total outstanding and average maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent of debt with 3 years or less to maturity is projected to decline to 53%. Of",
+        "terns\u2022 Projections assume no change to future issuance patterns. Using the above assumptions, over the next 10 years: A t it f t t l t t di d t it f i ttl t\u2022 Average maturity of total outstanding and average maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent of debt with 3 years or less to maturity is projected to decline to 53%. Office of Debt Management 7 \u2022 Average maturi",
+        "erage maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent of debt with 3 years or less to maturity is projected to decline to 53%. Office of Debt Management 7 \u2022 Average maturity of total debt outstanding rose by 6 hb h 80 90 80 90 monthsmonths Debt Maturity Measures Average Maturity of Issuance 1/ Hypothetical FY* months between March 2009 and December 2009, from 49 months t",
+        "ith 3 years or less to maturity is projected to decline to 53%. Office of Debt Management 7 \u2022 Average maturity of total debt outstanding rose by 6 hb h 80 90 80 90 monthsmonths Debt Maturity Measures Average Maturity of Issuance 1/ Hypothetical FY* months between March 2009 and December 2009, from 49 months to 55 months. 50 60 70 50 60 70 20 30 40 20 30 40 Average Maturity of Marketable Debt Outstanding 2/ 1/ Qua",
+        "0 90 monthsmonths Debt Maturity Measures Average Maturity of Issuance 1/ Hypothetical FY* months between March 2009 and December 2009, from 49 months to 55 months. 50 60 70 50 60 70 20 30 40 20 30 40 Average Maturity of Marketable Debt Outstanding 2/ 1/ Quarterly data are actuals through December 31, 2009. Actuals and fiscal year projections use a 4-quarter average. 2/ Quarterly data are actuals through December"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Chart-Data-February-2010.pdf",
+      "label": "Data",
+      "samples": [
+        "09 31% 7% 7/15/09 33% 7% 7/31/09 34% 6% 8/15/09 35% 6% 8/31/09 37% 6% 9/15/09 39% 6% 9/30/09 40% 5% 10/15/09 41% 5% 10/31/09 42% 6% 11/15/09 43% 6% 11/30/09 44% 6% 12/15/09 45% 6% 12/31/09 46% 7% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT A A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48",
+        "30/09 40% 5% 10/15/09 41% 5% 10/31/09 42% 6% 11/15/09 43% 6% 11/30/09 44% 6% 12/15/09 45% 6% 12/31/09 46% 7% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT A A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9",
+        "6% 11/15/09 43% 6% 11/30/09 44% 6% 12/15/09 45% 6% 12/31/09 46% 7% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT A A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "label": "Q1",
+      "samples": [
+        "oupon amounts as of January 15, 2009 and assume the outstanding level of bills on December 31, 2008. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 52 and 51 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 60 percent. 9 Office of Debt",
+        "ssume the outstanding level of bills on December 31, 2008. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 52 and 51 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 60 percent. 9 Office of Debt Management \u008c Average maturity of issuance",
+        "tanding and average maturity of issuance settle to about 52 and 51 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 60 percent. 9 Office of Debt Management \u008c Average maturity of issuance peaked in FY 2008. \u008c If future financing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of medium to longer-term debt. Distribution o",
+        "ssuance and maturing amounts. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Projected FY Net financing projections for FY 2009-10 are based on internal estimates; projections for FY 2011-13 are based on OMB 20",
+        "BT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Projected FY Net financing projections for FY 2009-10 are based on internal estimates; projections for FY 2011-13 are based on OMB 2009 MSR B udget estimates. Future"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart-data.pdf",
+      "label": "Data",
+      "samples": [
+        "0.0 -5.1 -8.5 I 08 -2.4 0.0 -3.3 -5.7 II -2.8 1.9 -6.9 -7.8 III -2.2 -1.8 -11.1 -15.1 IV -2.6 -0.1 -15.0 -17.6 I 09 -2.0 1.0 -10.9 -11.9 Treasury Quarterly Net Borrowing From NonMarketable Issues THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT A A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48",
+        "V -2.6 -0.1 -15.0 -17.6 I 09 -2.0 1.0 -10.9 -11.9 Treasury Quarterly Net Borrowing From NonMarketable Issues THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT A A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9",
+        "9 -11.9 Treasury Quarterly Net Borrowing From NonMarketable Issues THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT A A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "label": "Q2",
+      "samples": [
+        "on amounts as of April 17, 2009 and assume the outstanding level of weekly bills on March 31, 2009. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 10 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 67 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 9 Office of Debt",
+        "the outstanding level of weekly bills on March 31, 2009. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 10 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 67 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 9 Office of Debt Management \u008c Average maturity of marketab",
+        "tanding and average maturity of issuance settle to about 59 and 67 months, respectively. \u008c The percent of debt with 3 years or less to maturity stabilizes at 56 percent. 9 Office of Debt Management \u008c Average maturity of marketable debt outstanding is projected to rise from recent lows. \u008c If future financing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of med",
+        "ger-term debt. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Hypothetical FY* *Net financing projections for FY 2009-2019 are based on the preliminary OMB 2010 Budget estimates released February",
+        "SURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Hypothetical FY* *Net financing projections for FY 2009-2019 are based on the preliminary OMB 2010 Budget estimates released February 2009. Futu re residual financin"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart-data.pdf",
+      "label": "Data",
+      "samples": [
+        "4 0.0 -3.3 -5.7 II -2.8 1.9 -6.9 -7.8 III -2.2 -1.8 -11.1 -15.1 IV -2.6 -0.1 -15.0 -17.6 I 09 -2.0 1.0 -10.9 -11.9 II -1.9 2.0 -9.2 -9.1 Treasury Quarterly Net Borrowing From NonMarketable Issues THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AND A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74",
+        "I 09 -2.0 1.0 -10.9 -11.9 II -1.9 2.0 -9.2 -9.1 Treasury Quarterly Net Borrowing From NonMarketable Issues THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AND A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9",
+        "-9.1 Treasury Quarterly Net Borrowing From NonMarketable Issues THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AND A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart.pdf",
+      "label": "Q3",
+      "samples": [
+        "utstanding level of weekly bills on June 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt wit",
+        "0, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to",
+        "cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Man",
+        "e to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 80 90 80 90 monthsmonths DEBT MA",
+        "tle to about 68 and 78 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 80 90 80 90 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 As expected, average maturity of marketable debt outstanding is projected to rise over the coming years. 60 70 60 70 30 40 50 30 40 50 Average Maturity of Marketable",
+        "bt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 80 90 80 90 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 As expected, average maturity of marketable debt outstanding is projected to rise over the coming years. 60 70 60 70 30 40 50 30 40 50 Average Maturity of Marketable Debt Outstanding 2/ 1 Quarterly data are actuals throu gh June"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart-data.pdf",
+      "label": "Data",
+      "samples": [
+        ".3% 17.4% 11.4% 5.9% 1.8% 2.3% 9/30/08 62.4% 16.8% 11.0% 5.5% 1.6% 2.0% 12/31/08 61.0% 17.6% 10.4% 6.8% 1.8% 1.8% 3/31/09 58.0% 19.5% 11.9% 6.7% 2.0% 1.4% 6/30/09 52.4% 20.9% 14.0% 6.7% 2.2% 3.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 4",
+        "7.6% 10.4% 6.8% 1.8% 1.8% 3/31/09 58.0% 19.5% 11.9% 6.7% 2.0% 1.4% 6/30/09 52.4% 20.9% 14.0% 6.7% 2.2% 3.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9",
+        ".5% 11.9% 6.7% 2.0% 1.4% 6/30/09 52.4% 20.9% 14.0% 6.7% 2.2% 3.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "label": "Q4",
+      "samples": [
+        "nding level of weekly bills on September 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance settle to about 66 and 77 months respectivelysettle to about 66 and 77 months, respectively. \u2022 The percent of debt with 3 years or less to maturi",
+        "0, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance settle to about 66 and 77 months respectivelysettle to about 66 and 77 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt",
+        "velysettle to about 66 and 77 months, respectively. \u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 9090 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 Average maturity of marketable issuance and debt outstanding are projected to rise over the coming years assuming not policy changes 60 70 80 60 70 80 and current is",
+        "\u2022 The percent of debt with 3 years or less to maturity declines to 53 percent. Office of Debt Management 7 9090 monthsmonths DEBT MATURITY MEASURES Average Maturity of Issuance 1/ Hypothetical FY* \u2022 Average maturity of marketable issuance and debt outstanding are projected to rise over the coming years assuming not policy changes 60 70 80 60 70 80 and current issuance patterns. 30 40 50 30 40 50 Average Maturity",
+        "Average maturity of marketable issuance and debt outstanding are projected to rise over the coming years assuming not policy changes 60 70 80 60 70 80 and current issuance patterns. 30 40 50 30 40 50 Average Maturity of Marketable Debt Outstanding 2/ 1/ Quarterly data are actuals through September 30, 2009. Actuals and fiscal year projections use a 4-quarter average. 2/ ld lh h b i l j i ld 2020 1980 1982 1984 19"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart-data.pdf",
+      "label": "Data",
+      "samples": [
+        "% 1.8% 3/31/09 58.0% 19.5% 11.9% 6.7% 2.0% 1.4% 6/30/09 53.5% 21.3% 14.3% 6.8% 2.3% 1.3% 9/30/09 49.7% 22.8% 16.3% 6.9% 2.7% 1.1% Average 58.12% 22.50% 10.82% 4.67% 3.19% 2.13% CMB's are excluded THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 4",
+        "9/30/09 49.7% 22.8% 16.3% 6.9% 2.7% 1.1% Average 58.12% 22.50% 10.82% 4.67% 3.19% 2.13% CMB's are excluded THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9",
+        "Average 58.12% 22.50% 10.82% 4.67% 3.19% 2.13% CMB's are excluded THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss* Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "label": "Q1",
+      "samples": [
+        "t deficit estimates used for FY2008-2012. The FY 2008 financing need is an update based on market expectations and Treasury\u2019s internal forecasts. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 60 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 54 percent. 7 Offic",
+        "The FY 2008 financing need is an update based on market expectations and Treasury\u2019s internal forecasts. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 60 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 54 percent. 7 Office of Debt Management \u008c Based on current as",
+        "e settle to about 59 and 60 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 54 percent. 7 Office of Debt Management \u008c Based on current assumptions, average maturity of issuance peaks in FY 2008. \u008c If future financing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of medium to longer-term debt. DEBT MATURITY M",
+        "f medium to longer-term debt. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Projected FY Net financing projections for FY 2008-2012 are based on OMB 2008 MSR estimates. Future residual financing needs are spre",
+        "BT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Projected FY Net financing projections for FY 2008-2012 are based on OMB 2008 MSR estimates. Future residual financing needs are spread propo rtionally across auctio"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart-data.pdf",
+      "label": "Data",
+      "samples": [
+        "5% 23.6% 10.7% 5.3% 1.5% 3.3% 3/31/07 57.8% 20.9% 10.5% 5.2% 1.2% 3.4% 6/30/07 54.5% 21.8% 11.4% 5.9% 1.8% 3.5% 9/30/07 56.3% 20.1% 11.7% 5.9% 1.8% 3.2% 12/31/07 57.4% 19.3% 11.9% 5.9% 1.74% 2.8% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48",
+        "8% 11.4% 5.9% 1.8% 3.5% 9/30/07 56.3% 20.1% 11.7% 5.9% 1.8% 3.2% 12/31/07 57.4% 19.3% 11.9% 5.9% 1.74% 2.8% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/",
+        "1% 11.7% 5.9% 1.8% 3.2% 12/31/07 57.4% 19.3% 11.9% 5.9% 1.74% 2.8% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "label": "Q2",
+      "samples": [
+        "recently announced amounts and assume the outstanding level of bills on March 31, 2008. \u008c OMB 2009 Budget deficit estimates used for FY2008-2013. Using the above assumptions, over the next 6 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 55 and 58 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 56 percent. 7 Offic",
+        "outstanding level of bills on March 31, 2008. \u008c OMB 2009 Budget deficit estimates used for FY2008-2013. Using the above assumptions, over the next 6 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 55 and 58 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Under current assum",
+        "ance settle to about 55 and 58 months, respectively. \u008c The percent of debt maturing with 3 years or less to maturity stabilizes at 56 percent. 7 Office of Debt Management \u008c Under current assumptions, average maturity of issuance peaks in FY 2008 and then declines thereafter. \u008c If future financing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of medium to long",
+        "f medium to longer-term debt. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Projected FY Net financing projections for FY 2008-2013 are based on OMB 2009 Budget estimates. Future residual financing needs are s",
+        "BT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Projected FY Net financing projections for FY 2008-2013 are based on OMB 2009 Budget estimates. Future residual financing needs are spread pr oportionally across auc"
+      ]
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart-data.pdf",
+      "label": "Data",
+      "samples": [
+        "6% 19.0% 9.6% 4.7% 1.1% 3.1% 6/30/07 58.6% 19.9% 10.4% 5.3% 1.6% 3.2% 9/30/07 61.6% 17.7% 10.2% 5.2% 1.6% 2.8% 12/31/07 61.7% 17.4% 10.7% 5.3% 1.57% 2.5% 3/31/08 63.0% 16.4% 10.4% 5.4% 1.65% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48",
+        "% 10.2% 5.2% 1.6% 2.8% 12/31/07 61.7% 17.4% 10.7% 5.3% 1.57% 2.5% 3/31/08 63.0% 16.4% 10.4% 5.4% 1.65% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/",
+        "4% 10.7% 5.3% 1.57% 2.5% 3/31/08 63.0% 16.4% 10.4% 5.4% 1.65% 2.3% THE AVERAGE MATURITY OF TOTAL OUTSTANDING MARKETABLE DEBT AN A 1-YEAR MOVING AVERAGE OF THE AVERAGE MATURITY OF ISSUANCE Avg Mat Iss Average Maturity 1-Yr Moving Average Total Outstanding (months) (months) 12/31/80 74 48 3/31/81 73 48 6/30/81 74 50 9/30/81 76 51 12/31/81 77 50 3/31/82 77 50 6/30/82 64 50 9/30/82 57 49 12/31/82 55 47 3/31/83 56 47"
+      ]
+    }
+  ],
+  "rejected_values": [
+    {
+      "url": "https://home.treasury.gov/system/files/276/August2015TreasuryPresentationToTBAC.pdf",
+      "value": 30.0,
+      "unit": "year",
+      "why": "surroundings read as chart axis labels, not prose",
+      "context": "65 191 197 202 192 191 171 0.0% 1.0% 2.0% 3.0% 4.0% 5.0% 6.0% 7.0% 0 500 1000 1500 2000 2500 3000 3500 1Y 2Y 3Y 4Y 5Y 6Y 7Y 8Y 9Y 10Y 11Y 12Y 13Y 14Y 15Y 16Y 17Y 18Y 19Y 20Y 21Y 22Y 23Y 24Y 25Y 26Y 27Y 28Y 29Y 30Y Average coupon rate Debt outstanding ($bn) Maturity bucket Simulate cost of funds and weighted average maturity of Treasury debt over the next 30 years 10 \uf07d Assumptions: o Interest rates"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/August2015TreasuryPresentationToTBAC.pdf",
+      "value": 2.0,
+      "unit": "year",
+      "why": "the slide is a projection or a hypothetical, not an actual",
+      "context": "ve. o Scenario 5: %issuance is uniform, but rates are shocked higher after 10 years by 300bp relative to the base case outlined above. \uf07d Output: Projected \u201cWeighted average cost of funds (WAC)\u201d and \u201cWeighted average maturity of outstanding debt stock (WAM)\u201d over time Uniform issuance extends WAM by 2 years without significantly increasing cost 11 Average maturity (WAM; years) Cost of funds (WAC) T"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/August2015TreasuryPresentationToTBAC.pdf",
+      "value": 75.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "e term premia but longer maturities have comparable relative term premia. \uf07d More work should be done on an asset liability framework for managing government debt and the durability of liquidity premium in the front end going forward. Appendix 21 Simulation parameters 22 \uf07d Simulate cost of funds and weighted average maturity over the next 75 years (we only show progression over the next 30 years) \uf07d"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/221/2026-3rd-Quarter.xls",
+      "value": 10.0,
+      "unit": "year",
+      "why": "surroundings read as chart axis labels, not prose",
+      "context": "2000 | 0.39 | 0.53 | 0.61\n1 | 2000 | 0.38 | 0.53 | 0.6\n### SHEET: Maturity dist. of debt out.\nMaturity\u00a0Distribution\u00a0and\u00a0Average\u00a0Length\u00a0of\u00a0Marketable\u00a0Interest-Bearing\u00a0Public\u00a0Debt \nAmount maturing within\nEnd of Month |  Total Outstanding ($ billions)  | \nOne Year \nor less | % | \n\n1-5 Years | % | \n\n5-10 Years | % | \n\n10-20 Years | % | \n20 Years \nand over | % | \n\nAverage Length (months)\n2026 | June | "
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "value": 10.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "20 TIPS ifor 30-year TIPS is based on the average announced amount for 20-year TIPS in 2009. \u2022 Projections exclude cash management bills. \u2022 Projections assume no change to future issuance patterns\u2022 Projections assume no change to future issuance patterns. Using the above assumptions, over the next 10 years: A t it f t t l t t di d t it f i ttl t\u2022 Average maturity of total outstanding and average m"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/Monday-chart-template-Feb-2010-Final.pdf",
+      "value": 79.0,
+      "unit": "month",
+      "why": "the slide is a projection or a hypothetical, not an actual",
+      "context": ". \u2022 Projections exclude cash management bills. \u2022 Projections assume no change to future issuance patterns\u2022 Projections assume no change to future issuance patterns. Using the above assumptions, over the next 10 years: A t it f t t l t t di d t it f i ttl t\u2022 Average maturity of total outstanding and average maturity of issuance settle to approximately 68 and 79 months, respectively. \u2022 The percent o"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "value": 5.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "curities and are derived from hypothetical initial coupon auction sizes. \u008c These sizes are based on announced coupon amounts as of January 15, 2009 and assume the outstanding level of bills on December 31, 2008. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 52"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "value": 51.0,
+      "unit": "month",
+      "why": "the slide is a projection or a hypothetical, not an actual",
+      "context": "upon auction sizes. \u008c These sizes are based on announced coupon amounts as of January 15, 2009 and assume the outstanding level of bills on December 31, 2008. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 52 and 51 months, respectively. \u008c The percent of debt w"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q1-chart.pdf",
+      "value": 90.0,
+      "unit": "month",
+      "why": "surroundings read as chart axis labels, not prose",
+      "context": "January 15, 2009 and assume the outstanding level of bills on December 31, 2008. All projections exclude CMB issuance and maturing amounts. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Project"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "value": 10.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "ned securities and are derived from hypothetical initial coupon auction sizes, which are based on announced coupon amounts as of April 17, 2009 and assume the outstanding level of weekly bills on March 31, 2009. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 10 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 5"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "value": 67.0,
+      "unit": "month",
+      "why": "the slide is a projection or a hypothetical, not an actual",
+      "context": "al coupon auction sizes, which are based on announced coupon amounts as of April 17, 2009 and assume the outstanding level of weekly bills on March 31, 2009. \u008c Projections exclude cash management bills. Using the above assumptions, over the next 10 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 67 months, respectively. \u008c The percent of debt w"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q2-chart.pdf",
+      "value": 90.0,
+      "unit": "month",
+      "why": "surroundings read as chart axis labels, not prose",
+      "context": "re spread proportionally, current issuance patterns would lead to a steadily increasing share of medium to longer-term debt. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 2014 2016 2018 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Hypothe"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart.pdf",
+      "value": 10.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "l initial coupon auction sizes, which are based on announced coupon amounts as of July 23, 2009 and assume the outstanding level of weekly bills on June 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q3-chart.pdf",
+      "value": 78.0,
+      "unit": "month",
+      "why": "the slide is a projection or a hypothetical, not an actual",
+      "context": "el of weekly bills on June 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance\u2022 Average maturity of total outstanding and average maturity of issuance settle to about 68 and 78 months, respectively. \u2022 The percent of debt w"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "value": 10.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "hetical auction sizes, which are based on announced coupon amounts as of October 23, 2009, and assume the outstanding level of weekly bills on September 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance settle to about 6"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2009-q4-chart.pdf",
+      "value": 77.0,
+      "unit": "month",
+      "why": "the slide is a projection or a hypothetical, not an actual",
+      "context": "upon amounts as of October 23, 2009, and assume the outstanding level of weekly bills on September 30, 2009. \u2022 Projections exclude cash management bills. \u2022 Assumes no change to future issuance patterns. Using the above assumptions, over the next 10 years: \u2022 Average maturity of total outstanding and average maturity of issuance settle to about 66 and 77 months respectivelysettle to about 66 and 77 "
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "value": 5.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "ecently announced amounts and assume the outstanding level of bills on September 30, 2007. \u008c OMB 2008 MSR Budget deficit estimates used for FY2008-2012. The FY 2008 financing need is an update based on market expectations and Treasury\u2019s internal forecasts. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "value": 60.0,
+      "unit": "month",
+      "why": "average maturity of ISSUANCE \u2014 not our measurement",
+      "context": "level of bills on September 30, 2007. \u008c OMB 2008 MSR Budget deficit estimates used for FY2008-2012. The FY 2008 financing need is an update based on market expectations and Treasury\u2019s internal forecasts. Using the above assumptions, over the next 5 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 59 and 60 months, respectively. \u008c The percent of debt m"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q1-chart.pdf",
+      "value": 90.0,
+      "unit": "month",
+      "why": "surroundings read as chart axis labels, not prose",
+      "context": "nancing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of medium to longer-term debt. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Project"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "value": 6.0,
+      "unit": "year",
+      "why": "the number is a horizon or a scenario, not a level",
+      "context": "securities and are derived from hypothetical initial coupon auction sizes. \u008c These sizes are based on the most recently announced amounts and assume the outstanding level of bills on March 31, 2008. \u008c OMB 2009 Budget deficit estimates used for FY2008-2013. Using the above assumptions, over the next 6 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 55"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "value": 58.0,
+      "unit": "month",
+      "why": "average maturity of ISSUANCE \u2014 not our measurement",
+      "context": "coupon auction sizes. \u008c These sizes are based on the most recently announced amounts and assume the outstanding level of bills on March 31, 2008. \u008c OMB 2009 Budget deficit estimates used for FY2008-2013. Using the above assumptions, over the next 6 years: \u008c Average maturity of total outstanding and average maturity of issuance settle to about 55 and 58 months, respectively. \u008c The percent of debt m"
+    },
+    {
+      "url": "https://home.treasury.gov/system/files/276/2008-q2-chart.pdf",
+      "value": 90.0,
+      "unit": "month",
+      "why": "surroundings read as chart axis labels, not prose",
+      "context": "nancing needs are spread proportionally, current issuance patterns would lead to a steadily increasing share of medium to longer-term debt. DEBT MATURITY MEASURES 20 30 40 50 60 70 80 90 1980 1982 1984 1986 1988 1990 1992 1994 1996 1998 2000 2002 2004 2006 2008 2010 2012 months 20 30 40 50 60 70 80 90 months Average Maturity of Issuance 1/ Average Maturity of Marketable Debt Outstanding 2/ Project"
+    }
+  ],
+  "stopped_on_budget": {
+    "after_documents": 39,
+    "documents_unread": 784
+  },
+  "documents_with_text": 37,
+  "outcome": "NOT FOUND (PARTIAL)"
+}

@@ -1,0 +1,3 @@
+# Probe-only dependencies. Kept OUT of requirements.txt so the deployed
+# app never carries a PDF parser it does not use.
+pypdf==6.4.0
