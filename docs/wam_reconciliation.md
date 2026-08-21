@@ -113,3 +113,46 @@ window, which reads as extra shortening in 2008-2009.
 
 Material for those two years specifically, immaterial from 2010 on. It should be
 resolved before the 2008-2009 readings are used to argue anything.
+
+## Testing the callable hypothesis: half confirmed, and a second gap found
+
+Recomputed WAM at 2002-03-31 from `mspd_table_3_market`, through the project's
+own `normalize_securities_detail` so subtotal rows are excluded and TIPS are put
+on a par basis. 176 securities, $2,988.3bn par.
+
+Fifteen bonds issued before 1985 with ~30-year terms are outstanding, $70.5bn,
+2.36% of par — the classic callables, callable at 25 years. Maturing them at the
+call date rather than final maturity moves WAM by **−1.42 months**.
+
+| | months | gap vs Treasury's 64 |
+|---|---|---|
+| recompute, final maturity | 66.4 | +2.4 |
+| recompute, call dates | 65.0 | **+1.0** |
+
+**So callables explain roughly half the era's bias, not all of it.** The
+hypothesis survives and is worth acting on — `wam.model_call_dates: false` is a
+real divergence from Treasury with a measurable cost — but something else
+accounts for the rest.
+
+### The second gap is internal, and is the more serious of the two
+
+The committed pipeline reports **69.1 months** at 2002-03. This recomputation,
+using the pipeline's own normalizer at the same date, gives **66.4**. A 2.7-month
+difference between the published series and a recomputation from the same source
+through the same code is not a definitional question — it is an inconsistency
+inside our own pipeline, and it is larger than the callable effect it was meant
+to explain.
+
+Par differs too: the pipeline reports $3,041.6bn against $2,988.3bn here, a
+$53.3bn gap. Federal Financing Bank accounts for $15bn of that; the remaining
+~$38bn is unexplained.
+
+**This is not yet a finding that the pipeline is wrong.** The recomputation
+differs from `build_wam` in ways not controlled for: it filters to a single
+record date before normalizing rather than processing the full history, and row
+selection ahead of normalization may differ. Either could produce the gap.
+
+Resolving it means running `build_wam`'s exact path for 2002-03 and diffing the
+security set against this one. That should happen before the callable convention
+is changed, because changing a convention to close a gap that is really a
+plumbing bug would bury the bug rather than fix it.
