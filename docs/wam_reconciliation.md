@@ -158,3 +158,52 @@ handling and double-counted; the second bypassed the weighting basis. Neither
 looked wrong on inspection. **Any future check of this kind should call the
 pipeline's own functions rather than reproduce them**, which is what finally
 produced a trustworthy number here.
+
+
+## Bill weighting and class coverage: both refuted, callables confirmed
+
+Tested across all 306 overlapping months rather than at one date, using the
+pipeline's own frame. Mean difference, ours minus Treasury, in months:
+
+| era | as-is | call dates | ex-TIPS | call + ex-TIPS |
+|---|---|---|---|---|
+| 2001-2007 | +2.73 | **+1.64** | -1.51 | -2.65 |
+| 2008-2012 | -0.32 | -0.39 | -3.98 | -4.05 |
+| 2013-2019 | -0.14 | -0.14 | -2.94 | -2.94 |
+| 2020-2026 | -0.03 | -0.03 | -1.41 | -1.41 |
+
+**TIPS exclusion is refuted.** It looked promising at 2002-03, where dropping
+TIPS moved WAM -3.6 months and landed within a month of Treasury's figure. Across
+the full history it is decisively wrong: it degrades every era, pushing 2008-2012
+from -0.32 to -3.98, and the share of months agreeing within half a month falls
+from 61% to 8%. Treasury includes TIPS. The single-date result was a coincidence,
+and testing one month would have produced a confident wrong answer.
+
+**Bill weighting is refuted.** Bills are 27% of par and contribute 0.63 of the
+69.1 months. Closing a 5.11-month gap by reweighting them would require carrying
+bills at about 33% of par instead of 27% — a 30% over-weight with no basis in any
+convention. Not a candidate.
+
+**Callables are confirmed as a partial explanation.** Call-date treatment improves
+2001-2007 from +2.73 to +1.64 — about 40% of that era's bias — and is essentially
+neutral everywhere else (-0.32 to -0.39, then unchanged). A correction that acts
+only where the problem is and costs nothing where there is no problem is the
+signature of a real effect rather than a fitted one.
+
+Note the composition that makes this plausible: bonds are 22% of par and 67% of
+WAM (212.6 months average maturity against 2.3 for bills), so a bond-only
+convention has leverage far beyond its weight.
+
+### What remains
+
+About **1.6 months** of the 2001-2007 bias is still unexplained after callables.
+Untested: whether the 25-year call assumption holds for every one of the fifteen
+bonds, and whether any non-bond securities of that era carried call provisions.
+
+### Recommendation
+
+Set `wam.model_call_dates: true`. It is a real divergence from Treasury,
+measurably corrects the era it affects, and does no harm to the rest of the
+series. The residual should be recorded rather than chased — the modern period,
+which is what the score actually uses, already agrees to within a tenth of a
+month.
