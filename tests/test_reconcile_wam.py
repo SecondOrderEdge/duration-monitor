@@ -105,3 +105,32 @@ def test_months_present_in_only_one_series_are_dropped_not_filled():
                          "wam_years": [5.75, 6.0]})
     joined = compare(ours, pd.Series({pd.Period("2000-01", freq="M"): 68.0}))
     assert len(joined) == 1, "an inner join; no month is invented on either side"
+
+
+# --------------------------------------------------------------------------- #
+# The standing check
+# --------------------------------------------------------------------------- #
+
+def test_the_configured_limit_is_above_treasurys_rounding_floor():
+    """Treasury publishes whole months, so anything at or under half a month is
+    rounding. A limit below that would fire on arithmetic, not on drift."""
+    import yaml
+
+    cfg = yaml.safe_load(
+        (pathlib.Path(__file__).resolve().parents[1] / "config" / "thresholds.yaml")
+        .read_text(encoding="utf-8")
+    )["validation"]["wam_vs_treasury"]
+    assert cfg["max_median_abs_difference_months"] >= 0.5
+
+
+def test_the_check_starts_after_the_known_callable_divergence():
+    """2001-2007 carries an accepted +2.7 month gap from the callable convention.
+    Judging from 2001 would make the check fire permanently on something already
+    understood, which is how a check gets ignored."""
+    import yaml
+
+    cfg = yaml.safe_load(
+        (pathlib.Path(__file__).resolve().parents[1] / "config" / "thresholds.yaml")
+        .read_text(encoding="utf-8")
+    )["validation"]["wam_vs_treasury"]
+    assert pd.Period(str(cfg["judge_from"]), freq="M") >= pd.Period("2008-01", freq="M")

@@ -142,13 +142,42 @@ wam:
   # Deviation D9(b). TIPS are published inflation-adjusted, so a total WAM mixing
   # them with par-reported classes weights TIPS by roughly their accretion. Par is
   # recoverable (outstanding - accretion) and is the basis used, so every class is
-  # weighted on one footing. To be confirmed against Treasury's own published
-  # average length of the marketable debt, which is the external check on this.
+  # weighted on one footing.
+  #
+  # CONFIRMED 2026-08-21 against Treasury's own published series. The quarterly
+  # release workbook carries "Average Maturity of Treasury Marketable
+  # Securities--Total Outstanding (in months)" monthly back to 2000. Over 306
+  # overlapping months our series differs by a MEDIAN OF +0.01 MONTHS, and from
+  # 2008 onward by -0.32, -0.14 and -0.03 months per era. The PAR basis is right:
+  # excluding TIPS altogether was tested and degrades every era, collapsing
+  # agreement-within-half-a-month from 61% of months to 8%. Treasury includes
+  # TIPS, on this footing. See docs/wam_reconciliation.md and
+  # scripts/reconcile_wam.py, which re-runs the check.
   tips_weighting_basis: PAR
+  verified: 2026-08-21
   maturity_buckets_years: [1, 2, 3, 5]
   use_final_maturity_for_frn: true
   use_final_maturity_for_tips: true
-  model_call_dates: false       # callables (pre-2009 history) mature at final maturity
+
+  # Callables mature at FINAL maturity here. Measured cost, 2026-08-21: this is
+  # the largest single driver of the one era where we diverge from Treasury.
+  # Maturing the fifteen pre-1985 ~30-year bonds at a 25-year call instead moves
+  # 2001-2007 from +2.73 to +1.64 months and changes nothing after 2008.
+  #
+  # NOT CHANGED, deliberately. MSPD publishes no callable flag and no call date,
+  # so modelling one means inferring WHICH securities are callable (pattern:
+  # issued pre-1985, term >= 29y — never verified against a prospectus) and
+  # inferring the DATE (maturity minus five years — assumed, not read). That
+  # would replace a published maturity_date with a number this project made up,
+  # to close 40% of a bias in a period the score uses only as percentile warm-up.
+  # A measured, bounded, documented divergence is worth more than a modelled
+  # correction that hides the same uncertainty inside a computed date.
+  #
+  # Residual after callables: about 1.6 months in 2001-2007, unexplained.
+  # Refuted as explanations: TIPS exclusion, and bill weighting (bills are 27% of
+  # par and would need carrying at ~33% to close the gap).
+  model_call_dates: false
+  model_call_dates_measured: 2026-08-21
   marketable_only: true
 
 # --------------------------------------------------------------------------- #
@@ -342,6 +371,22 @@ validation:
         (1,596,401.8579mn) and with mspd_table_1 BILLS to within rounding. The
         detail is right and the unmatured subtotal is wrong for this month.
   debt_to_penny_tolerance_pct: 0.1
+  # WAM against Treasury's published monthly series (scripts/reconcile_wam.py).
+  # Calibrated 2026-08-21 from the observed distribution: median difference
+  # +0.01 months, and every era from 2008 within 0.32. A drift past half a month
+  # in the MODERN period would be a real change in the pipeline or the source,
+  # not noise — Treasury publishes whole months, so half a month is the rounding
+  # floor and anything beyond it is signal.
+  #
+  # Judged from 2008 only. 2001-2007 carries a known +2.7 month divergence driven
+  # by the callable convention (see the `wam` block); including it would make the
+  # check fire permanently on something already understood and deliberately
+  # accepted, which is how a check gets ignored.
+  wam_vs_treasury:
+    max_median_abs_difference_months: 0.5
+    judge_from: 2008-01
+    calibrated: 2026-08-21
+
   staleness_days:
     mspd: 45          # monthly, published around the 8th business day
     auctions: 7

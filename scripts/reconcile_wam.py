@@ -174,8 +174,27 @@ def main() -> int:
               f"Treasury {joined.loc[period, 'published_months']:.0f}mo "
               f"({diff.loc[period]:+.1f})")
 
+    # The check, not just the report. A reconciliation that only prints is one
+    # nobody reads until they already suspect something.
+    import yaml
+
+    cfg = yaml.safe_load(
+        (REPO_ROOT / "config" / "thresholds.yaml").read_text(encoding="utf-8")
+    )["validation"].get("wam_vs_treasury") or {}
+    judge_from = pd.Period(str(cfg.get("judge_from", "2008-01")), freq="M")
+    limit = float(cfg.get("max_median_abs_difference_months", 0.5))
+    modern = joined[joined.index >= judge_from]["difference_months"]
+    breached = bool(len(modern)) and abs(modern.median()) > limit
+    print(f"\n  check: median |difference| from {judge_from} is "
+          f"{abs(modern.median()):.3f} months against a {limit} limit "
+          f"({len(modern)} months) — {'FAIL' if breached else 'ok'}")
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     summary = {
+        "check_from": str(judge_from),
+        "check_limit_months": limit,
+        "check_median_abs_months": round(float(abs(modern.median())), 4),
+        "check_passed": not breached,
         "workbook": args.workbook,
         "sheet": title,
         "published_months": len(published),
@@ -195,6 +214,10 @@ def main() -> int:
         period=lambda f: f["period"].astype(str)
     ).to_csv(OUT_DIR / "wam_vs_treasury.csv", index=False)
     print(f"\n  → {(OUT_DIR / 'wam_vs_treasury.json').relative_to(REPO_ROOT)}")
+    if breached:
+        print("::error::WAM has drifted from Treasury's published series beyond "
+              f"{limit} months since {judge_from}.", file=sys.stderr)
+        return 1
     return 0
 
 
