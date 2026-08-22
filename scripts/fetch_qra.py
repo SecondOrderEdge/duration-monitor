@@ -1,0 +1,150 @@
+"""Fetch one quarter's refunding documents and extract the passages a QRA row needs.
+
+The QRA log is manual by design — Phase 1 deliberately does not NLP-extract the
+PDFs, and this script does not change that. It does the FETCHING, which the
+development environment cannot (home.treasury.gov is refused at CONNECT), and it
+extracts VERBATIM passages around the terms a `qra_log.csv` row is built from:
+borrowing estimates, the assumed end-of-quarter cash balance, auction size
+changes, and the issuance commentary. A human reads the passages and types the
+row. No number is parsed into a field by this script, because a mis-parsed
+borrowing estimate in a hand-entry log would be worse than an empty one: the log
+exists to be the thing that was definitely read off the document.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import pathlib
+import re
+import sys
+import time
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.probe_tbac import (  # noqa: E402
+    ENTRY_POINTS,
+    fetch,
+    links_from,
+    text_of,
+)
+
+OUT_DIR = REPO_ROOT / "docs" / "source_probe" / "qra"
+
+# The terms a QRA row is transcribed from. Each match is returned with wide
+# context so the reader gets the sentence Treasury wrote, not a fragment.
+TOPICS = {
+    "borrowing_estimate": re.compile(
+        r"expects to borrow|borrowing estimate|net marketable debt|"
+        r"privately-held net marketable", re.I),
+    "cash_balance": re.compile(r"cash balance", re.I),
+    "auction_sizes": re.compile(
+        r"auction size|increase.{0,40}auction|nominal coupon.{0,60}(?:size|increase|maintain)",
+        re.I),
+    "bills": re.compile(r"\bbill(s)?\b.{0,80}(?:issuance|share|financing)|financing.{0,60}bills", re.I),
+    "buybacks": re.compile(r"buyback", re.I),
+}
+
+
+def passages(text: str, pattern: re.Pattern, *, window: int = 450, limit: int = 6) -> list[str]:
+    out, last_end = [], -1
+    for match in pattern.finditer(text):
+        if match.start() < last_end:            # merge overlapping windows
+            continue
+        start = max(match.start() - window, 0)
+        end = match.end() + window
+        out.append(" ".join(text[start:end].split()))
+        last_end = end
+        if len(out) >= limit:
+            break
+    return out
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--must-contain", nargs="+", required=True,
+                        help="every term must appear in the document label/URL, "
+                             "e.g. --must-contain 2023 4th")
+    parser.add_argument("--timeout", type=int, default=45)
+    parser.add_argument("--budget-seconds", type=float, default=420)
+    parser.add_argument("--max-bytes", type=int, default=12_000_000)
+    parser.add_argument("--delay", type=float, default=1.0)
+    args = parser.parse_args()
+    started = time.monotonic()
+
+    terms = [t.lower() for t in args.must_contain]
+    report: dict = {"probe": "qra_documents", "target": terms, "documents": []}
+
+    candidates, indexes, seen = [], [], set()
+    for url in ENTRY_POINTS:
+        record = fetch(url, args.timeout, max_bytes=args.max_bytes)
+        payload = record.pop("_payload", None)
+        if payload is not None:
+            docs, idx = links_from(record.get("final_url", url), payload)
+            candidates += docs
+            indexes += idx
+        time.sleep(args.delay)
+    # One archive hop, as the other probes learned the hard way.
+    for index in indexes[:40]:
+        if index["url"] in seen or time.monotonic() - started > args.budget_seconds * 0.4:
+            continue
+        seen.add(index["url"])
+        record = fetch(index["url"], args.timeout, max_bytes=args.max_bytes)
+        payload = record.pop("_payload", None)
+        if payload is not None:
+            docs, _ = links_from(record.get("final_url", index["url"]), payload)
+            candidates += docs
+        time.sleep(args.delay)
+
+    unique = list({c["url"]: c for c in candidates}.values())
+    matched = [c for c in unique
+               if all(t in (c["url"] + " " + (c["label"] or "")).lower() for t in terms)]
+    print(f"{len(unique)} documents discovered, {len(matched)} match {terms}", flush=True)
+
+    for link in matched:
+        if time.monotonic() - started > args.budget_seconds:
+            report["stopped_on_budget"] = True
+            print("  BUDGET REACHED", flush=True)
+            break
+        record = fetch(link["url"], args.timeout, max_bytes=args.max_bytes)
+        text, why = text_of(record)
+        record.pop("_payload", None)
+        entry = {"url": link["url"], "label": link["label"],
+                 "characters": len(text)}
+        if why:
+            entry["text_unavailable"] = why
+        else:
+            entry["passages"] = {
+                topic: found for topic, pattern in TOPICS.items()
+                if (found := passages(text, pattern))
+            }
+        report["documents"].append(entry)
+        print(f"  {link['label'][:60]}: "
+              f"{len(entry.get('passages', {}))} topic(s) matched, {len(text):,} chars",
+              flush=True)
+        time.sleep(args.delay)
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    slug = "_".join(terms)
+    (OUT_DIR / f"qra_{slug}.json").write_text(
+        json.dumps(report, indent=2, default=str), encoding="utf-8")
+
+    lines = [f"# QRA source passages — {' '.join(terms)}", "",
+             "Verbatim extracts for transcribing a `qra_log.csv` row. Read the",
+             "passage, type the row, cite the URL. Nothing here is parsed into a",
+             "field automatically, and nothing should be.", ""]
+    for doc in report["documents"]:
+        lines += [f"## {doc['label'] or doc['url']}", "", f"<{doc['url']}>", ""]
+        if doc.get("text_unavailable"):
+            lines += [f"*no text: {doc['text_unavailable']}*", ""]
+        for topic, found in (doc.get("passages") or {}).items():
+            lines.append(f"### {topic}")
+            lines += [""] + [f"> {p}" for p in found] + [""]
+    (OUT_DIR / f"qra_{slug}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"\n→ docs/source_probe/qra/qra_{slug}.md")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
