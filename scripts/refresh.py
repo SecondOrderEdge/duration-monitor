@@ -64,7 +64,9 @@ from src.signals.auction_stress import (  # noqa: E402
 from src.transformation.normalize import (  # noqa: E402
     EUROSTAT_CENTRAL_GOVERNMENT,
     MILLIONS,
+    monthly_buyback_par,
     extract_subtotals,
+    normalize_buybacks,
     normalize_eurostat_debt,
     month_end_cash_balance,
     normalize_cash_balance,
@@ -700,6 +702,53 @@ def build_euro_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFram
     return combined
 
 
+def build_buybacks(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
+    """Buyback operations, one row each, plus the monthly retired-par series.
+
+    Exists because MSPD deltas net buybacks into "issuance": an unadjusted
+    coupon buyback reads as strategic coupon restraint when it is an announced
+    operation. This table feeds the addback that corrects the funding factors,
+    and the operations page that answers "what did Treasury execute this week"
+    from primary data — the genuinely current part of the monitor.
+
+    NO staleness check, deliberately: three distinct programs share this series
+    with gaps of years between them. A paused program is a fact about policy,
+    not a broken feed.
+    """
+    print("  fetching buybacks_operations ...", flush=True)
+    result = client.fetch("buybacks_operations")
+    print(f"    {result.n_rows} rows over {result.n_pages} page(s)")
+    if keep_raw:
+        raw = write_raw(result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+    typed, report = parse_endpoint(result)
+    report.raise_if_failed()
+
+    ops = normalize_buybacks(typed, retrieval_date=result.retrieval_date)
+    assumed = ops[ops.class_assumed]
+    print(f"    {len(ops)} operations, {ops.operation_date.min():%Y-%m} → "
+          f"{ops.operation_date.max():%Y-%m}, "
+          f"${ops.par_accepted.sum()/1e9:.1f}bn par accepted")
+    print(f"    {len(assumed)} operation(s) with no stated security type "
+          f"(${assumed.par_accepted.sum()/1e9:.1f}bn) mapped to COUPONS as "
+          "class_assumed — the 2000-02 program and Small Value tests")
+
+    details_result = client.fetch("buybacks_security_details")
+    typed_details, details_report = parse_endpoint(details_result)
+    details_report.raise_if_failed()
+    bought = typed_details[pd.to_numeric(typed_details.par_amt_accepted, errors="coerce") > 0]
+    print(f"    security detail: {len(typed_details)} rows, "
+          f"{len(bought)} with par accepted")
+    if keep_raw:
+        raw = write_raw(details_result)
+        print(f"    raw → {raw.relative_to(REPO_ROOT)}")
+    target = PROCESSED / "buybacks_security_details.parquet"
+    typed_details.to_parquet(target, index=False)
+    print(f"    processed → {target.relative_to(REPO_ROOT)}")
+
+    return ops
+
+
 def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     """Fiscal Duration Shift Score, from tables the other builders produced.
 
@@ -707,7 +756,8 @@ def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     validated, and recomputing them here would let the score drift away from what
     the pages display.
     """
-    needed = ["debt_outstanding", "wam", "term_premium", "long_end_stress", "cash_balance"]
+    needed = ["debt_outstanding", "wam", "term_premium", "long_end_stress",
+              "cash_balance", "buybacks"]
     missing = [n for n in needed if not (PROCESSED / f"{n}.parquet").exists()]
     if missing:
         raise FileNotFoundError(
@@ -747,14 +797,26 @@ def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     # false positive here. The unadjusted ratio is kept alongside, because it is
     # what actually happened to the debt stock.
     adjusted = thresholds["debt_ceiling_episodes"].get("cash_adjustment", True)
-    unadj = incremental_bill_funding(net, min_abs_denominator=floor)[
-        "incremental_bill_funding"
-    ]
-    adj = cash_adjusted_bill_funding(net, cash, min_abs_denominator=floor)[
-        "incremental_bill_funding_adjusted"
-    ]
+
+    # Buyback addback (same false-positive family as D5, announced rather than
+    # inferred). Par retired is added back to the coupon flow so an operation
+    # does not read as coupon restraint.
+    buyback_on = thresholds["issuance"].get("buyback_adjustment", True)
+    addback = monthly_buyback_par(read["buybacks"]) if buyback_on else None
+    if addback is not None and len(addback):
+        active = int((addback > 0).sum())
+        print(f"    buyback addback: {active} month(s) with retired coupon par, "
+              f"${addback.sum()/1e9:.1f}bn total")
+
+    unadj = incremental_bill_funding(
+        net, min_abs_denominator=floor, coupon_buyback_addback=addback
+    )["incremental_bill_funding"]
+    adj = cash_adjusted_bill_funding(
+        net, cash, min_abs_denominator=floor, coupon_buyback_addback=addback
+    )["incremental_bill_funding_adjusted"]
     funding = adj if adjusted else unadj
-    print(f"    incremental bill funding: {'cash-adjusted' if adjusted else 'unadjusted'}")
+    print(f"    incremental bill funding: {'cash-adjusted' if adjusted else 'unadjusted'}"
+          f"{', buyback-adjusted' if buyback_on else ''}")
 
     factors = build_factors(
         bill_share_series=bill_share(debt),
@@ -765,6 +827,7 @@ def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
         auction_stress=stress,
         coupon_classes=coupon_classes,
         min_abs_denominator=floor,
+        coupon_buyback_addback=addback,
     )
 
     pct_cfg = thresholds["percentiles"]
@@ -805,9 +868,13 @@ def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
     # so every crisis month of 2008-09 was capped by an input that had no value
     # rather than by one that said no.
     scored["regime_evidence"] = regime_evidence(regime_inputs, thresholds["regimes"])
-    incomplete = int((scored["regime_evidence"] != "complete").sum())
+    # Counted among SCORED months only. The inputs frame reaches back before the
+    # first published score, and counting those rows produced a 113% share in a
+    # live run — a number that cannot be a share of anything.
+    is_scored = scored["score"].notna()
+    incomplete = int(((scored["regime_evidence"] != "complete") & is_scored).sum())
     if incomplete:
-        share = incomplete / max(int(scored["regime"].notna().sum()), 1)
+        share = incomplete / max(int(is_scored.sum()), 1)
         print(f"    regime evidence: {incomplete} month(s) ({share:.0%}) capped "
               "with at least one corroboration input unavailable")
         # No quality event: the log's types are for things that went WRONG with a
@@ -858,6 +925,7 @@ def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
 BUILDERS = {
     "debt_outstanding": build_debt_outstanding,
     "cash_balance": build_cash_balance,
+    "buybacks": build_buybacks,
     "auctions": build_auctions,
     "wam": build_wam,
     "term_premium": build_term_premium,

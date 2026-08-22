@@ -438,6 +438,7 @@ def build_factors(
     coupon_classes: tuple[str, ...],
     min_abs_denominator: float,
     horizon: int = 12,
+    coupon_buyback_addback: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Assemble the six factors on a common axis, at whatever frequency the inputs use.
 
@@ -452,9 +453,12 @@ def build_factors(
     caller happened to pass. `horizon` is in PERIODS, not months: 12 on a monthly
     axis and 4 on a quarterly one both mean a year.
     """
-    from src.calculations.issuance import _aggregate
+    from src.calculations.issuance import _aggregate, _apply_buyback_addback
 
-    coupons = _aggregate(net, coupon_classes)
+    # The same addback the funding ratio uses, so the two factors cannot
+    # disagree about what coupon issuance did in a buyback month.
+    coupons = _apply_buyback_addback(_aggregate(net, coupon_classes),
+                                     coupon_buyback_addback)
     coupons_h = coupons.rolling(horizon).sum()
     bills_h = _aggregate(net, ["BILLS"]).rolling(horizon).sum()
     need_h = bills_h + coupons_h

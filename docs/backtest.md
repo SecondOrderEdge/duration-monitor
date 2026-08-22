@@ -36,10 +36,12 @@ which about **1.8 would be expected to exclude zero by chance** at 95%.
 | incremental_bill_funding | wam shortening | 6m | 0.219 | 0.014 to 0.404 |
 | coupon_restraint | wam shortening | 3m | 0.205 | 0.016 to 0.371 |
 
-**The thesis survives, weakly.** Quantity signals lead the 10y term premium at
-three and six months with information coefficients around 0.20-0.26. Nine hits
-against 1.8 expected by chance is well beyond noise, and the term-premium results
-are the ones the thesis actually predicts.
+**The thesis survives, weakly — and see the Kim-Wright cross-check below, which
+weakens it further.** Quantity signals lead the ACM 10y term premium at three and
+six months with information coefficients around 0.20-0.26. Nine hits against the
+number expected by chance is beyond noise, and the term-premium results are the
+ones the thesis actually predicts. They do NOT reproduce against an independently
+estimated term premium.
 
 Read the intervals, not the point estimates. Several barely clear zero — the
 6-month WAM result runs 0.001 to 0.457. An IC of 0.25 means the signal explains
@@ -89,6 +91,65 @@ The correlation-adjusted weighting is doing the right thing regardless — it
 derives weights from this structure rather than assuming one — but the note
 justifying it describes a relationship the score does not contain. It should be
 corrected to match what is measured.
+
+## The headline finding does not survive a change of term-premium model
+
+Deviation D11 warns that ACM history is revised data used as if it were
+real-time. `THREEFYTP10` (Kim-Wright) was ingested in Phase 1 as an independent
+cross-check and never used for one. Running it is the sharpest available test of
+the only positive result above, and the result does not hold up.
+
+| signal → 10y term premium | horizon | ACM | Kim-Wright |
+|---|---|---|---|
+| coupon_restraint | 3m | **0.202** [0.012, 0.355] | 0.081 [-0.086, 0.255] |
+| coupon_restraint | 6m | **0.255** [0.025, 0.442] | 0.110 [-0.136, 0.322] |
+| bill_share_trend | 6m | **0.249** [0.012, 0.442] | 0.117 [-0.142, 0.353] |
+| quantity_composite | 6m | **0.249** [0.027, 0.419] | 0.127 [-0.105, 0.352] |
+| coupon_restraint | 12m | 0.269 [-0.021, 0.479] | 0.205 [-0.106, 0.481] |
+
+**Against Kim-Wright, not one test at any horizon excludes zero.** The
+information coefficients roughly halve at three and six months — 0.20 to 0.08,
+0.26 to 0.11 — and every interval spans zero comfortably.
+
+Of the nine results that cleared zero across 48 tests, **none is Kim-Wright**.
+All are ACM term premium or WAM.
+
+### How to read this
+
+Not a refutation. The signs agree across both models, and at twelve months the
+two are closer (0.24-0.27 against 0.19-0.22) with both intervals spanning zero.
+The direction of the relationship is consistent; its statistical support is not.
+
+But the honest statement is that **the term-premium result is
+model-dependent and should not be reported as established.** It is significant
+against one estimate of the term premium and absent against another estimate of
+the same quantity. Three readings are available and this evidence does not
+separate them:
+
+1. The relationship is partly an artefact of ACM's retroactive re-estimation —
+   precisely what D11 warned about, now with a measurement attached.
+2. ACM and Kim-Wright differ in what they capture and ACM is the better measure
+   of the thing the thesis is about.
+3. Kim-Wright is noisier over this sample, widening intervals without changing
+   the underlying relationship.
+
+Distinguishing them needs point-in-time ACM vintages, which are not freely
+available. So this stays a documented limitation rather than a resolved
+question — but it is now a limitation with numbers on it rather than a caveat.
+
+### What the backtest establishes, stated conservatively
+
+- Quantity signals lead **one estimate** of the 10y term premium at 3-6 months
+  with IC around 0.25; the same test against an independent estimate returns
+  around 0.11 and does not clear zero.
+- Quantity signals show **no relationship whatsoever** to long-end auction
+  stress, at any horizon, on either count. Twelve tests, ICs between -0.046 and
+  +0.035.
+- The WAM results are mechanically linked to issuance mix and are not evidence
+  about market behaviour.
+
+That is a weaker claim than the section above it originally made, and it is the
+claim the evidence supports.
 
 ## Known limitation (Deviation D11)
 

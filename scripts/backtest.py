@@ -62,8 +62,20 @@ def load_signals_and_outcomes() -> tuple[dict, dict, pd.DataFrame]:
         pd.PeriodIndex(pd.to_datetime(wam["observation_date"]), freq="M")
     )["wam_years"].sort_index()
 
+    # Kim-Wright, an INDEPENDENTLY estimated 10y term premium (FRED THREEFYTP10).
+    # The one positive result this backtest produced rests on ACM, which is
+    # revised data used as if it were real-time (Deviation D11). If the
+    # relationship is an artefact of ACM's re-estimation rather than a fact about
+    # the market, it should not survive against a different model of the same
+    # quantity. Ingested for this purpose since Phase 1 and never used for it.
+    rates = pd.read_parquet(PROCESSED / "rates.parquet")
+    kw = rates[rates["series_id"] == "THREEFYTP10"].dropna(subset=["value"])
+    kw = kw.set_index("date")["value"].sort_index().resample("ME").last()
+    kw.index = kw.index.to_period("M")
+
     outcomes = {
         "term_premium_10y": tp10.dropna(),
+        "term_premium_10y_kim_wright": kw.dropna(),
         "long_end_auction_stress": stress.dropna(),
         # Negated so that HIGHER always means MORE duration stress, matching the
         # signals' orientation. A falling WAM is shortening.

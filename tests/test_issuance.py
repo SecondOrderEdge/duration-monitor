@@ -369,3 +369,44 @@ def test_bill_share_reads_a_quarterly_series_as_quarterly():
     assert share.index.freqstr.startswith("Q")
     assert len(share) == 3
     assert (share == 0.1).all()
+
+
+def test_buyback_addback_undoes_the_retirement_in_the_funding_ratio():
+    """A $20bn coupon buyback must not read as coupon restraint.
+
+    Bills +30, coupons -10 of which -20 is buyback retirement: true coupon
+    issuance was +10. Unadjusted the ratio reads 30/20 = 1.5 (implausible,
+    bill-financed retirement); adjusted it reads 30/40 = 0.75.
+    """
+    idx = pd.PeriodIndex(["2024-05"], freq="M")
+    rows = []
+    for cls, amt in (("BILLS", 30e9), ("NOTES", -10e9), ("BONDS", 0.0), ("FRN", 0.0)):
+        rows.append({"period": idx[0], "security_class": cls, "net_issuance": amt})
+    net = pd.DataFrame(rows)
+    addback = pd.Series([20e9], index=idx)
+    un = incremental_bill_funding(net, min_abs_denominator=1e9)
+    adj = incremental_bill_funding(net, min_abs_denominator=1e9,
+                                   coupon_buyback_addback=addback)
+    assert un["incremental_bill_funding"].iloc[0] == pytest.approx(1.5)
+    assert adj["incremental_bill_funding"].iloc[0] == pytest.approx(0.75)
+
+
+def test_months_outside_the_addback_span_are_untouched():
+    idx = pd.PeriodIndex(["2010-01"], freq="M")
+    net = pd.DataFrame([{"period": idx[0], "security_class": c, "net_issuance": v}
+                        for c, v in (("BILLS", 10e9), ("NOTES", 30e9),
+                                     ("BONDS", 0.0), ("FRN", 0.0))])
+    addback = pd.Series([5e9], index=pd.PeriodIndex(["2024-05"], freq="M"))
+    un = incremental_bill_funding(net, min_abs_denominator=1e9)
+    adj = incremental_bill_funding(net, min_abs_denominator=1e9,
+                                   coupon_buyback_addback=addback)
+    assert adj["incremental_bill_funding"].iloc[0] == un["incremental_bill_funding"].iloc[0]
+
+
+def test_a_negative_addback_is_refused():
+    idx = pd.PeriodIndex(["2024-05"], freq="M")
+    net = pd.DataFrame([{"period": idx[0], "security_class": "BILLS", "net_issuance": 1e9},
+                        {"period": idx[0], "security_class": "NOTES", "net_issuance": 1e9}])
+    with pytest.raises(ValueError):
+        incremental_bill_funding(net, min_abs_denominator=1e8,
+                                 coupon_buyback_addback=pd.Series([-1.0], index=idx))

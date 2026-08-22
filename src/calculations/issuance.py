@@ -196,11 +196,36 @@ def _aggregate(net: pd.DataFrame, classes) -> pd.Series:
     return total
 
 
+def _apply_buyback_addback(coupons: pd.Series, addback: pd.Series | None) -> pd.Series:
+    """Add par retired by buybacks back to the coupon flow.
+
+    MSPD deltas net buybacks into "issuance": a $2bn coupon buyback makes coupon
+    net issuance $2bn more negative, which mechanically raises the bill share of
+    borrowing and reads as coupon restraint — the same false-positive family as
+    the debt-ceiling cash rebuild (Deviation D5), except announced in advance by
+    Treasury and published as an official operations series.
+
+    Applied at the AGGREGATE coupon level, where the factors actually consume
+    coupons. The operations data does not split "Nominal Coupons" into notes and
+    bonds, and pretending a per-class attribution exists would be a guess wearing
+    a data column. Outside the addback's own span the flow is untouched — months
+    before the first operation and after the last are not zero-filled, because
+    the series' absence there is not information about them.
+    """
+    if addback is None or addback.empty:
+        return coupons
+    if (addback < 0).any():
+        raise ValueError("buyback addback must be non-negative par amounts")
+    aligned = addback.reindex(coupons.index)
+    return coupons + aligned.where(aligned.notna(), 0.0)
+
+
 def incremental_bill_funding(
     net: pd.DataFrame,
     *,
     coupon_classes: tuple[str, ...] = DEFAULT_COUPON_CLASSES,
     min_abs_denominator: float,
+    coupon_buyback_addback: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Share of net marketable borrowing absorbed by bills.
 
@@ -217,7 +242,8 @@ def incremental_bill_funding(
         raise ValueError("min_abs_denominator must be positive")
 
     bills = _aggregate(net, [BILL_CLASS])
-    coupons = _aggregate(net, coupon_classes)
+    coupons = _apply_buyback_addback(_aggregate(net, coupon_classes),
+                                     coupon_buyback_addback)
     denominator = bills + coupons
 
     # One flag with one meaning: the ratio is not published because the
@@ -325,6 +351,7 @@ def cash_adjusted_bill_funding(
     *,
     coupon_classes: tuple[str, ...] = DEFAULT_COUPON_CLASSES,
     min_abs_denominator: float,
+    coupon_buyback_addback: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Incremental bill funding with the change in cash balance removed.
 
@@ -350,7 +377,8 @@ def cash_adjusted_bill_funding(
         raise ValueError("min_abs_denominator must be positive")
 
     bills = _aggregate(net, [BILL_CLASS])
-    coupons = _aggregate(net, coupon_classes)
+    coupons = _apply_buyback_addback(_aggregate(net, coupon_classes),
+                                     coupon_buyback_addback)
     borrowing = bills + coupons
 
     delta_cash = ensure_complete(cash_balance).diff()
