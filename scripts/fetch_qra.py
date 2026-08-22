@@ -113,17 +113,35 @@ def main() -> int:
               + (f" ERROR {record['error'][:90]}" if record.get("error") else ""),
               flush=True)
         time.sleep(args.delay)
-    for index in indexes[:60]:
+    # The archive is three levels deep: archives -> year page -> quarter page ->
+    # documents. A one-level hop reaches the year pages and stops, so the
+    # refunding statement and borrowing estimates — which live on the quarter
+    # page — were never fetched. Deeper indexes are followed ONLY when they
+    # match the target terms ("2023 - 4th Quarter"), so depth stays targeted
+    # rather than becoming a site mirror.
+    queue = list(indexes[:60])
+    crawled = 0
+    while queue and crawled < 60:
+        index = queue.pop(0)
         if index["url"] in seen or time.monotonic() - started > args.budget_seconds * 0.4:
             continue
         seen.add(index["url"])
+        crawled += 1
         record = fetch(index["url"], args.timeout, max_bytes=args.max_bytes)
         payload = record.pop("_payload", None)
         if payload is not None:
-            docs, _ = links_from(record.get("final_url", index["url"]), payload)
+            docs, deeper = links_from(record.get("final_url", index["url"]), payload)
+            parent_tag = index["url"] + " " + (index["label"] or "")
             for d in docs:
-                d["parent"] = index["url"] + " " + (index["label"] or "")
+                d["parent"] = parent_tag
             candidates += docs
+            for extra in deeper:
+                tag = (extra["url"] + " " + (extra["label"] or "") + " "
+                       + parent_tag).lower()
+                if all(t in tag for t in terms) and extra["url"] not in seen:
+                    extra["label"] = (extra["label"] or "") + " | " + (index["label"] or "")
+                    queue.append(extra)
+                    print(f"  following matching index: {extra['url'][-70:]}", flush=True)
         time.sleep(args.delay)
 
     unique = list({c["url"]: c for c in candidates}.values())
