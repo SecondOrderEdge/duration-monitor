@@ -96,10 +96,18 @@ def main() -> int:
         # script discovered zero documents and gave no way to tell a blocked
         # host from an empty page — the exact opacity every other probe in this
         # repo has had to fix once.
-        report["entry_points"].append({
+        entry_record = {
             "url": url, "status": record.get("status"),
             "error": record.get("error"), "documents": len(docs), "indexes": len(idx),
-        })
+        }
+        # A 200 with zero links is the one outcome the status line cannot
+        # explain: it is either a markup change or a bot-mitigation page served
+        # with a success code. Keep enough of the body to tell which.
+        if payload is not None and not docs and not idx:
+            body = payload.decode("utf-8", errors="replace")
+            entry_record["body_sample"] = " ".join(body[:3000].split())
+            entry_record["anchor_count"] = body.lower().count("<a ")
+        report["entry_points"].append(entry_record)
         print(f"  entry {url[-60:]}: status={record.get('status')} "
               f"docs={len(docs)} indexes={len(idx)}"
               + (f" ERROR {record['error'][:90]}" if record.get("error") else ""),
