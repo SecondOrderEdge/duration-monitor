@@ -122,13 +122,37 @@ country_variants:
 
 weighting:
   method: correlation_adjusted        # w proportional to C^-1 1, shrunk
-  # Measured on the percentile ranks the score actually uses, bill share trend,
-  # WAM trend and coupon restraint are mutually correlated 0.91-0.97, and at
-  # matched horizons incremental bill funding and coupon restraint are the SAME
-  # number. Equal weights would give one measurement about half the score while
-  # auction stress — the only orthogonal factor — received a sixth. Deriving the
-  # weights from the correlation structure keeps all six factors and lets the
-  # data decide how much a duplicate is worth.
+  # CORRECTED 2026-08-21 against the published matrix (docs/backtest.md,
+  # docs/backtest/factor_correlations.csv). The earlier version of this note
+  # overstated one relationship and inverted another.
+  #
+  # Measured, Spearman, on the point-in-time ranks the score combines:
+  #
+  #                            bill  incr   wam  coup    tp  auct
+  #   bill_share_trend         1.00  0.01  0.80  0.93  0.21  0.12
+  #   incremental_bill_funding 0.01  1.00 -0.03 -0.02 -0.14 -0.02
+  #   wam_trend                0.80 -0.03  1.00  0.76  0.09  0.12
+  #   coupon_restraint         0.93 -0.02  0.76  1.00  0.25  0.14
+  #   term_premium_10y_trend   0.21 -0.14  0.09  0.25  1.00 -0.04
+  #   long_end_auction_stress  0.12 -0.02  0.12  0.14 -0.04  1.00
+  #
+  # The redundancy is real but narrower than claimed. Bill share trend and
+  # coupon restraint are near-duplicates at 0.93; WAM trend joins them at 0.80
+  # and 0.76. The old note said "0.91-0.97" for all three pairs, which
+  # overstated two of them.
+  #
+  # It also said incremental bill funding and coupon restraint are "the SAME
+  # number at matched horizons". At the horizons the score ACTUALLY USES they
+  # correlate -0.02. Incremental bill funding is orthogonal to every other
+  # factor and is the most independent quantity measure in the set — the
+  # opposite of what the note implied, and the reason the correlation-adjusted
+  # weighting gives it real weight.
+  #
+  # The case for the method is unchanged and, if anything, stronger: three
+  # factors carry one measurement between them, and equal weights would hand
+  # that measurement half the score. Deriving weights from the structure keeps
+  # all six factors and lets the data price a duplicate. What changes is that
+  # the justification now matches the matrix rather than a recollection of it.
   ridge: 0.5
   # Shrinkage toward equal weighting, chosen by WALK-FORWARD STABILITY rather
   # than taste. Unshrunk, the inversion is singular when two factors are

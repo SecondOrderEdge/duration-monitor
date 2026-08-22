@@ -46,6 +46,7 @@ from src.calculations.issuance import (  # noqa: E402
 )
 from src.signals.duration_shift_score import (  # noqa: E402
     bands_for_variant,
+    regime_evidence,
     build_factors,
     resolve_variant,
     classify_regime,
@@ -798,6 +799,21 @@ def build_score(client: FiscalDataClient, *, keep_raw: bool) -> pd.DataFrame:
         "long_end_auction_stress_percentile": corroboration["long_end_auction_stress"],
     })
     scored["regime"] = classify_regime(regime_inputs, thresholds["regimes"])
+    # What the regime is standing on. A missing corroboration input caps a
+    # reading exactly as a disagreeing one does, and on this series that is not
+    # a corner case: the auction stress percentile does not exist before 2013,
+    # so every crisis month of 2008-09 was capped by an input that had no value
+    # rather than by one that said no.
+    scored["regime_evidence"] = regime_evidence(regime_inputs, thresholds["regimes"])
+    incomplete = int((scored["regime_evidence"] != "complete").sum())
+    if incomplete:
+        share = incomplete / max(int(scored["regime"].notna().sum()), 1)
+        print(f"    regime evidence: {incomplete} month(s) ({share:.0%}) capped "
+              "with at least one corroboration input unavailable")
+        # No quality event: the log's types are for things that went WRONG with a
+        # feed, and a corroboration series that does not reach back far enough is
+        # not a failure, it is the shape of the data. The regime_evidence column
+        # on every row is the guarantee, as it is for the score variant.
 
     for name in ranks.columns:
         scored[f"rank_{name}"] = ranks[name]

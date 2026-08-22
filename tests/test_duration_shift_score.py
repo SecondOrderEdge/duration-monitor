@@ -14,6 +14,7 @@ import pytest
 from src.calculations.issuance import cash_adjusted_bill_funding, net_issuance
 from src.signals.duration_shift_score import (
     band_contradicts_direction,
+    regime_evidence,
     bands_for_variant,
     FACTOR_DIRECTION,
     build_factors,
@@ -558,3 +559,59 @@ def test_the_shipped_config_withholds_bands_from_quantity_only():
     cfg = config.load("thresholds")["duration_shift_score_bands"]
     assert bands_for_variant("quantity_only", cfg) is None
     assert bands_for_variant("full", cfg) == cfg["bands"]
+
+
+# --------------------------------------------------------------------------- #
+# Missing corroboration is not the same as failed corroboration
+# --------------------------------------------------------------------------- #
+
+EVIDENCE_CFG = {
+    "levels": {"green": {"score_at_least": 0}, "orange": {"score_at_least": 60},
+               "red": {"score_at_least": 80}},
+    "corroboration": {
+        "orange": {"tp_percentile_at_least": 70},
+        "red": {"tp_percentile_at_least": 85, "auct_percentile_at_least": 90},
+    },
+}
+
+
+def test_a_present_but_failing_input_reads_as_complete():
+    """The market disagreeing is evidence. It must not look like absence."""
+    d = pd.DataFrame({"tp_percentile": [10.0], "auct_percentile": [5.0]})
+    assert regime_evidence(d, EVIDENCE_CFG).iloc[0] == "complete"
+
+
+def test_a_missing_input_is_named():
+    d = pd.DataFrame({"tp_percentile": [90.0], "auct_percentile": [float("nan")]})
+    assert regime_evidence(d, EVIDENCE_CFG).iloc[0] == "incomplete: auct_percentile"
+
+
+def test_several_missing_inputs_are_all_named():
+    d = pd.DataFrame({"tp_percentile": [float("nan")], "auct_percentile": [float("nan")]})
+    assert regime_evidence(d, EVIDENCE_CFG).iloc[0] == (
+        "incomplete: tp_percentile, auct_percentile"
+    )
+
+
+def test_the_2008_shape_is_flagged():
+    """The live case: score, term premium and bill share all clear red, and the
+    auction percentile does not exist yet because its series starts in 2008."""
+    d = pd.DataFrame(
+        {"tp_percentile": [95.0, 95.0], "auct_percentile": [float("nan"), 94.0]},
+        index=["2008-10", "2023-11"],
+    )
+    evidence = regime_evidence(d, EVIDENCE_CFG)
+    assert evidence.loc["2008-10"].startswith("incomplete")
+    assert evidence.loc["2023-11"] == "complete"
+
+
+def test_evidence_does_not_change_the_regime_itself():
+    """It reports what the regime stands on; it must not silently alter it."""
+    inputs = pd.DataFrame({
+        "duration_shift_score": [85.0],
+        "tp_percentile": [95.0],
+        "auct_percentile": [float("nan")],
+    })
+    before = classify_regime(inputs, EVIDENCE_CFG).iloc[0]
+    regime_evidence(inputs, EVIDENCE_CFG)
+    assert classify_regime(inputs, EVIDENCE_CFG).iloc[0] == before

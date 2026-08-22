@@ -317,6 +317,48 @@ def _score_level(score: pd.Series, levels: dict) -> pd.Series:
     ).where(score.notna())
 
 
+def regime_evidence(inputs: pd.DataFrame, regimes: dict) -> pd.Series:
+    """Whether each month's regime rests on evidence, or on evidence being absent.
+
+    `classify_regime` treats a missing corroboration input as a failed condition
+    (`.fillna(False)`), which is the right call for ESCALATION — a reading should
+    not be promoted to the most severe regime on inputs nobody has. But it makes
+    "the market disagreed" and "nobody measured" produce the same label, and they
+    are opposite findings.
+
+    Measured on the live series, this matters exactly where it is worst. Four
+    months cleared the score, term-premium and bill-share conditions for red and
+    were capped at orange: 2008-09, 2008-10, 2008-11 and 2009-05. In none of them
+    was auction stress low. In all of them it was NaN — the auction series starts
+    2008-04 and its point-in-time percentile needs sixty months of history, so
+    the most severe regime was structurally unreachable through the entire
+    financial crisis, and the pages said orange with no indication why.
+
+    Returns "complete" where every corroboration input was available, otherwise
+    "incomplete: <inputs>". It does not change the regime; it says what the
+    regime is standing on.
+    """
+    corroboration = regimes.get("corroboration", {})
+    needed: list[str] = []
+    for conditions in corroboration.values():
+        for key in conditions:
+            for suffix in _COMPARATORS:
+                if key.endswith(suffix):
+                    needed.append(key[: -len(suffix)])
+                    break
+
+    present = [c for c in dict.fromkeys(needed) if c in inputs.columns]
+    if not present:
+        return pd.Series("complete", index=inputs.index)
+
+    missing = inputs[present].isna()
+    def label(row: pd.Series) -> str:
+        absent = [c for c in present if row[c]]
+        return "complete" if not absent else "incomplete: " + ", ".join(absent)
+
+    return missing.apply(label, axis=1)
+
+
 def classify_regime(inputs: pd.DataFrame, regimes: dict) -> pd.Series:
     """Regime from the score band, capped by how far market evidence corroborates it.
 
@@ -339,6 +381,14 @@ def classify_regime(inputs: pd.DataFrame, regimes: dict) -> pd.Series:
     history. Raw levels cannot be calibrated and can be silently unreachable —
     the previous red regime required an auction-stress reading of 25 against a
     series whose observed maximum is 22.4.
+
+    A MISSING corroboration input is treated as a failed condition below, so it
+    caps rather than escalates. That is deliberate — nothing should be promoted
+    to the most severe regime on evidence nobody has — but it makes "the market
+    disagreed" and "nobody measured" produce the same label. Use
+    `regime_evidence` alongside this to tell them apart; on the live series four
+    of the five months capped below red were capped by an input that did not
+    exist yet, not by one that disagreed.
     """
     levels = list(regimes["levels"])
     corroboration = regimes.get("corroboration", {})
