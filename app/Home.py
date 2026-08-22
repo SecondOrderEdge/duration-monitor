@@ -225,7 +225,7 @@ if has_score and len(scored):
     prior = scored["score"].iloc[-13] if len(scored) > 13 else float("nan")
     kpi(c7, "Fiscal Duration Shift Score", f"{latest_score:.0f}",
         f"{latest_score - prior:+.0f} / 1y",
-        note=f"{scored['band'].iloc[-1]} · {scored.index[-1]}")
+        note=f"{scored['band'].iloc[-1]} · {scored.index[-1]} · conditions, not forecast")
 else:
     kpi(c7, "Fiscal Duration Shift Score", "", unavailable=True,
         note="run scripts/refresh.py --only score")

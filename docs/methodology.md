@@ -9,6 +9,50 @@ Is the marginal deficit being financed with bills instead of duration, and is th
 sovereign deliberately shortening its financing profile? Level of debt is
 context; direction of travel is the signal.
 
+## What this monitor can and cannot claim
+
+The thesis behind this tool is a causal chain: deficits pressure the long end,
+term premium rises, auctions weaken, the sovereign restrains coupons, bills
+absorb the financing, maturity shortens. The measurement half of that chain is
+built and validated. The predictive half was **tested and largely did not
+survive** (`docs/backtest.md`), and this monitor's claims are calibrated to that
+result.
+
+**Established, and externally validated:**
+
+- What the sovereign is doing. Bill share, net issuance, incremental bill
+  funding and WAM, every number traced to an official source. WAM reconciles
+  with Treasury's own published series to a median of 0.01 months over 306
+  months, with a standing weekly drift check.
+- Mechanical distortions are corrected from official series, not assumptions:
+  the debt-ceiling cash rebuild (TGA) and buyback retirements are both removed
+  from the funding ratios, because both read as strategic shortening and are
+  neither.
+
+**Tested and not established:**
+
+- Quantity signals lead ONE estimate of the 10y term premium (ACM) at 3-6
+  months with rank correlations near 0.25 — and the same test against an
+  independent estimate (Kim-Wright) returns roughly half that and does not
+  clear zero. The relationship is model-dependent.
+- Quantity signals show NO forward relationship to long-end auction stress at
+  any horizon. Twelve tests, none distinguishable from zero.
+
+**What follows from that:**
+
+- This is a **conditions monitor, not a forecasting tool**, and none of its
+  outputs is a trading signal. The score says how aggressive the financing
+  profile is against its own history; the regime escalates only when the market
+  observably corroborates, *because* the data says corroboration cannot be
+  assumed in advance. The backtest is the reason the corroboration requirement
+  exists, not an embarrassment beside it.
+- The monitor runs at two speeds. The score's quantity factors come from MSPD —
+  monthly, published about four business days after month-end — so the stock
+  reading is **structurally three to seven weeks behind and cannot describe
+  today**. Auction results, buyback operations, the TGA and the term premium are
+  days old; the Operations page carries them. Treasury's forward intentions are
+  announced (refunding, auction and buyback schedules), not inferred.
+
 ## Sources
 
 | Series | Source | Notes |
@@ -127,8 +171,10 @@ two are not expected to be equal and the difference is not an error.
 
 - **ACM revisions.** The backtest uses today's ACM vintage for history, because
   point-in-time vintages are not freely available. Term premium history is
-  therefore revised data used as if it were real-time. This cannot be fixed, only
-  disclosed; `THREEFYTP10` (Kim-Wright) is an independent model cross-check (D11).
+  therefore revised data used as if it were real-time (D11). The Kim-Wright
+  cross-check has now been RUN, and it matters: the quantity-to-term-premium
+  relationship that clears zero on ACM does not clear zero on Kim-Wright at any
+  horizon. See `docs/backtest.md`.
 - **No true auction tail.** A true tail needs the 1pm when-issued yield, which is
   not free. The published high-minus-median spread and allotment-at-high are used
   instead — genuine official measures of the same thing. The constant-maturity

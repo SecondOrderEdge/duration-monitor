@@ -11,6 +11,7 @@ from _shared import (
 )
 
 from src import config
+from src.calculations.curves import spread_context, spread_series
 from src.calculations.issuance import bill_share
 from src.calculations.percentiles import point_in_time_percentile
 
@@ -112,5 +113,42 @@ st.info(
     "be fixed, only disclosed; `THREEFYTP10` (Kim-Wright) provides an independent "
     "model cross-check once FRED ingestion is running (Deviation D11)."
 )
+
+
+
+st.divider()
+st.subheader("Curve spreads")
+st.caption(
+    "Context only, never a score input: a spread mixes rate expectations with "
+    "term premium, so it frames the readings above rather than adding to them. "
+    "Percentile is against ten trailing years, weak-ranked — the score's own "
+    "convention."
+)
+if available("rates"):
+    curves_cfg = config.load("thresholds")["curves"]
+    spreads = spread_series(load("rates"), curves_cfg["spreads"])
+    context = spread_context(spreads,
+                             window_years=int(curves_cfg["percentile_window_years"]))
+    ccols = st.columns(len(context))
+    for col, row in zip(ccols, context.itertuples()):
+        kpi(col, row.spread, f"{row.latest:+.2f}pp",
+            f"{row.change_12m:+.2f} / 1y" if row.change_12m == row.change_12m else None,
+            note=f"{row.percentile:.0f}th pctile · {row.as_of:%Y-%m-%d}")
+
+    fig_sp = go.Figure()
+    palette = {"2s10s": ACCENT, "5s30s": WARM, "10s30s": "#9aa3b5", "3m10y": "#5fa87a"}
+    for name in spreads.columns:
+        fig_sp.add_trace(go.Scatter(
+            x=spreads.index, y=spreads[name], name=name, mode="lines",
+            line=dict(color=palette.get(name, MUTED), width=1.4),
+        ))
+    fig_sp.add_hline(y=0, line=dict(color=MUTED, width=1, dash="dot"))
+    st.plotly_chart(style(fig_sp, ytitle="percentage points"), width="stretch")
+    st.caption(
+        "Gaps are real: DGS20 is discontinued 1987-1993 and any spread on a "
+        "missing leg stays missing rather than being bridged."
+    )
+else:
+    st.info("Rates not built yet — run `python scripts/refresh.py --only rates`.")
 
 provenance("term_premium")

@@ -207,6 +207,25 @@ auctions:
   include_pre_2008_in_composite: false
 
 # --------------------------------------------------------------------------- #
+# Curve spreads (brief calculation 9 — context only, never a score input)
+# --------------------------------------------------------------------------- #
+curves:
+  # An INTERPRETIVE CHOICE: which constant-maturity pairs constitute "2s10s" is
+  # a market convention with no external truth to verify against.
+  convention: true
+  # Long minus short, in percentage points, from the named FRED series. Context
+  # for the term-premium page: a spread mixes expectations and term premium, so
+  # it frames a reading rather than feeding the score.
+  spreads:
+    2s10s:  {long: DGS10, short: DGS2}
+    5s30s:  {long: DGS30, short: DGS5}
+    10s30s: {long: DGS30, short: DGS10}
+    3m10y:  {long: DGS10, short: DGS3MO}
+  # Percentile of the latest reading against this many trailing YEARS of daily
+  # observations — same 10-year convention as the score's percentile window.
+  percentile_window_years: 10
+
+# --------------------------------------------------------------------------- #
 # Reference levels
 # --------------------------------------------------------------------------- #
 reference_levels:
