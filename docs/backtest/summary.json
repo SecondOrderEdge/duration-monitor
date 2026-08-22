@@ -1,0 +1,23 @@
+{
+  "n_tests": 36,
+  "n_excluding_zero": 9,
+  "expected_by_chance_at_95pct": 1.8,
+  "signals": [
+    "bill_share_trend",
+    "incremental_bill_funding",
+    "coupon_restraint",
+    "quantity_composite"
+  ],
+  "outcomes": [
+    "term_premium_10y",
+    "long_end_auction_stress",
+    "wam_shortening"
+  ],
+  "horizons": [
+    3,
+    6,
+    12
+  ],
+  "bootstrap_draws": 800,
+  "note": "Signals are quantity-only by construction; the full score contains two of the three outcomes and would be circular."
+}
