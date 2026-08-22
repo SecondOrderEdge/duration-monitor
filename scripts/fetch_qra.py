@@ -76,17 +76,22 @@ def main() -> int:
     terms = [t.lower() for t in args.must_contain]
     report: dict = {"probe": "qra_documents", "target": terms, "documents": []}
 
+    # Every candidate carries the page it was DISCOVERED ON. The archive lists
+    # quarters as bare "4th Quarter" links under a year index page, so the year
+    # exists only in the parent's URL or label — the first run required every
+    # term on the leaf and matched nothing at all.
     candidates, indexes, seen = [], [], set()
     for url in ENTRY_POINTS:
         record = fetch(url, args.timeout, max_bytes=args.max_bytes)
         payload = record.pop("_payload", None)
         if payload is not None:
             docs, idx = links_from(record.get("final_url", url), payload)
+            for d in docs:
+                d["parent"] = url
             candidates += docs
             indexes += idx
         time.sleep(args.delay)
-    # One archive hop, as the other probes learned the hard way.
-    for index in indexes[:40]:
+    for index in indexes[:60]:
         if index["url"] in seen or time.monotonic() - started > args.budget_seconds * 0.4:
             continue
         seen.add(index["url"])
@@ -94,13 +99,24 @@ def main() -> int:
         payload = record.pop("_payload", None)
         if payload is not None:
             docs, _ = links_from(record.get("final_url", index["url"]), payload)
+            for d in docs:
+                d["parent"] = index["url"] + " " + (index["label"] or "")
             candidates += docs
         time.sleep(args.delay)
 
     unique = list({c["url"]: c for c in candidates}.values())
-    matched = [c for c in unique
-               if all(t in (c["url"] + " " + (c["label"] or "")).lower() for t in terms)]
+    def haystack(c):
+        return (c["url"] + " " + (c["label"] or "") + " " + c.get("parent", "")).lower()
+    matched = [c for c in unique if all(t in haystack(c) for t in terms)]
     print(f"{len(unique)} documents discovered, {len(matched)} match {terms}", flush=True)
+    if not matched:
+        # A zero must be diagnosable (the lesson every probe here has taught).
+        near = [c for c in unique if any(t in haystack(c) for t in terms)]
+        print(f"  ZERO matched. {len(near)} documents match at least one term; "
+              "first few haystacks:")
+        for c in near[:10]:
+            print("   ", haystack(c)[:140])
+        report["near_misses"] = [haystack(c)[:200] for c in near[:30]]
 
     for link in matched:
         if time.monotonic() - started > args.budget_seconds:
