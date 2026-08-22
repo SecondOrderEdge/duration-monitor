@@ -267,8 +267,17 @@ def links_from(base_url: str, raw: bytes) -> tuple[list[dict], list[dict]]:
     documents, indexes, seen = [], [], set()
     page = raw.decode("utf-8", errors="replace")
     host = urllib.parse.urlparse(base_url).netloc
-    for match in re.finditer(r'<a\b[^>]*href="([^"]+)"[^>]*>(.*?)</a>', page, re.I | re.S):
-        href, label = match.group(1), clean_html(match.group(2))
+    # All three attribute-quoting forms. Treasury began serving minified HTML
+    # with UNQUOTED attributes (href=https://... with no quotes) between one run
+    # and the next; the double-quote-only pattern then parsed 350 anchors per
+    # page to zero links while every fetch returned 200.
+    anchor = re.compile(
+        r"""<a\b[^>]*href=(?:"([^"]+)"|'([^']+)'|([^\s>'"]+))[^>]*>(.*?)</a>""",
+        re.I | re.S,
+    )
+    for match in anchor.finditer(page):
+        href = match.group(1) or match.group(2) or match.group(3)
+        label = clean_html(match.group(4))
         absolute = urllib.parse.urljoin(base_url, href).split("#")[0]
         if absolute in seen or not absolute.startswith("http"):
             continue

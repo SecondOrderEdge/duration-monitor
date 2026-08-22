@@ -14,9 +14,14 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Restrict to one source (fiscaldata, fred, nyfed, phase3, tbac, wam). Blank probes all."
+        description: "Restrict to one source (fiscaldata, fred, nyfed, phase3, tbac, wam, qra). Blank probes all."
         required: false
         default: ""
+        type: string
+      qra_quarter:
+        description: "For only=qra: label terms identifying the quarter, e.g. '2023 4th'"
+        required: false
+        default: "2023 4th"
         type: string
   push:
     # Any change to the contract or the probe itself should be re-verified
@@ -30,6 +35,7 @@ on:
       - scripts/probe_tbac.py
       - scripts/probe_wam_reference.py
       - scripts/reconcile_wam.py
+      - scripts/fetch_qra.py
       - src/calculations/wam.py
       - .github/workflows/probe-sources.yml
   schedule:
@@ -76,7 +82,7 @@ jobs:
           ARGS=""
           case "${{ inputs.only }}" in
             "")        ARGS="" ;;
-            phase3|tbac|wam) echo "skipping the Phase 1 contract probe" | tee probe_stdout.txt; exit 0 ;;
+            phase3|tbac|wam|qra) echo "skipping the Phase 1 contract probe" | tee probe_stdout.txt; exit 0 ;;
             *)         ARGS="--only ${{ inputs.only }}" ;;
           esac
           python scripts/probe_sources.py $ARGS | tee probe_stdout.txt
@@ -151,6 +157,17 @@ jobs:
         if: inputs.only == '' || inputs.only == 'wam'
         timeout-minutes: 15
         run: python -u scripts/reconcile_wam.py | tee -a probe_stdout.txt
+
+      - name: Fetch QRA documents for manual transcription
+        # Dispatch-only. Fetches one quarter's refunding documents and commits
+        # verbatim passages so a qra_log row can be transcribed from the actual
+        # text — home.treasury.gov is refused by the development environment.
+        # The quarter comes from the qra_quarter input.
+        if: inputs.only == 'qra'
+        timeout-minutes: 15
+        run: |
+          pip install -r requirements-probe.txt
+          python -u scripts/fetch_qra.py --must-contain ${{ inputs.qra_quarter }} | tee -a probe_stdout.txt
 
       - name: Summarise
         run: |

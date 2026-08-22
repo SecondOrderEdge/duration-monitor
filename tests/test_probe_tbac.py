@@ -328,3 +328,16 @@ def test_text_of_routes_a_workbook_by_content_type():
               "_payload": _workbook([["Average Maturity", 69.8]])}
     text, why = text_of(record)
     assert why is None and "69.8" in text
+
+
+def test_unquoted_href_attributes_are_parsed():
+    """Treasury began serving minified HTML with unquoted attributes; the
+    quoted-only pattern parsed ~350 anchors per page to zero links, silently."""
+    page = (b'<a href=/system/files/221/TBACCharge1Q32026.pdf>TBAC Charge 1</a>'
+            b"<a href='/news/press-releases/sb0591'>TBAC Report to Secretary</a>"
+            b'<a href="/system/files/221/x.pdf">2011 - 3rd Quarter</a>')
+    documents, _ = links_from("https://home.treasury.gov/x", page)
+    urls = [d["url"] for d in documents]
+    assert any("TBACCharge1Q32026" in u for u in urls), "unquoted href missed"
+    assert any("sb0591" in u for u in urls), "single-quoted href missed"
+    assert any("/221/x.pdf" in u for u in urls), "double-quoted href regressed"
