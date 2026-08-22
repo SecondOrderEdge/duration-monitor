@@ -1,6 +1,6 @@
 # Phase 3 source discovery
 
-- Probe run (UTC): `2026-08-22T05:07:52.297143+00:00`
+- Probe run (UTC): `2026-08-22T05:30:54.628468+00:00`
 
 What each candidate publisher actually returns. This is DISCOVERY — no field names are declared yet, so nothing here is verified. It exists so the Phase 3 schema is designed against observed responses rather than assumptions, which is what the Phase 1 probe was for.
 
@@ -46,7 +46,7 @@ Debt securities statistics by residence, sector and maturity. The brief names it
 - HTTP 200, `application/xml;charset=UTF-8`, 15,287 bytes
 
 ```
-<?xml version="1.0" ?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IDREF56dfe370-11f5-46bd-9fe8-cbedc18826ab</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-21T17:12:41Z</mes:Prepared><mes:Sender id="UNKNOWN"></mes:Sender><mes:Receiver id="not_supplied"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)" isExternalReference="false" agencyID="BIS" id="BIS_REL_CAL" isFinal="false" version="1.0"><com:Name xml:lang="en">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package="datastructure" agencyID="BIS" id="BIS_RELEASE_CALENDAR" version="1.0" class="DataStructure"></Ref></str:Structure></str:Dataflow><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)" isExternalReference="false" agencyID="BIS" id="WS_CBPOL" isFinal="false" version="1.0"><com:Name xml:lang="en">Central bank policy rates</co
+<?xml version="1.0" ?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IDREFcea16907-b9b5-4c6d-b83e-26d71620cdad</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-21T20:59:52Z</mes:Prepared><mes:Sender id="UNKNOWN"></mes:Sender><mes:Receiver id="not_supplied"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)" isExternalReference="false" agencyID="BIS" id="BIS_REL_CAL" isFinal="false" version="1.0"><com:Name xml:lang="en">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package="datastructure" agencyID="BIS" id="BIS_RELEASE_CALENDAR" version="1.0" class="DataStructure"></Ref></str:Structure></str:Dataflow><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)" isExternalReference="false" agencyID="BIS" id="WS_CBPOL" isFinal="false" version="1.0"><com:Name xml:lang="en">Central bank policy rates</co
 ```
 
 ### `https://stats.bis.org/api/v1/dataflow`
@@ -114,7 +114,7 @@ Securities issues statistics and government finance statistics cover Germany, Fr
 - HTTP 200, `application/vnd.sdmx.structure+xml;version=2.1`, 30,851 bytes
 
 ```
-<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IREF752794</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-22T05:07:59Z</mes:Prepared><mes:Sender id="Unknown"/><mes:Receiver id="not_supplied"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn="urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)" isExternalReference="false" agencyID="ECB" id="ECB_SEC1" isFinal="false" uri="https://www.ecb.europa.eu/vocabulary/stats/sec/1" version="1.0"><com:Name xml:lang="en">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn="urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor" id="DimensionDescriptor"><str:Dimension urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ" id="FREQ" position="1"><str:ConceptIdentity><Ref m
+<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IREF766639</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-22T05:31:01Z</mes:Prepared><mes:Sender id="Unknown"/><mes:Receiver id="not_supplied"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn="urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)" isExternalReference="false" agencyID="ECB" id="ECB_SEC1" isFinal="false" uri="https://www.ecb.europa.eu/vocabulary/stats/sec/1" version="1.0"><com:Name xml:lang="en">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn="urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor" id="DimensionDescriptor"><str:Dimension urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ" id="FREQ" position="1"><str:ConceptIdentity><Ref m
 ```
 
 ## `eurostat` — Eurostat
@@ -371,9 +371,9 @@ Central government debt statistics, including maturity structure on a harmonised
 <!--NSI Web Service v8.19.8.0-->
 <message:Structure xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:structure="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:common="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common">
   <message:Header>
-    <message:ID>IDREF1508</message:ID>
+    <message:ID>IDREF1651</message:ID>
     <message:Test>false</message:Test>
-    <message:Prepared>2026-08-22T07:08:21.2746146+02:00</message:Prepared>
+    <message:Prepared>2026-08-22T07:31:17.0314607+02:00</message:Prepared>
     <message:Sender id="Unknown" />
     <message:Receiver id="Unknown" />
   </message:Header>
@@ -428,14 +428,14 @@ Gilt and Treasury bill issuance, per-security detail. The UK is the closest anal
 ### `https://www.dmo.gov.uk/data/`
 
 - HTTP 200, `text/html; charset=UTF-8`, 15,238 bytes
-- redirected to `https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=1b579a02-477f-417c-a1aa-4380b3f19ddc&ssb=09662270919&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=a431d859-bhbz-4a5e-b22b-a682579148ea&ssk=support@shieldsquare.com&ssm=55567112205458005109635155541086&ssn=9e5f3757e370a819612faa00700b8b6e9f5b1c0bcd81-8fca-4b8a-b26033&sso=d39d0256-c20483d1489815b46f445c571a9f073e41f85d6f0003cd98&ssp=35096121661787303011178735425665950&ssq=32286937530375565164775303849598994462542&ssr=MTM1LjIzMi4yMDAuMQ==&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJ1em14IjoiN2ZjMDAwNjRmMmQyNTUtM2QzMC00MTIzLTlkNWEtZTUwYmNmY2Y0NWMxMS0xNzg3Mzc1MzAzNzk4MC0wMDEzYWZjMDI4MGE5OWVjODI4MTAiLCJyZCI6ImRtby5nb3YudWsiLCJfX3V6bWYiOiI3ZjkwMDAxYzBiY2Q4MS04ZmNhLTRiOGEtYjI1Ni1jMjA0ODNkMTQ4OTgxLTE3ODczNzUzMDM3OTgwLTAwNDFiY2IxMGE5YjJiZTliNzAxMCJ9`
+- redirected to `https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=7c0d0deb-0717-4d65-9672-4f3dc14c83de&ssb=78042283442&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=5c58c567-bhbz-4b83-95cb-882357bf78a9&ssk=support@shieldsquare.com&ssm=44105762823839306107915259126000&ssn=4ba21e1ae12e1095ec49d5f15726b1d936d3bc483feb-ac43-4b2c-ae72fa&sso=02c4fbc8-cb62a6ff29709bd9d7551ce8a1e444c570122f5869abfc24&ssp=23193000931787334451178738165985638&ssq=78469427667901914716276679378095242293238&ssr=MjAuMTE4LjIxNC4yNDI=&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJ1em14IjoiN2ZjMDAwOTliOWQxMjEtYzNhNS00YTE0LWFiOGMtNTc2NTNkYzk1ZTE2MS0xNzg3Mzc2Njc5NzExMC0wMDFkZjJhNGE2MWVlOGFjOGYyMTAiLCJfX3V6bWYiOiI3ZjkwMDBiYzQ4M2ZlYi1hYzQzLTRiMmMtYWJjOC1jYjYyYTZmZjI5NzAxLTE3ODczNzY2Nzk3MTEwLTAwNDA4NjM2NzVhZDU4OWNkM2YxMCIsInJkIjoiZG1vLmdvdi51ayJ9`
 
 ```
 <head><title>ShieldSquare Captcha</title><script type="text/javascript">
 	window.SSJSInternal = 18155;
 
-	var __uzdbm_1 = "1c0bcd81-8fca-4b8a-b256-c20483d14898";
-	var __uzdbm_2 = "YTQzMWQ4NTktYmhiei00YTVlLWIyMmItYTY4MjU3OTE0OGVhJDEzNS4yMzIuMjAwLjE=";
+	var __uzdbm_1 = "bc483feb-ac43-4b2c-abc8-cb62a6ff2970";
+	var __uzdbm_2 = "NWM1OGM1NjctYmhiei00YjgzLTk1Y2ItODgyMzU3YmY3OGE5JDIwLjExOC4yMTQuMjQy";
 	
 	(function(w, d, e, u, c, g, a, b){
 		w["SSJSConnectorObj"] = w["SSJSConnectorObj"] || {ss_cid : c, domain_info: g};
