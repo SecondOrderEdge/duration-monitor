@@ -1,6 +1,6 @@
 # Source probe results
 
-- Probe run (UTC): `2026-08-22T05:29:59.864402+00:00`
+- Probe run (UTC): `2026-08-22T13:53:10.567424+00:00`
 
 Field names below are **observed from live responses**. Anything marked MISSING means `config/sources.yaml` expected a field the API does not return — the contract is wrong and must be corrected before ingestion is written against it.
 
