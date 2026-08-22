@@ -30,6 +30,7 @@ on:
       - scripts/probe_tbac.py
       - scripts/probe_wam_reference.py
       - scripts/reconcile_wam.py
+      - src/calculations/wam.py
       - .github/workflows/probe-sources.yml
   schedule:
     # Weekly contract check: a field that disappears should surface on its own,
@@ -138,12 +139,17 @@ jobs:
           python -u scripts/probe_wam_reference.py | tee -a probe_stdout.txt
 
       - name: Reconcile WAM against Treasury's published series
-        # Treasury DOES publish it: the quarterly release workbook carries a
-        # monthly grid, 'Average Maturity of Treasury Marketable Securities
-        # --Total Outstanding (in months)', back to 2000. Four earlier runs
-        # concluded otherwise because the workbook was decoded as UTF-8.
-        if: inputs.only == 'wam'
-        timeout-minutes: 10
+        # A STANDING CHECK, not a one-off investigation. Treasury publishes the
+        # series monthly in the quarterly release workbook, and ours agreed to a
+        # median of 0.01 months over 306 months when this was established. If
+        # that drifts past half a month from 2008 on, either our pipeline changed
+        # or the source did, and both are worth knowing before a reading is
+        # quoted rather than the next time somebody happens to look.
+        #
+        # Runs on the weekly schedule and on any explicit probe. Cheap: one
+        # workbook, one API pull, no crawl.
+        if: inputs.only == '' || inputs.only == 'wam'
+        timeout-minutes: 15
         run: python -u scripts/reconcile_wam.py | tee -a probe_stdout.txt
 
       - name: Summarise
