@@ -81,15 +81,29 @@ def main() -> int:
     # exists only in the parent's URL or label — the first run required every
     # term on the leaf and matched nothing at all.
     candidates, indexes, seen = [], [], set()
+    report["entry_points"] = []
     for url in ENTRY_POINTS:
         record = fetch(url, args.timeout, max_bytes=args.max_bytes)
         payload = record.pop("_payload", None)
+        docs, idx = [], []
         if payload is not None:
             docs, idx = links_from(record.get("final_url", url), payload)
             for d in docs:
                 d["parent"] = url
             candidates += docs
             indexes += idx
+        # Recorded and printed, success or not. The first two runs of this
+        # script discovered zero documents and gave no way to tell a blocked
+        # host from an empty page — the exact opacity every other probe in this
+        # repo has had to fix once.
+        report["entry_points"].append({
+            "url": url, "status": record.get("status"),
+            "error": record.get("error"), "documents": len(docs), "indexes": len(idx),
+        })
+        print(f"  entry {url[-60:]}: status={record.get('status')} "
+              f"docs={len(docs)} indexes={len(idx)}"
+              + (f" ERROR {record['error'][:90]}" if record.get("error") else ""),
+              flush=True)
         time.sleep(args.delay)
     for index in indexes[:60]:
         if index["url"] in seen or time.monotonic() - started > args.budget_seconds * 0.4:
