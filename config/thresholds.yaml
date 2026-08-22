@@ -72,6 +72,15 @@ issuance:
   # Each floor is instead 38% of that country's own median, which is the
   # fraction the US floor already implies (25,000 of a 65,167 monthly median).
   # The rule is carried over; only the scale changes.
+  # Buyback adjustment. MSPD deltas net retired securities into "issuance", so
+  # a coupon buyback reads as strategic coupon restraint when it is an announced
+  # liquidity or cash-management operation — the D5 false-positive family, with
+  # a published official series to correct from (buybacks_operations, verified).
+  # Par retired is added back to the aggregate coupon flow in the funding and
+  # coupon-restraint factors. Effect measured at first run recorded in the
+  # commit that introduced this flag.
+  buyback_adjustment: true
+
   min_abs_denominator_quarterly_meur:
     DE: 3700
     FR: 8200

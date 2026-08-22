@@ -13,6 +13,8 @@ import pytest
 
 from src.calculations.issuance import aggregate_net_issuance, net_issuance
 from src.transformation.normalize import (
+    monthly_buyback_par,
+    normalize_buybacks,
     MILLIONS,
     NormalizationError,
     normalize_debt_outstanding,
@@ -477,3 +479,59 @@ def test_rows_with_no_maturity_and_no_label_are_surfaced():
     typed.loc[2, "security_class2_desc"] = "9127950"     # a CUSIP where a label belongs
     orphans = unclassified_subtotal_rows(typed)
     assert len(orphans) == 1
+
+
+# --------------------------------------------------------------------------- #
+# Buybacks
+# --------------------------------------------------------------------------- #
+
+def _ops(rows):
+    base = {"operation_date": "2026-08-20", "settlement_date": "2026-08-21",
+            "operation_type": "Liquidity Support", "security_type": "Nominal Coupons",
+            "maturity_bucket": "3Y to 5Y", "total_par_amt_offered": 10e9,
+            "total_par_amt_accepted": 2e9, "max_par_amt_redeemed": 4e9}
+    return pd.DataFrame([{**base, **r} for r in rows])
+
+
+def test_buyback_classes_map_and_unknown_types_raise():
+    out = normalize_buybacks(_ops([{}, {"security_type": "TIPS"}]))
+    assert list(out.security_class.astype(str)) == ["COUPONS", "TIPS"]
+    with pytest.raises(NormalizationError):
+        normalize_buybacks(_ops([{"security_type": "Corporate Bonds"}]))
+
+
+def test_the_2000_era_null_type_is_assumed_coupons_and_flagged():
+    """The 2000-02 program carries no security type. It bought back long bonds,
+    so COUPONS is right — but it is an assumption and must travel on the row."""
+    out = normalize_buybacks(_ops([{"security_type": None}]))
+    assert str(out.security_class.iloc[0]) == "COUPONS"
+    assert bool(out.class_assumed.iloc[0])
+    stated = normalize_buybacks(_ops([{}]))
+    assert not bool(stated.class_assumed.iloc[0])
+
+
+def test_monthly_buyback_par_fills_gaps_with_zero_not_nan():
+    """A month with no operation is a true zero — Treasury retired nothing.
+    NaN would poison the adjusted coupon flow for most of history."""
+    ops = normalize_buybacks(_ops([
+        {"operation_date": "2024-05-10", "total_par_amt_accepted": 2e9},
+        {"operation_date": "2024-08-20", "total_par_amt_accepted": 3e9},
+    ]))
+    par = monthly_buyback_par(ops)
+    assert par[pd.Period("2024-06", freq="M")] == 0.0
+    assert par[pd.Period("2024-05", freq="M")] == 2e9
+    assert len(par) == 4
+
+
+def test_monthly_buyback_par_is_per_class():
+    ops = normalize_buybacks(_ops([
+        {"total_par_amt_accepted": 2e9},
+        {"security_type": "TIPS", "total_par_amt_accepted": 5e8},
+    ]))
+    assert monthly_buyback_par(ops).iloc[0] == 2e9
+    assert monthly_buyback_par(ops, security_class="TIPS").iloc[0] == 5e8
+
+
+def test_negative_par_accepted_is_refused():
+    with pytest.raises(NormalizationError):
+        normalize_buybacks(_ops([{"total_par_amt_accepted": -1.0}]))

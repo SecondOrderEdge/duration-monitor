@@ -649,6 +649,103 @@ fiscaldata:
         MTS table. The absent `current_fytd_budget_amt` was not renamed; it does
         not exist here in any spelling.
 
+    buybacks_operations:
+      path: v1/accounting/od/buybacks_operations
+      purpose: >
+        Buyback operations, one row per operation, with par offered and accepted.
+        Drives the buyback adjustment to net issuance: MSPD deltas net retired
+        securities into "issuance", so an unadjusted coupon buyback reads as
+        strategic coupon restraint when it is an announced liquidity or cash
+        management operation.
+      date_field: operation_date
+      units: usd
+      verified: true
+      # Observed 2026-08-22 by direct probe from the development environment
+      # (api.fiscaldata.treasury.gov is inside the egress allowlist). The push
+      # probe re-verifies and commits evidence.
+      coverage: {start: 2000-03-09, observed_end: 2026-08-20, rows_at_probe: 217}
+      history_note: >
+        Three distinct programs share this dataset: the 2000-2002 paydown-era
+        buybacks, sporadic Small Value tests, and the liquidity-support /
+        cash-management program running since 2024. Gaps of YEARS between them
+        are the shape of the data, not staleness — this endpoint must never get
+        a staleness threshold.
+      expected_fields:
+        - operation_date
+        - settlement_date
+        - operation_type
+        - security_type
+        - maturity_bucket
+        - total_par_amt_offered
+        - total_par_amt_accepted
+        - max_par_amt_redeemed
+      observed_fields_at_probe:
+        - final_ann_pdf
+        - final_ann_xml
+        - maturity_bucket
+        - max_nbr_offers
+        - max_par_amt_redeemed
+        - nbr_issues_accepted
+        - nbr_issues_eligible
+        - operation_close_time_est
+        - operation_date
+        - operation_start_time_est
+        - operation_type
+        - par_amt_per_offer
+        - preliminary_ann_pdf
+        - preliminary_ann_xml
+        - results_pdf
+        - results_xml
+        - security_type
+        - settlement_date
+        - special_ann_pdf
+        - total_par_amt_accepted
+        - total_par_amt_offered
+      schema:
+        operation_date: date
+        settlement_date: date
+        operation_type: category
+        security_type: category
+        maturity_bucket: category
+        total_par_amt_offered: decimal
+        total_par_amt_accepted: decimal
+        max_par_amt_redeemed: decimal
+      row_grain: One row per operation. operation_type and security_type are the
+        literal string "null" for the 2000-2002 program.
+
+    buybacks_security_details:
+      path: v1/accounting/od/buybacks_security_details
+      purpose: >
+        CUSIP-level buyback results — which securities were bought, at what par
+        and price. Not used by the adjustment (the factors consume coupons as an
+        aggregate); ingested for the operations page and future attribution.
+      date_field: operation_date
+      units: usd
+      verified: true
+      coverage: {start: 2000-03-09, observed_end: 2026-08-20, rows_at_probe: 5808}
+      expected_fields:
+        - operation_date
+        - cusip_nbr
+        - maturity_date
+        - par_amt_accepted
+        - weighted_avg_accepted_price
+      observed_fields_at_probe:
+        - coupon_rate_pct
+        - cusip_nbr
+        - maturity_date
+        - operation_date
+        - operation_start_time_est
+        - par_amt_accepted
+        - weighted_avg_accepted_price
+      schema:
+        operation_date: date
+        cusip_nbr: string
+        maturity_date: date
+        par_amt_accepted: decimal
+        weighted_avg_accepted_price: decimal
+      row_grain: One row per (operation, eligible CUSIP); par_amt_accepted is
+        0.00 for eligible-but-not-purchased securities.
+
 fred:
   base_url: https://api.stlouisfed.org/fred/
   api_key_env: FRED_API_KEY

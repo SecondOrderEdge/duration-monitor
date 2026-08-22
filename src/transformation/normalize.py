@@ -288,6 +288,88 @@ def wam_input(securities: pd.DataFrame, *, basis: str = "PAR") -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- #
+# buybacks
+# --------------------------------------------------------------------------- #
+
+# Buyback security_type to the class vocabulary the factors use. "Nominal
+# Coupons" is deliberately NOT split into NOTES and BONDS: the operations data
+# does not carry the split, and the factors consume coupons as an aggregate
+# anyway, so inventing an attribution would add a guess where none is needed.
+BUYBACK_CLASS_MAP = {
+    "Nominal Coupons": "COUPONS",
+    "TIPS": "TIPS",
+}
+
+
+def normalize_buybacks(
+    operations: pd.DataFrame,
+    *,
+    retrieval_date: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    """Buyback operations to a tidy frame, one row per operation.
+
+    The 2000-2002 program and the Small Value tests carry a literal-"null"
+    security_type, which the typed layer surfaces as missing. Those are mapped to
+    COUPONS with `class_assumed = True`: the 2000-2002 paydown program bought
+    back long bonds, so the assumption is historically right for the dollars that
+    matter — but it is an assumption, and it travels on the row rather than
+    disappearing into the mapping.
+    """
+    required = {"operation_date", "total_par_amt_accepted", "security_type"}
+    missing = sorted(required - set(operations.columns))
+    if missing:
+        raise NormalizationError(f"buybacks frame is missing {missing}")
+
+    df = operations.copy()
+    df["operation_date"] = pd.to_datetime(df["operation_date"])
+
+    known = df["security_type"].map(BUYBACK_CLASS_MAP)
+    unmapped = df["security_type"].notna() & known.isna()
+    if unmapped.any():
+        raise NormalizationError(
+            "unmapped buyback security_type value(s): "
+            f"{sorted(df.loc[unmapped, 'security_type'].astype(str).unique())}. "
+            "Add them to BUYBACK_CLASS_MAP deliberately."
+        )
+    df["security_class"] = known.fillna("COUPONS").astype("category")
+    df["class_assumed"] = df["security_type"].isna()
+
+    df["par_accepted"] = pd.to_numeric(df["total_par_amt_accepted"], errors="raise")
+    if (df["par_accepted"] < 0).any():
+        raise NormalizationError("negative par accepted in buyback operations")
+
+    out = df[[
+        "operation_date", "settlement_date", "operation_type", "security_class",
+        "class_assumed", "maturity_bucket", "total_par_amt_offered",
+        "par_accepted", "max_par_amt_redeemed",
+    ]].sort_values("operation_date").reset_index(drop=True)
+    out["source"] = "fiscaldata/buybacks_operations"
+    out["retrieval_date"] = (
+        pd.Timestamp(retrieval_date) if retrieval_date is not None else pd.NaT
+    )
+    return out
+
+
+def monthly_buyback_par(buybacks: pd.DataFrame, *, security_class: str = "COUPONS") -> pd.Series:
+    """Par retired per month for one class, in USD, on a gap-free monthly grid.
+
+    Gaps are filled with ZERO, not NaN, and that is a considered exception to
+    this project's no-silent-fill rule: a month with no buyback operation is a
+    month in which Treasury retired nothing — a true zero, not a missing
+    observation. Filling with NaN would instead poison the adjusted coupon flow
+    for every non-buyback month, which is most of history.
+    """
+    one = buybacks[buybacks["security_class"].astype(str) == security_class]
+    par = one.groupby(
+        pd.PeriodIndex(pd.to_datetime(one["operation_date"]), freq="M"), observed=True
+    )["par_accepted"].sum()
+    if par.empty:
+        return par
+    full = pd.period_range(par.index.min(), par.index.max(), freq="M")
+    return par.reindex(full, fill_value=0.0)
+
+
+# --------------------------------------------------------------------------- #
 # auctions
 # --------------------------------------------------------------------------- #
 
