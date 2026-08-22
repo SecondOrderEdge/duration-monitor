@@ -1,6 +1,6 @@
 # Phase 3 source discovery
 
-- Probe run (UTC): `2026-08-22T03:30:45.543908+00:00`
+- Probe run (UTC): `2026-08-22T05:07:52.297143+00:00`
 
 What each candidate publisher actually returns. This is DISCOVERY — no field names are declared yet, so nothing here is verified. It exists so the Phase 3 schema is designed against observed responses rather than assumptions, which is what the Phase 1 probe was for.
 
@@ -24,10 +24,10 @@ How far back each candidate series reaches. The point-in-time percentiles need 6
 |---|---|---|---|
 40,633 series in the dataflow; 36 match central government, monthly, short or long-term, stocks or net issues.
 
-| `IT_F33100_4` | 2012-12 | 2022-03 | `M.IT.S131.F33100.N.4.EUR.E.Z` |
-| `IT_F33200_1` | 2012-12 | 2022-03 | `M.IT.S131.F33200.N.1.Z06.E.Z` |
-| `IT_F33200_4` | 2012-12 | 2022-03 | `M.IT.S131.F33200.N.4.Z06.E.Z` |
-| `IT_F33100_1` | 2012-12 | 2022-03 | `M.IT.S131.F33100.N.1.Z06.E.Z` |
+| `FR_F33100_1` | 2012-12 | 2022-03 | `M.FR.S131.F33100.N.1.Z06.E.Z` |
+| `FR_F33100_4` | 2012-12 | 2022-03 | `M.FR.S131.F33100.N.4.Z06.E.Z` |
+| `FR_F33200_1` | 2012-12 | 2022-03 | `M.FR.S131.F33200.N.1.Z06.E.Z` |
+| `FR_F33200_4` | 2012-12 | 2022-03 | `M.FR.S131.F33200.N.4.Z06.E.Z` |
 
 ## Eurostat coverage depth
 
@@ -46,7 +46,7 @@ Debt securities statistics by residence, sector and maturity. The brief names it
 - HTTP 200, `application/xml;charset=UTF-8`, 15,287 bytes
 
 ```
-<?xml version="1.0" ?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IDREFcea16907-b9b5-4c6d-b83e-26d71620cdad</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-21T20:59:52Z</mes:Prepared><mes:Sender id="UNKNOWN"></mes:Sender><mes:Receiver id="not_supplied"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)" isExternalReference="false" agencyID="BIS" id="BIS_REL_CAL" isFinal="false" version="1.0"><com:Name xml:lang="en">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package="datastructure" agencyID="BIS" id="BIS_RELEASE_CALENDAR" version="1.0" class="DataStructure"></Ref></str:Structure></str:Dataflow><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)" isExternalReference="false" agencyID="BIS" id="WS_CBPOL" isFinal="false" version="1.0"><com:Name xml:lang="en">Central bank policy rates</co
+<?xml version="1.0" ?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IDREF56dfe370-11f5-46bd-9fe8-cbedc18826ab</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-21T17:12:41Z</mes:Prepared><mes:Sender id="UNKNOWN"></mes:Sender><mes:Receiver id="not_supplied"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)" isExternalReference="false" agencyID="BIS" id="BIS_REL_CAL" isFinal="false" version="1.0"><com:Name xml:lang="en">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package="datastructure" agencyID="BIS" id="BIS_RELEASE_CALENDAR" version="1.0" class="DataStructure"></Ref></str:Structure></str:Dataflow><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)" isExternalReference="false" agencyID="BIS" id="WS_CBPOL" isFinal="false" version="1.0"><com:Name xml:lang="en">Central bank policy rates</co
 ```
 
 ### `https://stats.bis.org/api/v1/dataflow`
@@ -54,7 +54,7 @@ Debt securities statistics by residence, sector and maturity. The brief names it
 - HTTP 200, `application/xml;charset=UTF-8`, 16,687 bytes
 
 ```
-<?xml version="1.0" ?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IDREF92b90eaa-5d0d-4066-a982-16ecba2d7bbb</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-21T12:15:12Z</mes:Prepared><mes:Sender id="UNKNOWN"></mes:Sender><mes:Receiver id="not_supplied"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)" isExternalReference="false" agencyID="BIS" id="BIS_REL_CAL" isFinal="false" version="1.0"><com:Name xml:lang="en">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package="datastructure" agencyID="BIS" id="BIS_RELEASE_CALENDAR" version="1.0" class="DataStructure"></Ref></str:Structure></str:Dataflow><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)" isExternalReference="false" agencyID="BIS" id="WS_CBPOL" isFinal="false" version="1.0"><com:Name xml:lang="en">Central bank policy rates</co
+<?xml version="1.0" ?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IDREF434604ca-b848-4350-9d50-abaaee89521d</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-21T20:00:13Z</mes:Prepared><mes:Sender id="UNKNOWN"></mes:Sender><mes:Receiver id="not_supplied"></mes:Receiver></mes:Header><mes:Structures><str:Dataflows><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:BIS_REL_CAL(1.0)" isExternalReference="false" agencyID="BIS" id="BIS_REL_CAL" isFinal="false" version="1.0"><com:Name xml:lang="en">BIS_RELEASE_CALENDAR</com:Name><str:Structure><Ref package="datastructure" agencyID="BIS" id="BIS_RELEASE_CALENDAR" version="1.0" class="DataStructure"></Ref></str:Structure></str:Dataflow><str:Dataflow urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)" isExternalReference="false" agencyID="BIS" id="WS_CBPOL" isFinal="false" version="1.0"><com:Name xml:lang="en">Central bank policy rates</co
 ```
 
 ### `https://www.bis.org/statistics/index.htm`
@@ -93,20 +93,20 @@ Securities issues statistics and government finance statistics cover Germany, Fr
 
 ### `https://data-api.ecb.europa.eu/service/data/SEC?lastNObservations=1&format=jsondata&detail=serieskeysonly`
 
-- HTTP 200, `application/vnd.sdmx.data+json;version=1.0.0-wd`, 987,879 bytes
+- HTTP 200, `application/vnd.sdmx.data+json;version=1.0.0-wd`, 993,574 bytes
 - JSON top-level keys: `['dataSets', 'header', 'structure']`
 - **series:FREQ** (Frequency) — 2 categories: `M`=Monthly, `A`=Annual
-- **series:REF_AREA** (Reference area) — 33 categories: `FI`=Finland, `NL`=Netherlands, `MT`=Malta, `ES`=Spain, `IE`=Ireland, `LV`=Latvia, `I8`=Euro area 19 (fixed composition) as of 1 January 2015, `LU`=Luxembourg
-- **series:SEC_ISSUING_SECTOR** (Securities issuing sector) — 22 categories: `1610`=Non-MFI corporations, `S110`=Non-financial corporations (ESA 2010 classification), `S125`=Other financial intermediaries (ESA 2010 classification), `S126`=Financial auxiliaries (ESA 2010 classification), `1311`=Central government, `1314`=Social security funds, `1300`=General government, `130C`=State and local government
-- **series:SEC_ITEM** (Securities item) — 6 categories: `F51100`=Listed shares, `F33000`=Securities other than shares, excluding financial derivatives, `F33100`=Short-term securities other than shares, `F33200`=Long-term securities other than shares, `F33201`=Long-term / Fixed rate issues, `F33202`=Long-term / Floating rate issues
-- **series:SEC_VALUATION** (Securities valuation) — 2 categories: `M`=ESA95 valuation, `N`=Nominal value
-- **series:DATA_TYPE_SEC** (Securities data type) — 7 categories: `4`=Net issues (flows), `1`=Outstanding amounts at the end of the period (stocks), `2`=(Gross) issues against cash (flows), `3`=Redemptions (flows), `I`=Index of Notional Stocks, `A`=Based on 13-month average, `Q`=Based on 4-month average
-- **series:CURRENCY_TRANS** (Currency of transaction) — 13 categories: `Z06`=All currencies except EUR, `EUR`=Euro, `Z01`=All currencies combined, `HUF`=Hungarian forint, `Z07`=All currencies other than domestic, Euro and euro area currencies, `HRK`=Croatian kuna, `GBP`=UK pound sterling, `BGN`=Bulgarian lev
-- **series:SERIES_DENOM** (Series denominat/spec calcul) — 5 categories: `E`=Euro, `A`=Annual growth rate, `3`=3 month annualised growth rate, `6`=6 month annualised growth rate, `N`=National currency
+- **series:REF_AREA** (Reference area) — 33 categories: `CY`=Cyprus, `BG`=Bulgaria, `BE`=Belgium, `AT`=Austria, `A1`=World (all entities), `SE`=Sweden, `V3`=EU 28 (fixed composition) as of 1 July 2013, `V5`=EU27 (fixed composition) as of 31 January 2020 (brexit)
+- **series:SEC_ISSUING_SECTOR** (Securities issuing sector) — 22 categories: `1100`=Non-financial corporations (ESA 95 classification), `1210`=The central bank, `1220`=Other monetary financial institutions, `1230`=Other financial intermediaries, except insurance corporations and pension funds (ESA 95 classification), `S127`=Captive financial institutions (ESA 2010 classification), `S131`=Central government (ESA 2010 classification), `S134`=Social security funds (ESA 2010 classification), `S13C`=State and local government (ESA 2010 classification)
+- **series:SEC_ITEM** (Securities item) — 6 categories: `F33201`=Long-term / Fixed rate issues, `F33202`=Long-term / Floating rate issues, `F51100`=Listed shares, `F33000`=Securities other than shares, excluding financial derivatives, `F33100`=Short-term securities other than shares, `F33200`=Long-term securities other than shares
+- **series:SEC_VALUATION** (Securities valuation) — 2 categories: `N`=Nominal value, `M`=ESA95 valuation
+- **series:DATA_TYPE_SEC** (Securities data type) — 7 categories: `4`=Net issues (flows), `1`=Outstanding amounts at the end of the period (stocks), `2`=(Gross) issues against cash (flows), `3`=Redemptions (flows), `A`=Based on 13-month average, `I`=Index of Notional Stocks, `Q`=Based on 4-month average
+- **series:CURRENCY_TRANS** (Currency of transaction) — 13 categories: `Z06`=All currencies except EUR, `EUR`=Euro, `Z01`=All currencies combined, `Z07`=All currencies other than domestic, Euro and euro area currencies, `BGN`=Bulgarian lev, `SEK`=Swedish krona, `RON`=Romanian leu, `PLN`=Polish zloty
+- **series:SERIES_DENOM** (Series denominat/spec calcul) — 5 categories: `E`=Euro, `N`=National currency, `A`=Annual growth rate, `3`=3 month annualised growth rate, `6`=6 month annualised growth rate
 - **series:SEC_SUFFIX** (Series suffix - SEC context) — 3 categories: `Z`=Unspecified, `S`=Seasonally adjusted, `P`=Percentage of total currencies
 
 ```
-{"header":{"id":"bc4aa3c4-3c3b-4fcd-9fa3-fc72f845578b","test":false,"prepared":"2026-08-22T05:30:54.092+02:00","sender":{"id":"ECB"}},"dataSets":[{"action":"Replace","validFrom":"2026-08-22T05:30:54.092+02:00","series":{"0:0:0:0:0:0:0:0:0":{},"0:0:1:1:1:1:1:0:0":{},"0:0:1:1:1:1:2:0:0":{},"0:0:1:1:1:1:0:0:0":{},"0:0:1:1:1:2:1:0:0":{},"0:0:1:1:1:2:2:0:0":{},"0:0:1:1:1:2:0:0:0":{},"0:0:1:1:1:3:1:0:0":{},"0:0:1:1:1:3:2:0:0":{},"0:0:1:1:1:3:0:0:0":{},"0:0:1:1:1:0:1:0:0":{},"0:0:1:1:1:0:2:0:0":{},"0:0:1:1:1:0:0:0:0":{},"0:0:1:2:1:1:1:0:0":{},"0:0:1:2:1:1:2:0:0":{},"0:0:1:2:1:1:0:0:0":{},"0:0:1:2:1:2:1:0:0":{},"0:0:1:2:1:2:2:0:0":{},"0:0:1:2:1:2:0:0:0":{},"0:0:1:2:1:3:1:0:0":{},"0:0:1:2:1:3:2:0:0":{},"0:0:1:2:1:3:0:0:0":{},"0:0:1:2:1:0:1:0:0":{},"0:0:1:2:1:0:2:0:0":{},"0:0:1:2:1:0:0:0:0":{},"0:0:1:3:1:1:1:0:0":{},"0:0:1:3:1:1:2:0:0":{},"0:0:1:3:1:1:0:0:0":{},"0:0:1:3:1:2:1:0:0":{},"0:0:1:3:1:2:2:0:0":{},"0:0:1:3:1:2:0:0:0":{},"0:0:1:3:1:3:1:0:0":{},"0:0:1:3:1:3:2:0:0":{},"0:0:1:3:1:3:0:0:0":{},"0:0:1:3:1:0:1:0:0":{},"0:0:1:3:1:0:2:0:0":{},"0:0:1:3:1:0:0:0:0":{},"0:0:1:4:1:1:1:0:0":{},"0:0:1:4:1:1:2:0:0":{},"0:0:1:4:1:1:0:0:0":{},"0:0:1:4:1:2:1:0:0":{},"0:0:1:4:1:2:2:0:0":{},"0:0:1:4:1:2:0
+{"header":{"id":"e7a78567-0180-405c-ae01-cbf50cf7999e","test":false,"prepared":"2026-08-22T07:07:58.233+02:00","sender":{"id":"ECB"}},"dataSets":[{"action":"Replace","validFrom":"2026-08-22T07:07:58.233+02:00","series":{"0:0:0:0:0:0:0:0:0":{},"0:0:0:1:0:1:1:0:0":{},"0:0:0:1:0:1:2:0:0":{},"0:0:0:1:0:1:0:0:0":{},"0:0:0:1:0:2:1:0:0":{},"0:0:0:1:0:2:2:0:0":{},"0:0:0:1:0:2:0:0:0":{},"0:0:0:1:0:3:1:0:0":{},"0:0:0:1:0:3:2:0:0":{},"0:0:0:1:0:3:0:0:0":{},"0:0:0:1:0:0:1:0:0":{},"0:0:0:1:0:0:2:0:0":{},"0:0:0:1:0:0:0:0:0":{},"0:0:0:2:1:1:1:0:0":{},"0:0:0:2:1:1:2:0:0":{},"0:0:0:2:1:1:0:0:0":{},"0:0:0:2:1:2:1:0:0":{},"0:0:0:2:1:2:2:0:0":{},"0:0:0:2:1:2:0:0:0":{},"0:0:0:2:1:3:1:0:0":{},"0:0:0:2:1:3:2:0:0":{},"0:0:0:2:1:3:0:0:0":{},"0:0:0:2:1:0:1:0:0":{},"0:0:0:2:1:0:2:0:0":{},"0:0:0:2:1:0:0:0:0":{},"0:0:1:3:0:1:1:0:0":{},"0:0:1:3:0:2:1:0:0":{},"0:0:1:3:0:3:1:0:0":{},"0:0:1:3:0:0:1:0:0":{},"0:0:1:4:0:1:1:0:0":{},"0:0:1:4:0:2:1:0:0":{},"0:0:1:4:0:3:1:0:0":{},"0:0:1:4:0:0:1:0:0":{},"0:0:1:5:0:1:1:0:0":{},"0:0:1:5:0:2:1:0:0":{},"0:0:1:5:0:3:1:0:0":{},"0:0:1:5:0:0:1:0:0":{},"0:0:1:0:0:1:1:0:0":{},"0:0:1:0:0:2:1:0:0":{},"0:0:1:0:0:3:1:0:0":{},"0:0:1:0:0:0:1:0:0":{},"0:0:1:1:0:1:1:0:0":{},"0:0:1:1:0:2:1
 ```
 
 ### `https://data-api.ecb.europa.eu/service/datastructure/ECB/ECB_SEC1?format=sdmx-json`
@@ -114,7 +114,7 @@ Securities issues statistics and government finance statistics cover Germany, Fr
 - HTTP 200, `application/vnd.sdmx.structure+xml;version=2.1`, 30,851 bytes
 
 ```
-<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IREF694555</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-22T03:30:55Z</mes:Prepared><mes:Sender id="Unknown"/><mes:Receiver id="not_supplied"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn="urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)" isExternalReference="false" agencyID="ECB" id="ECB_SEC1" isFinal="false" uri="https://www.ecb.europa.eu/vocabulary/stats/sec/1" version="1.0"><com:Name xml:lang="en">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn="urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor" id="DimensionDescriptor"><str:Dimension urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ" id="FREQ" position="1"><str:ConceptIdentity><Ref m
+<?xml version='1.0' encoding='UTF-8'?><mes:Structure xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:mes="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:str="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:com="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common"><mes:Header><mes:ID>IREF752794</mes:ID><mes:Test>false</mes:Test><mes:Prepared>2026-08-22T05:07:59Z</mes:Prepared><mes:Sender id="Unknown"/><mes:Receiver id="not_supplied"/></mes:Header><mes:Structures><str:DataStructures><str:DataStructure urn="urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ECB:ECB_SEC1(1.0)" isExternalReference="false" agencyID="ECB" id="ECB_SEC1" isFinal="false" uri="https://www.ecb.europa.eu/vocabulary/stats/sec/1" version="1.0"><com:Name xml:lang="en">Securities</com:Name><str:DataStructureComponents><str:DimensionList urn="urn:sdmx:org.sdmx.infomodel.datastructure.DimensionDescriptor=ECB:ECB_SEC1(1.0).DimensionDescriptor" id="DimensionDescriptor"><str:Dimension urn="urn:sdmx:org.sdmx.infomodel.datastructure.Dimension=ECB:ECB_SEC1(1.0).FREQ" id="FREQ" position="1"><str:ConceptIdentity><Ref m
 ```
 
 ## `eurostat` — Eurostat
@@ -290,7 +290,7 @@ JGB issuance and outstanding by maturity. Japan is the largest test of the thesi
 
 ### `https://www.mof.go.jp/english/policy/jgbs/index.html`
 
-- HTTP 200, `text/html`, 21,911 bytes
+- HTTP 200, `text/html`, 21,912 bytes
 
 ```
 <!DOCTYPE html>
@@ -364,16 +364,16 @@ Central government debt statistics, including maturity structure on a harmonised
 
 ### `https://sdmx.oecd.org/public/rest/dataflow`
 
-- HTTP 200, `application/vnd.sdmx.structure+xml; charset=utf-8; version=2.1`, 8,880,069 bytes
+- HTTP 200, `application/vnd.sdmx.structure+xml; charset=utf-8; version=2.1`, 8,880,070 bytes
 
 ```
 <?xml version="1.0" encoding="utf-8"?>
 <!--NSI Web Service v8.19.8.0-->
 <message:Structure xmlns:message="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message" xmlns:structure="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure" xmlns:common="http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common">
   <message:Header>
-    <message:ID>IDREF840</message:ID>
+    <message:ID>IDREF1508</message:ID>
     <message:Test>false</message:Test>
-    <message:Prepared>2026-08-22T05:31:09.9074388+02:00</message:Prepared>
+    <message:Prepared>2026-08-22T07:08:21.2746146+02:00</message:Prepared>
     <message:Sender id="Unknown" />
     <message:Receiver id="Unknown" />
   </message:Header>
@@ -388,7 +388,7 @@ Central government debt statistics, including maturity structure on a harmonised
         </common:Annotations>
         <common:Name xml:lang="en">Air Emissions Accounts</common:Name>
         <common:Description xml:lang="en">Air Emissions Accounts</common:Description>
-        <structure:Stru
+        <structure:Str
 ```
 
 ## `uk_dmo` — UK Debt Management Office
@@ -428,14 +428,14 @@ Gilt and Treasury bill issuance, per-security detail. The UK is the closest anal
 ### `https://www.dmo.gov.uk/data/`
 
 - HTTP 200, `text/html; charset=UTF-8`, 15,238 bytes
-- redirected to `https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=b0a7b1f3-6a48-4b37-84c8-fd12426c5b39&ssb=71031276345&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=8a76f823-bhbz-468f-8606-1a15c5c9b220&ssk=support@shieldsquare.com&ssm=02110414523932173102327220949057&ssn=ebf6522b903a13008fdca491c10e14a585f4d3030684-23e4-418e-936578&sso=cdd0b76b-2cfc9e8a14f2f073c68f5e70f2988681071cde9b25adfdb5&ssp=00986785141787358391178736223360468&ssq=82995946947222019697669472914150637485551&ssr=NTcuMTUxLjg2LjI0Mg==&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJ1em14IjoiN2ZjMDAwNTkzNzAzMjItNjhjZS00NWE3LWE5MjQtZmM1MTgyNDZmNjNhMS0xNzg3MzY5NDcyMDkxMC0wMDFiMzFmNjhiYWFlMWVmMjZiMTAiLCJfX3V6bWYiOiI3ZjkwMDBkMzAzMDY4NC0yM2U0LTQxOGUtOTc2Yi0yY2ZjOWU4YTE0ZjIxLTE3ODczNjk0NzIwOTEwLTAwNDZmZTYxMzUyZjAyYWM4NTkxMCIsInJkIjoiZG1vLmdvdi51ayJ9`
+- redirected to `https://validate.perfdrive.com/5e975472fcf167bd1130d74f0fb9a2f7/?ssa=1b579a02-477f-417c-a1aa-4380b3f19ddc&ssb=09662270919&ssc=https%3A%2F%2Fwww.dmo.gov.uk%2Fdata%2F&ssi=a431d859-bhbz-4a5e-b22b-a682579148ea&ssk=support@shieldsquare.com&ssm=55567112205458005109635155541086&ssn=9e5f3757e370a819612faa00700b8b6e9f5b1c0bcd81-8fca-4b8a-b26033&sso=d39d0256-c20483d1489815b46f445c571a9f073e41f85d6f0003cd98&ssp=35096121661787303011178735425665950&ssq=32286937530375565164775303849598994462542&ssr=MTM1LjIzMi4yMDAuMQ==&sst=python-requests/2.33.1&ssu=&ssv=&ssw=&ssx=eyJ1em14IjoiN2ZjMDAwNjRmMmQyNTUtM2QzMC00MTIzLTlkNWEtZTUwYmNmY2Y0NWMxMS0xNzg3Mzc1MzAzNzk4MC0wMDEzYWZjMDI4MGE5OWVjODI4MTAiLCJyZCI6ImRtby5nb3YudWsiLCJfX3V6bWYiOiI3ZjkwMDAxYzBiY2Q4MS04ZmNhLTRiOGEtYjI1Ni1jMjA0ODNkMTQ4OTgxLTE3ODczNzUzMDM3OTgwLTAwNDFiY2IxMGE5YjJiZTliNzAxMCJ9`
 
 ```
 <head><title>ShieldSquare Captcha</title><script type="text/javascript">
 	window.SSJSInternal = 18155;
 
-	var __uzdbm_1 = "d3030684-23e4-418e-976b-2cfc9e8a14f2";
-	var __uzdbm_2 = "OGE3NmY4MjMtYmhiei00NjhmLTg2MDYtMWExNWM1YzliMjIwJDU3LjE1MS44Ni4yNDI=";
+	var __uzdbm_1 = "1c0bcd81-8fca-4b8a-b256-c20483d14898";
+	var __uzdbm_2 = "YTQzMWQ4NTktYmhiei00YTVlLWIyMmItYTY4MjU3OTE0OGVhJDEzNS4yMzIuMjAwLjE=";
 	
 	(function(w, d, e, u, c, g, a, b){
 		w["SSJSConnectorObj"] = w["SSJSConnectorObj"] || {ss_cid : c, domain_info: g};

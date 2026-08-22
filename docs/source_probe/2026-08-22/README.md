@@ -1,6 +1,6 @@
 # Source probe results
 
-- Probe run (UTC): `2026-08-22T03:30:20.255846+00:00`
+- Probe run (UTC): `2026-08-22T05:07:29.194591+00:00`
 
 Field names below are **observed from live responses**. Anything marked MISSING means `config/sources.yaml` expected a field the API does not return — the contract is wrong and must be corrected before ingestion is written against it.
 
@@ -16,6 +16,8 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 | `interest_expense` | ok | 7283 | 2010-05-31 → 2026-07-31 | OK |
 | `operating_cash_balance` | ok | 16546 | 2005-10-03 → 2026-08-20 | OK |
 | `mts_table_1` | ok | 3090 | 2015-03-31 → 2026-07-31 | OK |
+| `buybacks_operations` | ok | 217 | 2000-03-09 → 2026-08-20 | OK |
+| `buybacks_security_details` | ok | 5808 | 2000-03-09 → 2026-08-20 | OK |
 
 ### `mspd_table_1`
 
@@ -90,6 +92,24 @@ Field names below are **observed from live responses**. Anything marked MISSING 
 
 - Coverage: **2015-03-31 → 2026-07-31** (3090 rows)
 - Observed fields (21): `classification_desc`, `classification_id`, `current_month_dfct_sur_amt`, `current_month_gross_outly_amt`, `current_month_gross_rcpt_amt`, `data_type_cd`, `line_code_nbr`, `parent_id`, `print_order_nbr`, `record_calendar_day`, `record_calendar_month`, `record_calendar_quarter`, `record_calendar_year`, `record_date`, `record_fiscal_quarter`, `record_fiscal_year`, `record_type_cd`, `sequence_level_nbr`, `sequence_number_cd`, `src_line_nbr`, `table_nbr`
+
+- No field drift since the last probe.
+
+### `buybacks_operations`
+
+`https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/buybacks_operations`
+
+- Coverage: **2000-03-09 → 2026-08-20** (217 rows)
+- Observed fields (21): `final_ann_pdf`, `final_ann_xml`, `maturity_bucket`, `max_nbr_offers`, `max_par_amt_redeemed`, `nbr_issues_accepted`, `nbr_issues_eligible`, `operation_close_time_est`, `operation_date`, `operation_start_time_est`, `operation_type`, `par_amt_per_offer`, `preliminary_ann_pdf`, `preliminary_ann_xml`, `results_pdf`, `results_xml`, `security_type`, `settlement_date`, `special_ann_pdf`, `total_par_amt_accepted`, `total_par_amt_offered`
+
+- No field drift since the last probe.
+
+### `buybacks_security_details`
+
+`https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/buybacks_security_details`
+
+- Coverage: **2000-03-09 → 2026-08-20** (5808 rows)
+- Observed fields (7): `coupon_rate_pct`, `cusip_nbr`, `maturity_date`, `operation_date`, `operation_start_time_est`, `par_amt_accepted`, `weighted_avg_accepted_price`
 
 - No field drift since the last probe.
 

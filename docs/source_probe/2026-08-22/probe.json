@@ -1,5 +1,5 @@
 {
-  "probe_timestamp_utc": "2026-08-22T03:30:20.255846+00:00",
+  "probe_timestamp_utc": "2026-08-22T05:07:29.194591+00:00",
   "config_version": 2,
   "fiscaldata": {
     "mspd_table_1": {
@@ -1578,6 +1578,239 @@
         }
       ],
       "critical_unknowns": []
+    },
+    "buybacks_operations": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/buybacks_operations",
+      "path": "v1/accounting/od/buybacks_operations",
+      "purpose": "Buyback operations, one row per operation, with par offered and accepted. Drives the buyback adjustment to net issuance: MSPD deltas net retired securities into \"issuance\", so an unadjusted coupon buyback reads as strategic coupon restraint when it is an announced liquidity or cash management operation.\n",
+      "status": "ok",
+      "observed_fields": [
+        "final_ann_pdf",
+        "final_ann_xml",
+        "maturity_bucket",
+        "max_nbr_offers",
+        "max_par_amt_redeemed",
+        "nbr_issues_accepted",
+        "nbr_issues_eligible",
+        "operation_close_time_est",
+        "operation_date",
+        "operation_start_time_est",
+        "operation_type",
+        "par_amt_per_offer",
+        "preliminary_ann_pdf",
+        "preliminary_ann_xml",
+        "results_pdf",
+        "results_xml",
+        "security_type",
+        "settlement_date",
+        "special_ann_pdf",
+        "total_par_amt_accepted",
+        "total_par_amt_offered"
+      ],
+      "data_types": {
+        "operation_date": "DATE",
+        "operation_start_time_est": "STRING",
+        "operation_close_time_est": "STRING",
+        "settlement_date": "DATE",
+        "preliminary_ann_pdf": "STRING",
+        "preliminary_ann_xml": "STRING",
+        "final_ann_pdf": "STRING",
+        "final_ann_xml": "STRING",
+        "results_pdf": "STRING",
+        "results_xml": "STRING",
+        "special_ann_pdf": "STRING",
+        "operation_type": "STRING",
+        "security_type": "STRING",
+        "maturity_bucket": "STRING",
+        "nbr_issues_accepted": "INTEGER",
+        "total_par_amt_offered": "CURRENCY",
+        "par_amt_per_offer": "CURRENCY",
+        "max_par_amt_redeemed": "CURRENCY0",
+        "max_nbr_offers": "INTEGER",
+        "nbr_issues_eligible": "INTEGER",
+        "total_par_amt_accepted": "CURRENCY"
+      },
+      "labels": {
+        "operation_date": "Operation Date",
+        "operation_start_time_est": "Operation Start Time (EST)",
+        "operation_close_time_est": "Operation Closing Time (EST)",
+        "settlement_date": "Settlement Date",
+        "preliminary_ann_pdf": "Preliminary Announcement PDF",
+        "preliminary_ann_xml": "Preliminary Announcement XML",
+        "final_ann_pdf": "Final Announcement PDF",
+        "final_ann_xml": "Final Announcement XML",
+        "results_pdf": "Results PDF",
+        "results_xml": "Results XML",
+        "special_ann_pdf": "Special Announcement PDF",
+        "operation_type": "Operation Type",
+        "security_type": "Security Type",
+        "maturity_bucket": "Maturity Bucket",
+        "nbr_issues_accepted": "Number of Issues Accepted",
+        "total_par_amt_offered": "Total Par Amount Offered",
+        "par_amt_per_offer": "Par Amount Per Offer",
+        "max_par_amt_redeemed": "Max Par Amount Redeemed",
+        "max_nbr_offers": "Max Number of Offers",
+        "nbr_issues_eligible": "Number of Issues Eligible",
+        "total_par_amt_accepted": "Total Par Amount Accepted"
+      },
+      "total_rows_available": 217,
+      "latest_date": "2026-08-20",
+      "earliest_date": "2000-03-09",
+      "contract": {
+        "n_fields": 21,
+        "missing": [],
+        "matched": [
+          "maturity_bucket",
+          "max_par_amt_redeemed",
+          "operation_date",
+          "operation_type",
+          "security_type",
+          "settlement_date",
+          "total_par_amt_accepted",
+          "total_par_amt_offered"
+        ],
+        "contract_ok": true,
+        "baseline_recorded": true,
+        "added": [],
+        "dropped": []
+      },
+      "probe_extra_fields_present": [],
+      "probe_extra_fields_absent": [],
+      "null_audit": {
+        "fields_with_string_null": [
+          "special_ann_pdf"
+        ],
+        "fields_not_string_typed": []
+      },
+      "sample_rows": [
+        {
+          "operation_date": "2026-08-20",
+          "operation_start_time_est": "01:40 PM",
+          "operation_close_time_est": "02:00 PM",
+          "settlement_date": "2026-08-21",
+          "preliminary_ann_pdf": "BBPA_20260820174000.pdf",
+          "preliminary_ann_xml": "BBPA_20260820174000.xml",
+          "final_ann_pdf": "BBA_20260820174000.pdf",
+          "final_ann_xml": "BBA_20260820174000.xml",
+          "results_pdf": "BBR_20260820174000.pdf",
+          "results_xml": "BBR_20260820174000.xml",
+          "special_ann_pdf": "null",
+          "operation_type": "Liquidity Support",
+          "security_type": "Nominal Coupons",
+          "maturity_bucket": "3Y to 5Y",
+          "nbr_issues_accepted": "3",
+          "total_par_amt_offered": "10159000000.00",
+          "par_amt_per_offer": "1000000.00",
+          "max_par_amt_redeemed": "4000000000",
+          "max_nbr_offers": "9",
+          "nbr_issues_eligible": "48",
+          "total_par_amt_accepted": "1860000000.00"
+        },
+        {
+          "operation_date": "2026-08-18",
+          "operation_start_time_est": "01:40 PM",
+          "operation_close_time_est": "02:00 PM",
+          "settlement_date": "2026-08-19",
+          "preliminary_ann_pdf": "BBPA_20260818174000.pdf",
+          "preliminary_ann_xml": "BBPA_20260818174000.xml",
+          "final_ann_pdf": "BBA_20260818174000.pdf",
+          "final_ann_xml": "BBA_20260818174000.xml",
+          "results_pdf": "BBR_20260818174000.pdf",
+          "results_xml": "BBR_20260818174000.xml",
+          "special_ann_pdf": "null",
+          "operation_type": "Liquidity Support",
+          "security_type": "Nominal Coupons",
+          "maturity_bucket": "20Y to 30Y",
+          "nbr_issues_accepted": "3",
+          "total_par_amt_offered": "19868000000.00",
+          "par_amt_per_offer": "1000000.00",
+          "max_par_amt_redeemed": "2000000000",
+          "max_nbr_offers": "9",
+          "nbr_issues_eligible": "36",
+          "total_par_amt_accepted": "2000000000.00"
+        }
+      ],
+      "critical_unknowns": []
+    },
+    "buybacks_security_details": {
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/buybacks_security_details",
+      "path": "v1/accounting/od/buybacks_security_details",
+      "purpose": "CUSIP-level buyback results \u2014 which securities were bought, at what par and price. Not used by the adjustment (the factors consume coupons as an aggregate); ingested for the operations page and future attribution.\n",
+      "status": "ok",
+      "observed_fields": [
+        "coupon_rate_pct",
+        "cusip_nbr",
+        "maturity_date",
+        "operation_date",
+        "operation_start_time_est",
+        "par_amt_accepted",
+        "weighted_avg_accepted_price"
+      ],
+      "data_types": {
+        "operation_date": "DATE",
+        "operation_start_time_est": "STRING",
+        "cusip_nbr": "STRING",
+        "coupon_rate_pct": "PERCENTAGE",
+        "maturity_date": "DATE",
+        "par_amt_accepted": "CURRENCY",
+        "weighted_avg_accepted_price": "CURRENCY3"
+      },
+      "labels": {
+        "operation_date": "Operation Date",
+        "operation_start_time_est": "Operation Start Time (EST)",
+        "cusip_nbr": "CUSIP Number",
+        "coupon_rate_pct": "Coupon Rate",
+        "maturity_date": "Maturity Date",
+        "par_amt_accepted": "Par Amount Accepted",
+        "weighted_avg_accepted_price": "Weighted Average Accepted Price"
+      },
+      "total_rows_available": 5808,
+      "latest_date": "2026-08-20",
+      "earliest_date": "2000-03-09",
+      "contract": {
+        "n_fields": 7,
+        "missing": [],
+        "matched": [
+          "cusip_nbr",
+          "maturity_date",
+          "operation_date",
+          "par_amt_accepted",
+          "weighted_avg_accepted_price"
+        ],
+        "contract_ok": true,
+        "baseline_recorded": true,
+        "added": [],
+        "dropped": []
+      },
+      "probe_extra_fields_present": [],
+      "probe_extra_fields_absent": [],
+      "null_audit": {
+        "fields_with_string_null": [
+          "weighted_avg_accepted_price"
+        ],
+        "fields_not_string_typed": []
+      },
+      "sample_rows": [
+        {
+          "operation_date": "2026-08-20",
+          "operation_start_time_est": "01:40 PM",
+          "cusip_nbr": "91282CFJ5",
+          "coupon_rate_pct": "3.125",
+          "maturity_date": "2029-08-31",
+          "par_amt_accepted": "0.00",
+          "weighted_avg_accepted_price": "null"
+        },
+        {
+          "operation_date": "2026-08-20",
+          "operation_start_time_est": "01:40 PM",
+          "cusip_nbr": "91282CLK5",
+          "coupon_rate_pct": "3.625",
+          "maturity_date": "2029-08-31",
+          "par_amt_accepted": "0.00",
+          "weighted_avg_accepted_price": "null"
+        }
+      ],
+      "critical_unknowns": []
     }
   },
   "fred": {
@@ -2029,20 +2262,20 @@
         "last_updated": "2026-06-11 21:15:44-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-06-27",
-            "realtime_end": "2026-06-27",
+            "realtime_start": "2026-07-13",
+            "realtime_end": "2026-07-13",
             "date": "2026-01-01",
             "value": "8289569.0"
           },
           {
-            "realtime_start": "2026-06-27",
-            "realtime_end": "2026-06-27",
+            "realtime_start": "2026-07-13",
+            "realtime_end": "2026-07-13",
             "date": "2025-10-01",
             "value": "8190235.0"
           },
           {
-            "realtime_start": "2026-06-27",
-            "realtime_end": "2026-06-27",
+            "realtime_start": "2026-07-13",
+            "realtime_end": "2026-07-13",
             "date": "2025-07-01",
             "value": "7774054.0"
           }
@@ -2060,20 +2293,20 @@
         "last_updated": "2026-06-18 14:30:20-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-07-01",
-            "realtime_end": "2026-07-01",
+            "realtime_start": "2026-06-18",
+            "realtime_end": "2026-06-18",
             "date": "2026-01-01",
             "value": "39065421.0"
           },
           {
-            "realtime_start": "2026-07-01",
-            "realtime_end": "2026-07-01",
+            "realtime_start": "2026-06-18",
+            "realtime_end": "2026-06-18",
             "date": "2025-10-01",
             "value": "38514009.0"
           },
           {
-            "realtime_start": "2026-07-01",
-            "realtime_end": "2026-07-01",
+            "realtime_start": "2026-06-18",
+            "realtime_end": "2026-06-18",
             "date": "2025-07-01",
             "value": "37637552.59555763"
           }
@@ -2091,20 +2324,20 @@
         "last_updated": "2026-04-09 08:07:35-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-08-18",
-            "realtime_end": "2026-08-18",
+            "realtime_start": "2026-06-10",
+            "realtime_end": "2026-06-10",
             "date": "2025-01-01",
             "value": "-5.76906"
           },
           {
-            "realtime_start": "2026-08-18",
-            "realtime_end": "2026-08-18",
+            "realtime_start": "2026-06-10",
+            "realtime_end": "2026-06-10",
             "date": "2024-01-01",
             "value": "-6.19625"
           },
           {
-            "realtime_start": "2026-08-18",
-            "realtime_end": "2026-08-18",
+            "realtime_start": "2026-06-10",
+            "realtime_end": "2026-06-10",
             "date": "2023-01-01",
             "value": "-6.06751"
           }
@@ -2122,20 +2355,20 @@
         "last_updated": "2026-07-30 10:09:18-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-07-31",
-            "realtime_end": "2026-07-31",
+            "realtime_start": "2026-07-30",
+            "realtime_end": "2026-07-30",
             "date": "2026-04-01",
             "value": "1247.033"
           },
           {
-            "realtime_start": "2026-07-31",
-            "realtime_end": "2026-07-31",
+            "realtime_start": "2026-07-30",
+            "realtime_end": "2026-07-30",
             "date": "2026-01-01",
             "value": "1218.938"
           },
           {
-            "realtime_start": "2026-07-31",
-            "realtime_end": "2026-07-31",
+            "realtime_start": "2026-07-30",
+            "realtime_end": "2026-07-30",
             "date": "2025-10-01",
             "value": "1227.495"
           }
@@ -2153,20 +2386,20 @@
         "last_updated": "2026-06-25 07:51:13-05",
         "latest_observations": [
           {
-            "realtime_start": "2026-06-29",
-            "realtime_end": "2026-06-29",
+            "realtime_start": "2026-07-14",
+            "realtime_end": "2026-07-14",
             "date": "2026-01-01",
             "value": "5872.497"
           },
           {
-            "realtime_start": "2026-06-29",
-            "realtime_end": "2026-06-29",
+            "realtime_start": "2026-07-14",
+            "realtime_end": "2026-07-14",
             "date": "2025-10-01",
             "value": "5898.479"
           },
           {
-            "realtime_start": "2026-06-29",
-            "realtime_end": "2026-06-29",
+            "realtime_start": "2026-07-14",
+            "realtime_end": "2026-07-14",
             "date": "2025-07-01",
             "value": "5793.596"
           }
