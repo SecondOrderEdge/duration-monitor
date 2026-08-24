@@ -79,3 +79,100 @@ revision, reconciliation_break`. `severity` ∈ `info, warning, error`.
 
 As entered from the official Treasury documents. Amounts are in **billions**, the
 unit the QRA states them in. `source_url` is mandatory and validated non-empty.
+
+## `cash_balance`
+
+Daily Treasury General Account balance (Deviation D5's input).
+
+| column | meaning |
+|---|---|
+| `date` | business day |
+| `balance` | closing TGA balance, USD |
+| `country`, `currency`, `source`, `retrieval_date` | provenance |
+
+## `long_end_stress`
+
+Rolling long-end auction stress across 10/20/30Y auctions.
+
+| column | meaning |
+|---|---|
+| `date` | as-of date |
+| `long_end_stress` | rolling composite; negative = better absorbed than trailing average |
+| `country` | `US` |
+
+## `score`
+
+The Fiscal Duration Shift Score, monthly, with everything needed to explain a
+reading. One row per month.
+
+| column | meaning |
+|---|---|
+| `period` | month, `YYYY-MM` |
+| `score` | 0–100 composite; NaN below `min_factors` available factors |
+| `n_factors` | factors available that month |
+| `rank_*` / `weight_*` / `contrib_*` | per-factor point-in-time percentile, expanding correlation-adjusted weight, and contribution to the score |
+| `band` | interpretation band from config (US bands, `validated_for_variants`) |
+| `regime` | quantitative regime, corroboration-gated escalation |
+| `regime_evidence` | `complete`, or `incomplete: <inputs>` — a regime capped by an input that DID NOT EXIST is not the same finding as one the market argued against |
+| `cash_adjusted` | whether incremental bill funding removed the TGA change (D5) |
+
+The score is also buyback-adjusted (par retired is added back to the coupon
+flow); see `buybacks`.
+
+## `euro_debt`
+
+Eurostat `gov_10q_ggdebt`, central government (S1311), quarterly, EUR.
+
+| column | meaning |
+|---|---|
+| `security_class` | `BILLS` (F31), `COUPONS` (F32), `TOTAL_MARKETABLE` |
+| `total_is_derived` | TRUE on total rows: Eurostat publishes no total, so it is the sum of the two classes and the US-style reconciliation check has nothing to test |
+| others | as `debt_outstanding` |
+
+## `euro_score`
+
+Quantity-only Duration Shift Score for DE/FR/IT. **A different measurement from
+the US score** — three factors, quarterly, no market-price evidence — and never
+comparable with it; `variant` travels on every row and the app enforces
+`comparable_with`.
+
+| column | meaning |
+|---|---|
+| `variant` | `quantity_only` |
+| `band` | always null: the US bands are not validated for this variant (`docs/euro_band_backtest.md`) |
+| `bill_share`, `bill_share_4q_change`, `direction_absolute` | the ABSOLUTE reading beside the relative score — the score is a percentile of the country's own history and can read high while the bill share falls |
+| `score_is_relative_to_own_history` | always TRUE, as a machine-readable warning |
+| others | as `score`, reduced to the three quantity factors |
+
+## `buybacks`
+
+Treasury buyback operations, one row each, 2000-03 onward. Feeds the buyback
+adjustment: MSPD deltas net retired securities into "issuance", so an
+unadjusted coupon buyback reads as strategic coupon restraint when it is an
+announced operation.
+
+| column | meaning |
+|---|---|
+| `operation_date`, `settlement_date` | operation timing |
+| `operation_type` | `Liquidity Support`, `Cash Management`, `Small Value`; missing on the 2000–02 program |
+| `security_class` | `COUPONS` or `TIPS` |
+| `class_assumed` | TRUE where the source stated no type (the 2000–02 program, mapped to COUPONS) |
+| `total_par_amt_offered`, `par_accepted`, `max_par_amt_redeemed` | USD |
+
+No staleness threshold, deliberately: the programs have year-long gaps between
+them, and a paused program is policy, not a broken feed.
+
+## `buybacks_security_details`
+
+CUSIP-level buyback results — which securities were bought, at what par and
+price. `par_amt_accepted` is 0 for eligible-but-not-purchased securities. Not
+used by the adjustment (the factors consume coupons as an aggregate); kept for
+the Operations page and future attribution.
+
+## `qra_log` — first entry
+
+The Nov-2023 row (the coupon-restraint episode) is entered: borrowing estimates
+and cash balances read from the fetched Q4-2023 Treasury OFP materials
+(verbatim passages under `docs/source_probe/qra/`), auction size changes
+computed from our own `auctions` table, commentary quoted verbatim. Fields the
+evidence did not support unambiguously are left empty rather than filled.
