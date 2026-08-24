@@ -229,7 +229,22 @@ if has_score and len(scored):
 else:
     kpi(c7, "Fiscal Duration Shift Score", "", unavailable=True,
         note="run scripts/refresh.py --only score")
-kpi(c8, "Global score", "", unavailable=True, note="Phase 3")
+# There is deliberately NO global composite. The euro sovereigns are scored on
+# a three-factor quantity-only variant, and averaging incomparable measurements
+# under one number is the failure the variant mechanism exists to prevent. The
+# card shows the euro readings themselves, labelled.
+if processed_available("euro_score"):
+    euro = load_processed("euro_score", _mtime(PROCESSED / "euro_score.parquet"))
+    euro_live = euro.dropna(subset=["score"]).sort_values("period")
+    latest_eu = euro_live.groupby("country", observed=True).tail(1)
+    kpi(c8, "Euro area (quantity-only)",
+        "  ".join(f"{c} {v:.0f}" for c, v in
+                  zip(latest_eu["country"], latest_eu["score"])),
+        note=f"{latest_eu['period'].iloc[-1]} · not comparable to the US score "
+             "· see Cross-country")
+else:
+    kpi(c8, "Euro area (quantity-only)", "", unavailable=True,
+        note="run scripts/refresh.py --only euro_score")
 
 st.divider()
 
@@ -442,10 +457,19 @@ if has_score and len(scored):
         "83.6% of net borrowing that summer."
     )
 
-# ---- Not yet built -------------------------------------------------------- #
+# ---- Cross-country -------------------------------------------------------- #
 st.divider()
-st.markdown("##### Not yet available")
-st.info("**Global comparison** is Phase 3.")
+st.markdown("##### Cross-country")
+st.markdown(
+    "Germany, France and Italy are scored live from Eurostat on a "
+    "**quantity-only variant** — three of six factors, quarterly, no "
+    "market-price evidence, so **never on the same axis as the US score**. "
+    "The Cross-country page shows each with its absolute bill-share direction "
+    "beside the relative reading. There is deliberately no global composite: "
+    "averaging incomparable measurements under one number is the failure the "
+    "variant mechanism exists to prevent. UK and Japan publish no structured "
+    "data a free pipeline can ingest (`docs/phase3_source_assessment.md`)."
+)
 
 with st.sidebar:
     st.markdown("### Provenance")
