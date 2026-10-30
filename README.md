@@ -11,6 +11,8 @@ instead is measure the financing profile to a fiduciary-defensible standard and
 escalate only when the market observably corroborates — a design the backtest
 justifies rather than embarrasses.
 
+> **Disclaimer:** This project is informational and for research only. It is not financial or investment advice.
+
 Free official data only — Treasury Fiscal Data, FRED, NY Fed, Eurostat. No paid
 vendors. The one credential is a FRED API key (`FRED_API_KEY`), used by ingestion
 only: the dashboard reads `data/processed/` and never calls an API at page load.
