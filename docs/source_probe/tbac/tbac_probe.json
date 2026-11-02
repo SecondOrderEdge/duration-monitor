@@ -49,7 +49,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0592",
       "content_type": "text/html; charset=utf-8",
       "label": "TBAC Minutes: 2026 - 3rd Quarter",
-      "characters_extracted": 20499,
+      "characters_extracted": 20575,
       "mentions_bill_share": false
     },
     {
@@ -59,7 +59,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0591",
       "content_type": "text/html; charset=utf-8",
       "label": "TBAC Report to Secretary: 2026 - 3rd Quarter",
-      "characters_extracted": 19368,
+      "characters_extracted": 19444,
       "mentions_bill_share": false
     },
     {
@@ -69,7 +69,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl0534_TBACReportPressRelease",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter\u200b",
-      "characters_extracted": 21103,
+      "characters_extracted": 21179,
       "mentions_bill_share": false
     },
     {
@@ -79,7 +79,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0584",
       "content_type": "text/html; charset=utf-8",
       "label": "Financing Estimates: 2026 - 3rd Quarter",
-      "characters_extracted": 11221,
+      "characters_extracted": 11297,
       "mentions_bill_share": false
     },
     {
@@ -89,7 +89,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0585",
       "content_type": "text/html; charset=utf-8",
       "label": "Economic Policy Statements to TBAC: 2026 - 3rd Quarter\u200b",
-      "characters_extracted": 29874,
+      "characters_extracted": 29950,
       "mentions_bill_share": false
     },
     {
@@ -99,7 +99,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0590",
       "content_type": "text/html; charset=utf-8",
       "label": "Policy Statement: 2026 - 3rd Quarter",
-      "characters_extracted": 13189,
+      "characters_extracted": 13265,
       "mentions_bill_share": false
     },
     {
@@ -109,7 +109,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0490",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 19080,
+      "characters_extracted": 19156,
       "mentions_bill_share": false
     },
     {
@@ -119,7 +119,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0385",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 21755,
+      "characters_extracted": 21831,
       "mentions_bill_share": false
     },
     {
@@ -129,7 +129,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0306",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter\u200b\u200b",
-      "characters_extracted": 17813,
+      "characters_extracted": 17889,
       "mentions_bill_share": false
     },
     {
@@ -139,7 +139,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0213",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter\u200b",
-      "characters_extracted": 19617,
+      "characters_extracted": 19693,
       "mentions_bill_share": false
     },
     {
@@ -149,7 +149,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0121",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 23678,
+      "characters_extracted": 23754,
       "mentions_bill_share": false
     },
     {
@@ -159,7 +159,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sb0011",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 19585,
+      "characters_extracted": 19661,
       "mentions_bill_share": false
     },
     {
@@ -169,7 +169,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy2698",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter\u200b\u200b",
-      "characters_extracted": 19006,
+      "characters_extracted": 19082,
       "mentions_bill_share": false
     },
     {
@@ -179,7 +179,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy2513",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter\u200b",
-      "characters_extracted": 21637,
+      "characters_extracted": 21713,
       "mentions_bill_share": true
     },
     {
@@ -189,7 +189,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy2316",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 21154,
+      "characters_extracted": 21230,
       "mentions_bill_share": true
     },
     {
@@ -199,7 +199,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy2063",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 24399,
+      "characters_extracted": 24475,
       "mentions_bill_share": true
     },
     {
@@ -209,7 +209,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy1865",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter\u200b\u200b",
-      "characters_extracted": 22613,
+      "characters_extracted": 22689,
       "mentions_bill_share": true
     },
     {
@@ -219,7 +219,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy1670",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter\u200b",
-      "characters_extracted": 22156,
+      "characters_extracted": 22232,
       "mentions_bill_share": true
     },
     {
@@ -229,7 +229,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy1461",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 21234,
+      "characters_extracted": 21310,
       "mentions_bill_share": true
     },
     {
@@ -239,7 +239,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy1239",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 19498,
+      "characters_extracted": 19574,
       "mentions_bill_share": true
     },
     {
@@ -249,7 +249,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy1073",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter\u200b\u200b",
-      "characters_extracted": 18669,
+      "characters_extracted": 18745,
       "mentions_bill_share": true
     },
     {
@@ -259,7 +259,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy0909",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter\u200b",
-      "characters_extracted": 19758,
+      "characters_extracted": 19834,
       "mentions_bill_share": true
     },
     {
@@ -269,7 +269,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy0763",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 17258,
+      "characters_extracted": 17334,
       "mentions_bill_share": true
     },
     {
@@ -279,7 +279,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy0580",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 17571,
+      "characters_extracted": 17647,
       "mentions_bill_share": true
     },
     {
@@ -289,7 +289,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy0463",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 19649,
+      "characters_extracted": 19725,
       "mentions_bill_share": true
     },
     {
@@ -299,7 +299,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy0308",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter\u200b",
-      "characters_extracted": 21671,
+      "characters_extracted": 21747,
       "mentions_bill_share": true
     },
     {
@@ -309,7 +309,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy0165",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 21484,
+      "characters_extracted": 21560,
       "mentions_bill_share": true
     },
     {
@@ -319,7 +319,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jy0018",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 24208,
+      "characters_extracted": 24284,
       "mentions_bill_share": true
     },
     {
@@ -329,7 +329,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm1175",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter\u200b\u200b",
-      "characters_extracted": 23028,
+      "characters_extracted": 23104,
       "mentions_bill_share": true
     },
     {
@@ -339,7 +339,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm1080",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter\u200b",
-      "characters_extracted": 23270,
+      "characters_extracted": 23346,
       "mentions_bill_share": true
     },
     {
@@ -349,7 +349,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm1002",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 20599,
+      "characters_extracted": 20675,
       "mentions_bill_share": true
     },
     {
@@ -359,7 +359,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm897",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 21894,
+      "characters_extracted": 21970,
       "mentions_bill_share": false
     },
     {
@@ -369,7 +369,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm811",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter\u200b",
-      "characters_extracted": 21158,
+      "characters_extracted": 21234,
       "mentions_bill_share": false
     },
     {
@@ -379,7 +379,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm746",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 22838,
+      "characters_extracted": 22914,
       "mentions_bill_share": false
     },
     {
@@ -389,7 +389,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm678",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 23377,
+      "characters_extracted": 23453,
       "mentions_bill_share": false
     },
     {
@@ -399,7 +399,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm598",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 20961,
+      "characters_extracted": 21037,
       "mentions_bill_share": false
     },
     {
@@ -409,7 +409,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm539",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 22636,
+      "characters_extracted": 22712,
       "mentions_bill_share": false
     },
     {
@@ -419,7 +419,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm450",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 21346,
+      "characters_extracted": 21422,
       "mentions_bill_share": false
     },
     {
@@ -429,7 +429,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm0379",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 21479,
+      "characters_extracted": 21555,
       "mentions_bill_share": false
     },
     {
@@ -439,7 +439,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm0281",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 20808,
+      "characters_extracted": 20884,
       "mentions_bill_share": false
     },
     {
@@ -449,7 +449,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm0201",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 24581,
+      "characters_extracted": 24657,
       "mentions_bill_share": true
     },
     {
@@ -459,7 +459,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm0142",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 23526,
+      "characters_extracted": 23602,
       "mentions_bill_share": true
     },
     {
@@ -469,7 +469,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/sm0070",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter\u200b",
-      "characters_extracted": 27436,
+      "characters_extracted": 27512,
       "mentions_bill_share": true
     },
     {
@@ -479,7 +479,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/as0002",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 22335,
+      "characters_extracted": 22411,
       "mentions_bill_share": false
     },
     {
@@ -489,7 +489,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl0715",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 27544,
+      "characters_extracted": 27620,
       "mentions_bill_share": true
     },
     {
@@ -499,7 +499,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl0594",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 19560,
+      "characters_extracted": 19636,
       "mentions_bill_share": false
     },
     {
@@ -509,7 +509,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl0337",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 19681,
+      "characters_extracted": 19757,
       "mentions_bill_share": false
     },
     {
@@ -519,7 +519,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl0248",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 18957,
+      "characters_extracted": 19033,
       "mentions_bill_share": false
     },
     {
@@ -529,7 +529,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl0141",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 21387,
+      "characters_extracted": 21463,
       "mentions_bill_share": false
     },
     {
@@ -539,7 +539,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl10044",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 22623,
+      "characters_extracted": 22699,
       "mentions_bill_share": true
     },
     {
@@ -549,7 +549,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl9761",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 20775,
+      "characters_extracted": 20851,
       "mentions_bill_share": false
     },
     {
@@ -559,7 +559,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl2686",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 18761,
+      "characters_extracted": 18837,
       "mentions_bill_share": false
     },
     {
@@ -569,7 +569,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl2602",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 20867,
+      "characters_extracted": 20943,
       "mentions_bill_share": false
     },
     {
@@ -579,7 +579,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl2376",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 20592,
+      "characters_extracted": 20668,
       "mentions_bill_share": false
     },
     {
@@ -589,7 +589,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl2282",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 18959,
+      "characters_extracted": 19035,
       "mentions_bill_share": false
     },
     {
@@ -599,7 +599,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl2206",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 19508,
+      "characters_extracted": 19584,
       "mentions_bill_share": false
     },
     {
@@ -609,7 +609,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl2127",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 20031,
+      "characters_extracted": 20107,
       "mentions_bill_share": false
     },
     {
@@ -619,7 +619,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/jl1922",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 17496,
+      "characters_extracted": 17572,
       "mentions_bill_share": false
     },
     {
@@ -629,7 +629,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1842",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 17760,
+      "characters_extracted": 17836,
       "mentions_bill_share": false
     },
     {
@@ -639,7 +639,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1754",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 16322,
+      "characters_extracted": 16398,
       "mentions_bill_share": false
     },
     {
@@ -649,7 +649,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1664",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 19109,
+      "characters_extracted": 19185,
       "mentions_bill_share": false
     },
     {
@@ -659,7 +659,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1560",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 17827,
+      "characters_extracted": 17903,
       "mentions_bill_share": false
     },
     {
@@ -669,7 +669,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1403",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 16721,
+      "characters_extracted": 16797,
       "mentions_bill_share": false
     },
     {
@@ -679,7 +679,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1350",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 17203,
+      "characters_extracted": 17279,
       "mentions_bill_share": false
     },
     {
@@ -689,7 +689,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1266",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 17807,
+      "characters_extracted": 17883,
       "mentions_bill_share": false
     },
     {
@@ -699,7 +699,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1162",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 17634,
+      "characters_extracted": 17710,
       "mentions_bill_share": true
     },
     {
@@ -709,7 +709,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg1047",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 15860,
+      "characters_extracted": 15936,
       "mentions_bill_share": false
     },
     {
@@ -719,7 +719,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg941",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 18433,
+      "characters_extracted": 18509,
       "mentions_bill_share": true
     },
     {
@@ -729,7 +729,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg800",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 17708,
+      "characters_extracted": 17784,
       "mentions_bill_share": false
     },
     {
@@ -739,7 +739,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg680",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 16546,
+      "characters_extracted": 16622,
       "mentions_bill_share": false
     },
     {
@@ -749,7 +749,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg528",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 16906,
+      "characters_extracted": 16982,
       "mentions_bill_share": true
     },
     {
@@ -759,7 +759,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg348",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 14162,
+      "characters_extracted": 14238,
       "mentions_bill_share": false
     },
     {
@@ -769,7 +769,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg254",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 21964,
+      "characters_extracted": 22040,
       "mentions_bill_share": false
     },
     {
@@ -779,7 +779,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg111",
       "content_type": "text/html; charset=utf-8",
       "label": "2nd Quarter",
-      "characters_extracted": 23401,
+      "characters_extracted": 23477,
       "mentions_bill_share": false
     },
     {
@@ -789,7 +789,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/tg10",
       "content_type": "text/html; charset=utf-8",
       "label": "1st Quarter",
-      "characters_extracted": 25107,
+      "characters_extracted": 25183,
       "mentions_bill_share": false
     },
     {
@@ -799,7 +799,7 @@
       "final_url": "https://home.treasury.gov/news/press-releases/hp1238",
       "content_type": "text/html; charset=utf-8",
       "label": "4th Quarter",
-      "characters_extracted": 20720,
+      "characters_extracted": 20796,
       "mentions_bill_share": false
     },
     {
@@ -809,38 +809,8 @@
       "final_url": "https://home.treasury.gov/news/press-releases/hp1094",
       "content_type": "text/html; charset=utf-8",
       "label": "3rd Quarter",
-      "characters_extracted": 22054,
+      "characters_extracted": 22130,
       "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/news/press-releases/hp945",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/news/press-releases/hp945",
-      "content_type": "text/html; charset=utf-8",
-      "label": "2nd Quarter",
-      "characters_extracted": 20973,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/news/press-releases/hp778",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/news/press-releases/hp778",
-      "content_type": "text/html; charset=utf-8",
-      "label": "1st Quarter",
-      "characters_extracted": 18863,
-      "mentions_bill_share": false
-    },
-    {
-      "url": "https://home.treasury.gov/news/press-releases/hp656",
-      "fetched": true,
-      "status": 200,
-      "final_url": "https://home.treasury.gov/news/press-releases/hp656",
-      "content_type": "text/html; charset=utf-8",
-      "label": "4th Quarter",
-      "characters_extracted": 20119,
-      "mentions_bill_share": true
     }
   ],
   "evidence": [
@@ -1191,19 +1161,19 @@
   ],
   "documents_skipped_by_cap": 0,
   "stopped_on_budget": {
-    "after_documents": 80,
-    "documents_unread": 257,
+    "after_documents": 77,
+    "documents_unread": 260,
     "budget_seconds": 900
   },
-  "documents_with_text": 80,
+  "documents_with_text": 77,
   "documents_examined": 337,
   "coverage_by_year": {
     "2026": 5,
-    "unknown": 75
+    "unknown": 72
   },
   "coverage_by_class": {
     "minutes": 1,
-    "press release": 77,
+    "press release": 74,
     "report": 2
   },
   "outcome": "EVIDENCE FOUND",

@@ -14,14 +14,14 @@ Documents that yielded text, by year. **Read the verdict against this.** The cla
 | year | documents searched |
 |---|---|
 | 2026 | 5 |
-| unknown | 75 |
+| unknown | 72 |
 
 By document class. The claim is a sentence, so the classes that matter are minutes and reports; a run heavy in chart decks has searched a lot and looked in the wrong place.
 
 | class | documents searched |
 |---|---|
 | minutes | 1 |
-| press release | 77 |
+| press release | 74 |
 | report | 2 |
 
 ## Entry points
@@ -37,86 +37,83 @@ By document class. The claim is a sentence, so the classes that matter are minut
 
 | document | characters | note |
 |---|---|---|
-| TBAC Minutes: 2026 - 3rd Quarter | 20,499 |  |
-| TBAC Report to Secretary: 2026 - 3rd Quarter | 19,368 |  |
-| 2nd Quarter​ | 21,103 |  |
-| Financing Estimates: 2026 - 3rd Quarter | 11,221 |  |
-| Economic Policy Statements to TBAC: 2026 - 3rd Quarter​ | 29,874 |  |
-| Policy Statement: 2026 - 3rd Quarter | 13,189 |  |
-| 2nd Quarter | 19,080 |  |
-| 1st Quarter | 21,755 |  |
-| 4th Quarter​​ | 17,813 |  |
-| 3rd Quarter​ | 19,617 |  |
-| 2nd Quarter | 23,678 |  |
-| 1st Quarter | 19,585 |  |
-| 4th Quarter​​ | 19,006 |  |
-| 3rd Quarter​ | 21,637 |  |
-| 2nd Quarter | 21,154 |  |
-| 1st Quarter | 24,399 |  |
-| 4th Quarter​​ | 22,613 |  |
-| 3rd Quarter​ | 22,156 |  |
-| 2nd Quarter | 21,234 |  |
-| 1st Quarter | 19,498 |  |
-| 4th Quarter​​ | 18,669 |  |
-| 3rd Quarter​ | 19,758 |  |
-| 2nd Quarter | 17,258 |  |
-| 1st Quarter | 17,571 |  |
-| 4th Quarter | 19,649 |  |
-| 3rd Quarter​ | 21,671 |  |
-| 2nd Quarter | 21,484 |  |
-| 1st Quarter | 24,208 |  |
-| 4th Quarter​​ | 23,028 |  |
-| 3rd Quarter​ | 23,270 |  |
-| 2nd Quarter | 20,599 |  |
-| 1st Quarter | 21,894 |  |
-| 4th Quarter​ | 21,158 |  |
-| 3rd Quarter | 22,838 |  |
-| 2nd Quarter | 23,377 |  |
-| 1st Quarter | 20,961 |  |
-| 4th Quarter | 22,636 |  |
-| 3rd Quarter | 21,346 |  |
-| 2nd Quarter | 21,479 |  |
-| 1st Quarter | 20,808 |  |
-| 4th Quarter | 24,581 |  |
-| 3rd Quarter | 23,526 |  |
-| 2nd Quarter​ | 27,436 |  |
-| 1st Quarter | 22,335 |  |
-| 4th Quarter | 27,544 |  |
-| 3rd Quarter | 19,560 |  |
-| 1st Quarter | 19,681 |  |
-| 4th Quarter | 18,957 |  |
-| 3rd Quarter | 21,387 |  |
-| 2nd Quarter | 22,623 |  |
-| 1st Quarter | 20,775 |  |
-| 4th Quarter | 18,761 |  |
-| 3rd Quarter | 20,867 |  |
-| 2nd Quarter | 20,592 |  |
-| 1st Quarter | 18,959 |  |
-| 4th Quarter | 19,508 |  |
-| 3rd Quarter | 20,031 |  |
-| 2nd Quarter | 17,496 |  |
-| 1st Quarter | 17,760 |  |
-| 4th Quarter | 16,322 |  |
-| 3rd Quarter | 19,109 |  |
-| 2nd Quarter | 17,827 |  |
-| 1st Quarter | 16,721 |  |
-| 4th Quarter | 17,203 |  |
-| 3rd Quarter | 17,807 |  |
-| 2nd Quarter | 17,634 |  |
-| 1st Quarter | 15,860 |  |
-| 4th Quarter | 18,433 |  |
-| 3rd Quarter | 17,708 |  |
-| 2nd Quarter | 16,546 |  |
-| 1st Quarter | 16,906 |  |
-| 4th Quarter | 14,162 |  |
-| 3rd Quarter | 21,964 |  |
-| 2nd Quarter | 23,401 |  |
-| 1st Quarter | 25,107 |  |
-| 4th Quarter | 20,720 |  |
-| 3rd Quarter | 22,054 |  |
-| 2nd Quarter | 20,973 |  |
-| 1st Quarter | 18,863 |  |
-| 4th Quarter | 20,119 |  |
+| TBAC Minutes: 2026 - 3rd Quarter | 20,575 |  |
+| TBAC Report to Secretary: 2026 - 3rd Quarter | 19,444 |  |
+| 2nd Quarter​ | 21,179 |  |
+| Financing Estimates: 2026 - 3rd Quarter | 11,297 |  |
+| Economic Policy Statements to TBAC: 2026 - 3rd Quarter​ | 29,950 |  |
+| Policy Statement: 2026 - 3rd Quarter | 13,265 |  |
+| 2nd Quarter | 19,156 |  |
+| 1st Quarter | 21,831 |  |
+| 4th Quarter​​ | 17,889 |  |
+| 3rd Quarter​ | 19,693 |  |
+| 2nd Quarter | 23,754 |  |
+| 1st Quarter | 19,661 |  |
+| 4th Quarter​​ | 19,082 |  |
+| 3rd Quarter​ | 21,713 |  |
+| 2nd Quarter | 21,230 |  |
+| 1st Quarter | 24,475 |  |
+| 4th Quarter​​ | 22,689 |  |
+| 3rd Quarter​ | 22,232 |  |
+| 2nd Quarter | 21,310 |  |
+| 1st Quarter | 19,574 |  |
+| 4th Quarter​​ | 18,745 |  |
+| 3rd Quarter​ | 19,834 |  |
+| 2nd Quarter | 17,334 |  |
+| 1st Quarter | 17,647 |  |
+| 4th Quarter | 19,725 |  |
+| 3rd Quarter​ | 21,747 |  |
+| 2nd Quarter | 21,560 |  |
+| 1st Quarter | 24,284 |  |
+| 4th Quarter​​ | 23,104 |  |
+| 3rd Quarter​ | 23,346 |  |
+| 2nd Quarter | 20,675 |  |
+| 1st Quarter | 21,970 |  |
+| 4th Quarter​ | 21,234 |  |
+| 3rd Quarter | 22,914 |  |
+| 2nd Quarter | 23,453 |  |
+| 1st Quarter | 21,037 |  |
+| 4th Quarter | 22,712 |  |
+| 3rd Quarter | 21,422 |  |
+| 2nd Quarter | 21,555 |  |
+| 1st Quarter | 20,884 |  |
+| 4th Quarter | 24,657 |  |
+| 3rd Quarter | 23,602 |  |
+| 2nd Quarter​ | 27,512 |  |
+| 1st Quarter | 22,411 |  |
+| 4th Quarter | 27,620 |  |
+| 3rd Quarter | 19,636 |  |
+| 1st Quarter | 19,757 |  |
+| 4th Quarter | 19,033 |  |
+| 3rd Quarter | 21,463 |  |
+| 2nd Quarter | 22,699 |  |
+| 1st Quarter | 20,851 |  |
+| 4th Quarter | 18,837 |  |
+| 3rd Quarter | 20,943 |  |
+| 2nd Quarter | 20,668 |  |
+| 1st Quarter | 19,035 |  |
+| 4th Quarter | 19,584 |  |
+| 3rd Quarter | 20,107 |  |
+| 2nd Quarter | 17,572 |  |
+| 1st Quarter | 17,836 |  |
+| 4th Quarter | 16,398 |  |
+| 3rd Quarter | 19,185 |  |
+| 2nd Quarter | 17,903 |  |
+| 1st Quarter | 16,797 |  |
+| 4th Quarter | 17,279 |  |
+| 3rd Quarter | 17,883 |  |
+| 2nd Quarter | 17,710 |  |
+| 1st Quarter | 15,936 |  |
+| 4th Quarter | 18,509 |  |
+| 3rd Quarter | 17,784 |  |
+| 2nd Quarter | 16,622 |  |
+| 1st Quarter | 16,982 |  |
+| 4th Quarter | 14,238 |  |
+| 3rd Quarter | 22,040 |  |
+| 2nd Quarter | 23,477 |  |
+| 1st Quarter | 25,183 |  |
+| 4th Quarter | 20,796 |  |
+| 3rd Quarter | 22,130 |  |
 
 ## Passages found
 
